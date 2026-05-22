@@ -1,0 +1,132 @@
+---
+- name: ChgPassword | Validate platform and role inputs
+  block:
+    - name: ChgPassword | Validate supported operating system family
+      ansible.builtin.assert:
+        that:
+          - ansible_system == 'Linux'
+          - ansible_os_family in ['RedHat', 'Debian', 'Suse']
+        fail_msg: "Unsupported target: {{ ansible_system }} / {{ ansible_os_family }}. This role is for local Linux accounts."
+
+    - name: ChgPassword | Validate account list is provided
+      ansible.builtin.assert:
+        that:
+          - change_password_accounts is iterable
+          - change_password_accounts | length > 0
+        fail_msg: "change_password_accounts must contain at least one account."
+
+- name: ChgPassword | Validate account definitions
+  block:
+    - name: ChgPassword | Validate account definitions and security policy
+      ansible.builtin.assert:
+        that:
+          - item.username is defined
+          - item.username is match(change_password_validate_username_regex)
+          - item.state | default('present') in ['present', 'locked', 'unlocked']
+          - change_password_manage_root | bool or item.username != 'root'
+          - (item.password_hash | default('') | length > 0) or ((item.password_plain | default('') | length > 0) and (change_password_allow_plaintext_password | bool))
+          - (not change_password_require_hash | bool) or (item.password_hash | default('') | length > 0)
+          - change_password_hash_salt_mode in ['hmac_inventory', 'deterministic_inventory']
+          - change_password_hmac_algorithm in ['sha256', 'sha512']
+          - (change_password_hash_salt_mode != 'hmac_inventory') or (change_password_hmac_salt_secret | length >= 24)
+          - (change_password_hash_salt_mode != 'deterministic_inventory') or (change_password_allow_public_deterministic_salt | bool)
+          - change_password_salt_hash_algorithm in ['sha1', 'sha256', 'sha512']
+          - change_password_salt_length | int >= 8
+          - change_password_salt_length | int <= 16
+          - change_password_allow_empty_password | bool == false
+          - not ((item.username == 'root') and ((item.state | default('present')) == 'locked') and not (change_password_allow_root_lock | bool))
+          - not ((item.username == 'root') and (change_password_lock_after_change | bool) and not (change_password_allow_root_lock | bool))
+        fail_msg: >-
+          Invalid account definition or blocked hardening policy for account '{{ item.username | default('undefined') }}'.
+          Provide password_hash by default. For HMAC per-user/per-host hash generation, set change_password_allow_plaintext_password=true, change_password_require_hash=false, and provide change_password_hmac_salt_secret from Vault/AWX/secret-manager.
+      loop: "{{ change_password_accounts }}"
+      loop_control:
+        label: "{{ item.username | default('undefined') }}"
+      no_log: "{{ change_password_use_no_log | bool }}"
+
+    - name: ChgPassword | Validate SHA512 password hash format when provided
+      ansible.builtin.assert:
+        that:
+          - item.password_hash is match('^\$6\$(rounds=[0-9]+\$)?[^$]{1,16}\$.+')
+        fail_msg: "password_hash for '{{ item.username }}' must be a SHA512 crypt hash starting with $6$."
+      loop: "{{ change_password_accounts }}"
+      loop_control:
+        label: "{{ item.username }}"
+      when: item.password_hash | default('') | length > 0
+      no_log: "{{ change_password_use_no_log | bool }}"
+
+    - name: ChgPassword | Validate clear-text password complexity when explicitly enabled
+      ansible.builtin.assert:
+        that:
+          - item.password_plain | length >= change_password_min_length
+          - (not change_password_require_upper | bool) or (item.password_plain is regex('[A-Z]'))
+          - (not change_password_require_lower | bool) or (item.password_plain is regex('[a-z]'))
+          - (not change_password_require_digit | bool) or (item.password_plain is regex('[0-9]'))
+          - (not change_password_require_special | bool) or (item.password_plain is regex('[^A-Za-z0-9]'))
+          - item.password_plain not in change_password_forbidden_plain_values
+          - item.password_plain != item.username
+        fail_msg: "Clear-text password for '{{ item.username }}' does not satisfy the local complexity policy."
+      loop: "{{ change_password_accounts }}"
+      loop_control:
+        label: "{{ item.username }}"
+      when:
+        - change_password_allow_plaintext_password | bool
+        - change_password_enforce_complexity | bool
+        - item.password_plain | default('') | length > 0
+      no_log: "{{ change_password_use_no_log | bool }}"
+
+- name: ChgPassword | Validate local account backend
+  block:
+    - name: ChgPassword | Check local account existence
+      ansible.builtin.command:
+        argv:
+          - getent
+          - passwd
+          - "{{ item.username }}"
+      register: change_password_getent
+      changed_when: false
+      failed_when: false
+      loop: "{{ change_password_accounts }}"
+      loop_control:
+        label: "{{ item.username }}"
+
+    - name: ChgPassword | Fail if local account is missing
+      ansible.builtin.assert:
+        that:
+          - item.rc == 0
+        fail_msg: "Local account '{{ item.item.username }}' does not exist on {{ inventory_hostname }}."
+      loop: "{{ change_password_getent.results }}"
+      loop_control:
+        label: "{{ item.item.username }}"
+      when: change_password_fail_if_user_missing | bool
+
+    - name: ChgPassword | Check shadow backend availability
+      ansible.builtin.stat:
+        path: /etc/shadow
+      register: change_password_shadow
+      when: change_password_check_shadow_backend | bool
+
+    - name: ChgPassword | Fail when local shadow backend is unavailable
+      ansible.builtin.assert:
+        that:
+          - change_password_shadow.stat.exists
+          - change_password_shadow.stat.isreg
+        fail_msg: "/etc/shadow is unavailable. This target may use an external identity backend; do not use this role for IPA/LDAP/AD passwords."
+      when: change_password_check_shadow_backend | bool
+
+- name: ChgPassword | Validate password ageing prerequisites
+  block:
+    - name: ChgPassword | Ensure chage command exists when expiry or aging is requested
+      ansible.builtin.stat:
+        path: /usr/bin/chage
+      register: change_password_chage_check
+      when: >-
+        (change_password_accounts | selectattr('expire', 'defined') | selectattr('expire') | list | length > 0)
+        or (change_password_set_aging | bool)
+
+    - name: ChgPassword | Fail when chage is required but missing
+      ansible.builtin.assert:
+        that:
+          - change_password_chage_check.stat.exists
+        fail_msg: "chage is required for expire/aging operations but was not found at /usr/bin/chage."
+      when: change_password_chage_check is defined and not ansible_check_mode

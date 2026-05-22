@@ -1,0 +1,22 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Verify test user exists
+      ansible.builtin.command:
+        argv: ["getent", "passwd", "testrotate"]
+      changed_when: false
+
+    - name: Verify audit file exists
+      ansible.builtin.stat:
+        path: /var/log/ansible/change-password.log
+      register: audit_file
+
+    - name: Assert audit file exists
+      ansible.builtin.assert:
+        that:
+          - audit_file.stat.exists
+          - audit_file.stat.mode == '0600'

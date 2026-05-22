@@ -1,0 +1,17 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: chgpassword-ubuntu
+    image: geerlingguy/docker-ubuntu2404-ansible:latest
+    pre_build_image: true
+    privileged: true
+provisioner:
+  name: ansible
+  config_options:
+    defaults:
+      roles_path: ../../..
+verifier:
+  name: ansible

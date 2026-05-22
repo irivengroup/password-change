@@ -1,0 +1,32 @@
+---
+- name: ChgPassword | Run secured password rotation workflow
+  block:
+    - name: ChgPassword | Preflight validation
+      ansible.builtin.include_tasks: preflight.yml
+
+    - name: ChgPassword | Normalize input data
+      ansible.builtin.include_tasks: normalize.yml
+
+    - name: ChgPassword | Apply password changes
+      ansible.builtin.include_tasks: apply_password.yml
+
+    - name: ChgPassword | Apply password expiration and ageing
+      ansible.builtin.include_tasks: aging.yml
+
+    - name: ChgPassword | Write audit events
+      ansible.builtin.include_tasks: audit.yml
+      when: change_password_audit_enabled | bool
+
+  rescue:
+    - name: ChgPassword | Report secured workflow failure
+      ansible.builtin.fail:
+        msg: >-
+          ChgPassword failed on {{ inventory_hostname }}. Review the previous task output.
+          Secrets are hidden when change_password_use_no_log=true.
+
+  always:
+    - name: ChgPassword | Cleanup sensitive runtime facts
+      ansible.builtin.set_fact:
+        change_password_normalized_accounts: []
+      no_log: true
+      when: change_password_cleanup_sensitive_facts | default(true) | bool

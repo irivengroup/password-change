@@ -1,53 +1,67 @@
-# Ansible Chgpassword 
+# ChgPassword Ansible
 
-Ansible playbook and role to change a local Linux user password, including `root`.
+Hardened Ansible role and playbook to rotate **local Linux account passwords**, including `root`.
 
-## Features
+## Task layout
 
-- Supports `root` and standard local Linux users
-- Supports one or many accounts
-- Accepts precomputed SHA512 hashes or clear passwords from Vault/CI secrets
-- Uses `no_log` by default for sensitive tasks
-- Optional password expiry at next login
-- Optional account lock/unlock
-- Safe validation before applying changes
-- Compatible with RHEL, Rocky Linux, AlmaLinux, Debian, and Ubuntu
-
-## Project layout
+The role is split into Ansible task blocks instead of one monolithic task file:
 
 ```text
-.
-├── ansible.cfg
-├── inventories/production/hosts.yml
-├── inventories/production/group_vars/all.yml
-├── playbooks/change_password.yml
-├── requirements.yml
-└── roles/ChangePassword
+roles/ChgPassword/tasks/
+├── main.yml            # secured workflow block with rescue/always
+├── preflight.yml       # validation blocks
+├── normalize.yml       # secret-safe runtime normalization block
+├── apply_password.yml  # password state application block
+├── aging.yml           # expiration and chage policy block
+└── audit.yml           # audit trail block without secrets
 ```
 
-## Recommended usage with password hash
+A custom filter plugin is included:
 
-Generate a SHA512 hash:
+```text
+roles/ChgPassword/filter_plugins/crypto_salt.py
+```
+
+It derives a deterministic HMAC salt for SHA512 crypt when plaintext input is explicitly enabled.
+
+## Security posture
+
+Defaults are strict:
+
+- `password_hash` is required by default.
+- `password_plain` is rejected by default.
+- plaintext mode requires explicit opt-in and a Vault/AWX/secret-manager salt secret.
+- salt derivation uses `HMAC-SHA256(secret, prefix:username:inventory_hostname)[:16]`.
+- public deterministic salt mode is blocked unless explicitly allowed.
+- SHA512 crypt hashes are validated.
+- `root` can be changed but cannot be locked unless explicitly allowed.
+- account names are regex-validated.
+- sensitive operations use `no_log: true`.
+- audit logs contain no secret material.
+- host key checking is enabled in `ansible.cfg`.
+
+## Recommended usage: precomputed hash
+
+```yaml
+change_password_accounts:
+  - username: root
+    password_hash: "$6$rounds=656000$replaceSalt$replaceWithRealSha512CryptHash"
+    expire: false
+    state: present
+```
+
+Generate a SHA512 password hash offline:
 
 ```bash
 python3 - <<'PY'
 import crypt
 import getpass
 password = getpass.getpass('Password: ')
-print(crypt.crypt(password, crypt.mksalt(crypt.METHOD_SHA512)))
+print(crypt.crypt(password, crypt.mksalt(crypt.METHOD_SHA512, rounds=656000)))
 PY
 ```
 
-Then define:
-
-```yaml
-change_password_accounts:
-  - username: root
-    password_hash: "$6$rounds=656000$example$replace_with_real_hash"
-    expire: false
-```
-
-Encrypt the variable file:
+Encrypt variables:
 
 ```bash
 ansible-vault encrypt inventories/production/group_vars/all.yml
@@ -62,18 +76,37 @@ ansible-playbook \
   --ask-vault-pass
 ```
 
-## Usage with clear password
+## Optional usage: HMAC salt from Vault secret
 
-Only use this through Ansible Vault, AWX Survey, GitLab CI masked variables, or another secret manager.
+Use this only when the clear password is supplied securely from Ansible Vault, AWX credential/survey, HashiCorp Vault, CyberArk, or another secret manager.
 
 ```yaml
+change_password_require_hash: false
+change_password_allow_plaintext_password: true
+change_password_hash_salt_mode: hmac_inventory
+change_password_hmac_salt_secret: "use-a-long-random-secret-from-vault-minimum-24-chars"
+
 change_password_accounts:
   - username: root
-    password_plain: "StrongPassword2026!"
+    password_plain: "Use-A-Vault-Secret-Value-2026!"
     expire: false
+    state: present
 ```
 
-## Multiple users
+Salt formula:
+
+```text
+salt = HMAC-SHA256(change_password_hmac_salt_secret, "prefix:username:inventory_hostname")[:16]
+```
+
+Benefits:
+
+- same password produces different hashes per host and per user;
+- salt is deterministic, so Ansible remains idempotent;
+- salt is not publicly predictable without the Vault secret;
+- `/etc/shadow` hash correlation across hosts is reduced.
+
+## Multiple accounts
 
 ```yaml
 change_password_accounts:
@@ -82,46 +115,45 @@ change_password_accounts:
     expire: false
 
   - username: ansible
-    password_plain: "AnotherStrongPassword2026!"
+    password_hash: "$6$rounds=656000$..."
     expire: true
+    state: unlocked
 
   - username: deploy
-    password_plain: "DeployStrongPassword2026!"
-    state: unlocked
+    password_hash: "$6$rounds=656000$..."
+    state: locked
 ```
 
-## Important variables
+## Password ageing
+
+```yaml
+change_password_set_aging: true
+change_password_min_days: 1
+change_password_max_days: 90
+change_password_warn_days: 14
+change_password_inactive_days: 30
+```
+
+## Main variables
 
 | Variable | Default | Description |
 |---|---:|---|
-| `change_password_accounts` | `[]` | List of accounts to update |
-| `change_password_default_hash_rounds` | `656000` | SHA512 rounds when hashing clear password |
-| `change_password_enforce_complexity` | `true` | Enforce basic complexity for clear passwords |
-| `change_password_min_length` | `14` | Minimum length for clear passwords |
-| `change_password_fail_if_user_missing` | `true` | Fail if target local user does not exist |
-| `change_password_use_no_log` | `true` | Hide secrets from Ansible logs |
+| `change_password_accounts` | `[]` | Accounts to manage |
+| `change_password_require_hash` | `true` | Require `password_hash` |
+| `change_password_allow_plaintext_password` | `false` | Allow `password_plain` |
+| `change_password_hash_salt_mode` | `hmac_inventory` | Salt mode for plaintext workflow |
+| `change_password_hmac_salt_secret` | `""` | Secret key used by HMAC salt derivation |
+| `change_password_hmac_algorithm` | `sha256` | HMAC digest algorithm |
+| `change_password_hash_salt_prefix` | `chgpassword:v2` | Stable prefix included in HMAC message |
+| `change_password_salt_length` | `16` | SHA512 crypt salt length, max 16 |
+| `change_password_allow_public_deterministic_salt` | `false` | Permit legacy non-secret deterministic salt |
+| `change_password_use_no_log` | `true` | Hide sensitive task output |
+| `change_password_manage_root` | `true` | Allow root password rotation |
+| `change_password_allow_root_lock` | `false` | Allow locking root |
+| `change_password_fail_if_user_missing` | `true` | Fail if local user is absent |
+| `change_password_audit_enabled` | `true` | Write audit event without secrets |
+| `change_password_audit_file` | `/var/log/ansible/change-password.log` | Audit file path |
 
-## Notes for root password change
+## FreeIPA / IdM / LDAP warning
 
-Use a sudo-capable SSH account:
-
-```yaml
-ansible_user: ansible
-ansible_become: true
-```
-
-The role can update `root` even when direct root SSH is disabled, provided privilege escalation works.
-
-## FreeIPA / Red Hat IdM warning
-
-This role changes local Linux passwords via `/etc/shadow`. For centralized users managed by FreeIPA, Red Hat IdM, LDAP, or Active Directory, use the identity backend instead of this role.
-
-For FreeIPA, prefer `community.general.ipa_user`.
-
-## Security recommendations
-
-- Never commit clear passwords.
-- Prefer `password_hash` over `password_plain`.
-- Keep `change_password_use_no_log: true`.
-- Use Ansible Vault, AWX credentials, HashiCorp Vault, CyberArk, or CI masked variables.
-- Test on a non-critical host before production rollout.
+This role changes local `/etc/shadow` passwords only. For FreeIPA, Red Hat IdM, LDAP, or Active Directory accounts, use the identity provider API/module instead.

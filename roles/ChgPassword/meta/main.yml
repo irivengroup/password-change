@@ -1,9 +1,9 @@
 ---
 galaxy_info:
-  role_name: ChangePassword
+  role_name: ChgPassword
   namespace: iriven
   author: IRIVEN Group
-  description: Change local Linux user passwords, including root, safely with Ansible.
+  description: Hardened local Linux password rotation role, including root.
   license: MIT
   min_ansible_version: "2.14"
   platforms:
@@ -11,6 +11,7 @@ galaxy_info:
       versions:
         - "8"
         - "9"
+        - "10"
     - name: Ubuntu
       versions:
         - focal
@@ -20,4 +21,5 @@ galaxy_info:
       versions:
         - bullseye
         - bookworm
+        - trixie
 dependencies: []

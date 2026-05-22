@@ -1,0 +1,24 @@
+---
+- name: ChgPassword | Write local audit trail without secrets
+  block:
+    - name: ChgPassword | Ensure audit directory exists
+      ansible.builtin.file:
+        path: "{{ change_password_audit_file | dirname }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0750'
+
+    - name: ChgPassword | Write password change audit event without secrets
+      ansible.builtin.lineinfile:
+        path: "{{ change_password_audit_file }}"
+        create: true
+        owner: root
+        group: root
+        mode: '0600'
+        insertafter: EOF
+        line: >-
+          {{ ansible_date_time.iso8601 }} host={{ inventory_hostname }} user={{ item.username }} state={{ item.state | default('present') }} expire={{ item.expire | default(false) }} changed_by=ansible role=ChgPassword
+      loop: "{{ change_password_accounts }}"
+      loop_control:
+        label: "{{ item.username }}"

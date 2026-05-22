@@ -5,8 +5,11 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
-  ansible-lint:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -20,10 +23,13 @@ jobs:
       - name: Install tooling
         run: |
           python -m pip install --upgrade pip
-          pip install ansible ansible-lint yamllint molecule molecule-plugins[docker]
+          pip install ansible ansible-lint yamllint
 
-      - name: Install Ansible dependencies
-        run: ansible-galaxy collection install -r requirements.yml
+      - name: Run yamllint
+        run: yamllint .
 
       - name: Run ansible-lint
         run: ansible-lint .
+
+      - name: Run syntax check
+        run: ansible-playbook --syntax-check playbooks/change_password.yml

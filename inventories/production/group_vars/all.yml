@@ -1,17 +1,22 @@
 ---
-# Example inventory variables.
-# Encrypt this file with ansible-vault before committing secrets.
+# Encrypt this file before committing:
+#   ansible-vault encrypt inventories/production/group_vars/all.yml
 
+# Recommended secure workflow: provide precomputed hashes.
 change_password_accounts:
   - username: root
-    password_hash: ""
-    password_plain: ""
+    password_hash: "$6$rounds=656000$replaceSalt$replaceWithRealSha512CryptHash"
     expire: false
     state: present
 
-change_password_default_hash_rounds: 656000
-change_password_enforce_complexity: true
-change_password_min_length: 14
-change_password_fail_if_user_missing: true
-change_password_lock_after_change: false
-change_password_use_no_log: true
+# Optional workflow: allow plaintext only when it comes from Vault/AWX/secret-manager.
+# The role derives a deterministic, non-public salt using HMAC(secret, username + host).
+# change_password_require_hash: false
+# change_password_allow_plaintext_password: true
+# change_password_hash_salt_mode: hmac_inventory
+# change_password_hmac_salt_secret: "replace-with-long-random-vault-secret-min-24-chars"
+# change_password_accounts:
+#   - username: root
+#     password_plain: "replace-with-vault-secret-password"
+#     expire: false
+#     state: present
