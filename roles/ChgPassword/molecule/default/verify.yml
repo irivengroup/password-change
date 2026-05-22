@@ -6,9 +6,10 @@
 
   tasks:
     - name: Verify test user exists
-      ansible.builtin.command:
-        argv: ["getent", "passwd", "testrotate"]
-      changed_when: false
+      ansible.builtin.getent:
+        database: passwd
+        key: testrotate
+        fail_key: true
 
     - name: Verify audit file exists
       ansible.builtin.stat:

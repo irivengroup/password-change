@@ -77,27 +77,38 @@
 
 - name: ChgPassword | Validate local account backend
   block:
-    - name: ChgPassword | Check local account existence
-      ansible.builtin.command:
-        argv:
-          - getent
-          - passwd
-          - "{{ item.username }}"
-      register: change_password_getent
-      changed_when: false
-      failed_when: false
+    - name: ChgPassword | Query local passwd database with builtin getent
+      ansible.builtin.getent:
+        database: passwd
+        key: "{{ item.username }}"
+        fail_key: false
+      register: change_password_getent_passwd_results
       loop: "{{ change_password_accounts }}"
       loop_control:
         label: "{{ item.username }}"
 
+    - name: ChgPassword | Build discovered local account list
+      ansible.builtin.set_fact:
+        change_password_existing_local_users: >-
+          {{
+            change_password_getent_passwd_results.results
+            | selectattr('ansible_facts.getent_passwd', 'defined')
+            | map(attribute='ansible_facts.getent_passwd')
+            | map('dict2items')
+            | flatten
+            | map(attribute='key')
+            | list
+          }}
+      no_log: "{{ change_password_use_no_log | bool }}"
+
     - name: ChgPassword | Fail if local account is missing
       ansible.builtin.assert:
         that:
-          - item.rc == 0
-        fail_msg: "Local account '{{ item.item.username }}' does not exist on {{ inventory_hostname }}."
-      loop: "{{ change_password_getent.results }}"
+          - item.username in change_password_existing_local_users
+        fail_msg: "Local account '{{ item.username }}' does not exist on {{ inventory_hostname }}."
+      loop: "{{ change_password_accounts }}"
       loop_control:
-        label: "{{ item.item.username }}"
+        label: "{{ item.username }}"
       when: change_password_fail_if_user_missing | bool
 
     - name: ChgPassword | Check shadow backend availability

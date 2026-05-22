@@ -157,3 +157,13 @@ change_password_inactive_days: 30
 ## FreeIPA / IdM / LDAP warning
 
 This role changes local `/etc/shadow` passwords only. For FreeIPA, Red Hat IdM, LDAP, or Active Directory accounts, use the identity provider API/module instead.
+
+## Builtin-first implementation
+
+The role prioritizes Ansible builtin modules before falling back to commands:
+
+- `ansible.builtin.getent` for local account discovery.
+- `ansible.builtin.user` for password updates and lock/unlock state.
+- `ansible.builtin.stat` for `/etc/shadow` and `chage` prerequisites.
+- `ansible.builtin.command` is kept only for `chage`, because Ansible core has no dedicated password-aging module.
+

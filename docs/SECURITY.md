@@ -51,3 +51,7 @@ change_password_allow_public_deterministic_salt: true
 ```
 
 Do not use it for production unless you explicitly accept public salt predictability.
+
+## Builtin-first security posture
+
+This hardened variant avoids shelling out when Ansible core already provides a module. Account lookup uses `ansible.builtin.getent` instead of `command: getent passwd`, reducing parsing risk and improving idempotent reporting. Password changes and account locking continue to use `ansible.builtin.user`. The only remaining command execution path is `/usr/bin/chage` for password expiry/aging, because there is no first-class Ansible builtin equivalent in ansible-core.

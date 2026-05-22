@@ -28,5 +28,6 @@
     - name: ChgPassword | Cleanup sensitive runtime facts
       ansible.builtin.set_fact:
         change_password_normalized_accounts: []
+        change_password_existing_local_users: []
       no_log: true
       when: change_password_cleanup_sensitive_facts | default(true) | bool
