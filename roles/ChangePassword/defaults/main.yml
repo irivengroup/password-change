@@ -1,0 +1,27 @@
+---
+# List of local Linux accounts whose passwords must be changed.
+# Each item supports:
+# - username: account name, including root
+# - password_plain: clear password, should be provided through Vault or CI secret only
+# - password_hash: precomputed SHA512 hash, recommended
+# - expire: force password change on next login
+# - state: present|locked|unlocked
+change_password_accounts: []
+
+# Hashing parameters used when password_plain is provided.
+change_password_default_hash_rounds: 656000
+
+# Basic guardrails for clear-text passwords.
+change_password_enforce_complexity: true
+change_password_min_length: 14
+
+# If true, fail when a target account does not exist.
+# If false, the ansible.builtin.user module may create it depending on platform defaults.
+change_password_fail_if_user_missing: true
+
+# Lock account after changing password.
+# Usually false for root unless this is an explicit hardening action.
+change_password_lock_after_change: false
+
+# Hide passwords/hashes from Ansible output.
+change_password_use_no_log: true

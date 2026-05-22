@@ -1,0 +1,19 @@
+---
+dependency:
+  name: galaxy
+  options:
+    requirements-file: requirements.yml
+driver:
+  name: docker
+platforms:
+  - name: chgpassword-rocky9
+    image: rockylinux:9
+    pre_build_image: true
+    privileged: true
+    command: /usr/sbin/init
+provisioner:
+  name: ansible
+  playbooks:
+    converge: converge.yml
+verifier:
+  name: ansible
