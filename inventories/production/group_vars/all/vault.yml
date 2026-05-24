@@ -2,7 +2,7 @@
 # Encrypt this whole file:
 #   ansible-vault encrypt inventories/production/group_vars/all/vault.yml
 
-iriven_chgpasswd_hmac_salt_secret: "replace-with-long-random-vault-secret-min-24-chars"
+iriven_chgpasswd_hmac_salt_secret: "EyDb]TU~?BF|3[TVC<^+!_K!mog:[V[YY_sa4?@o*k>q:YOftSlmwtZ*N3DB"
 
 # unix_local_accounts is a list of dictionaries, not a mapping keyed by username.
 # manage_password defaults to true.

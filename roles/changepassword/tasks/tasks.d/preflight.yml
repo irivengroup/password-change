@@ -45,6 +45,20 @@
         label: "{{ item.username | default('undefined') }}"
       no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
 
+    - name: changepassword | Refuse unsupported account keys
+      ansible.builtin.assert:
+        that:
+          - >-
+            (item.keys() | list | difference(['username', 'password', 'state', 'expire', 'manage_password'])) | length == 0
+        fail_msg: >-
+          Unsupported keys found for account '{{ item.username | default('undefined') }}'.
+          This role only accepts username, password, state, expire and manage_password.
+          User provisioning attributes are intentionally forbidden.
+      loop: "{{ unix_local_accounts }}"
+      loop_control:
+        label: "{{ item.username | default('undefined') }}"
+      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+
     - name: changepassword | Build declared account username list
       ansible.builtin.set_fact:
         iriven_chgpasswd_declared_usernames: "{{ unix_local_accounts | map(attribute='username') | list }}"
@@ -148,6 +162,7 @@
           - item.expire | default(false) | type_debug == 'bool'
           - item.manage_password | default(iriven_chgpasswd_default_manage_password) | type_debug == 'bool'
           - iriven_chgpasswd_hash_algorithm in ['sha256', 'sha512']
+          - iriven_chgpasswd_default_hash_rounds | int >= iriven_chgpasswd_min_hash_rounds | int
           - item.aging is not defined
           - item.shell is not defined
           - item.groups is not defined
@@ -174,7 +189,7 @@
             (item.password | default('') is match(iriven_chgpasswd_password_hash_prefix_regex))
           - iriven_chgpasswd_hash_salt_mode == 'hmac_machine_id'
           - iriven_chgpasswd_hmac_algorithm in ['sha256', 'sha512']
-          - iriven_chgpasswd_hmac_salt_secret | length >= 24
+          - iriven_chgpasswd_hmac_salt_secret | length >= iriven_chgpasswd_min_hmac_secret_length | int
           - iriven_chgpasswd_salt_length | int >= 8
           - iriven_chgpasswd_salt_length | int <= 16
           - iriven_chgpasswd_allow_empty_password | bool == false
@@ -271,6 +286,17 @@
         fail_msg: "/etc/shadow is unavailable. This target may use an external identity backend; do not use this role for IPA/LDAP/AD passwords."
       when: iriven_chgpasswd_check_shadow_backend | bool
 
+    - name: changepassword | Validate local shadow file ownership and permissions
+      ansible.builtin.assert:
+        that:
+          - iriven_chgpasswd_shadow.stat.pw_name == 'root'
+          - iriven_chgpasswd_shadow.stat.gr_name in ['root', 'shadow']
+          - iriven_chgpasswd_shadow.stat.mode in ['0600', '0640']
+        fail_msg: >-
+          /etc/shadow has unexpected ownership or permissions on {{ inventory_hostname }}.
+          Expected owner root, group root/shadow, mode 0600/0640.
+      when: iriven_chgpasswd_check_shadow_backend | bool
+
 
     - name: changepassword | Read /etc/passwd for local-only backend validation
       ansible.builtin.slurp:
@@ -315,6 +341,32 @@
         - iriven_chgpasswd_require_login_shell | bool
         - item.ansible_facts.getent_passwd is defined
         - item.item.username in item.ansible_facts.getent_passwd
+      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+
+    - name: changepassword | Check selected login shell paths
+      ansible.builtin.stat:
+        path: "{{ item.value }}"
+      register: iriven_chgpasswd_selected_shell_stats
+      loop: "{{ iriven_chgpasswd_selected_login_shells | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+      when:
+        - iriven_chgpasswd_require_login_shell | bool
+      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+
+    - name: changepassword | Validate selected login shell paths exist and are executable
+      ansible.builtin.assert:
+        that:
+          - item.stat.exists
+          - item.stat.isreg
+          - item.stat.executable
+        fail_msg: >-
+          Account '{{ item.item.key }}' uses shell '{{ item.item.value }}', but the shell path is missing or not executable.
+      loop: "{{ iriven_chgpasswd_selected_shell_stats.results | default([]) }}"
+      loop_control:
+        label: "{{ item.item.key }}"
+      when:
+        - iriven_chgpasswd_require_login_shell | bool
       no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
 
     - name: changepassword | Validate selected accounts have an allowed login shell

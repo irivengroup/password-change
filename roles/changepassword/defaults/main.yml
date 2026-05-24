@@ -59,12 +59,14 @@ iriven_chgpasswd_forbidden_plain_values:
 # Pre-hashed password values beginning with $5$ or $6$ are passed through.
 iriven_chgpasswd_hash_algorithm: sha512
 iriven_chgpasswd_default_hash_rounds: 656000
+iriven_chgpasswd_min_hash_rounds: 500000
 iriven_chgpasswd_password_hash_regex: '^\$(5|6)\$(rounds=[0-9]+\$)?[^$]{1,16}\$.+'
 iriven_chgpasswd_password_hash_prefix_regex: '^\$(5|6)\$'
 iriven_chgpasswd_hash_salt_mode: hmac_machine_id
 iriven_chgpasswd_hash_salt_prefix: iriven_chgpasswd:v2
 iriven_chgpasswd_hmac_algorithm: sha256
 iriven_chgpasswd_hmac_salt_secret: ""
+iriven_chgpasswd_min_hmac_secret_length: 60
 iriven_chgpasswd_salt_length: 16
 
 # Password ageing. Omit values with null.

@@ -43,5 +43,10 @@
         iriven_chgpasswd_machine_id_file: ""
         iriven_chgpasswd_machine_id_raw: {}
         iriven_chgpasswd_effective_salt_identity: ""
+        iriven_chgpasswd_shadow_ageing_state: {}
+        iriven_chgpasswd_apply_results: {}
+        iriven_chgpasswd_getent_passwd_results: {}
+        iriven_chgpasswd_selected_shell_stats: {}
+        iriven_chgpasswd_machine_id_stat: {}
       no_log: true
       when: iriven_chgpasswd_cleanup_sensitive_facts | default(true) | bool

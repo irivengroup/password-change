@@ -23,7 +23,7 @@
         command: /bin/sh -c "while true; do sleep 3600; done"
         detach: true
         tty: true
-        restart_policy: no
+        restart_policy: "no"
         privileged: false
         cleanup: true
 

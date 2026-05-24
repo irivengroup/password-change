@@ -19,6 +19,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+        with:
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -143,6 +147,16 @@ jobs:
               errors.append('roles/changepassword/defaults/main.yml: default generated hash algorithm must remain sha512')
           if defaults.get('iriven_chgpasswd_hash_salt_mode') != 'hmac_machine_id':
               errors.append('roles/changepassword/defaults/main.yml: salt mode must remain hmac_machine_id')
+
+          if int(defaults.get('iriven_chgpasswd_default_hash_rounds', 0)) < int(defaults.get('iriven_chgpasswd_min_hash_rounds', 500000)):
+              errors.append('roles/changepassword/defaults/main.yml: hash rounds must not be below the configured minimum')
+          if int(defaults.get('iriven_chgpasswd_min_hmac_secret_length', 0)) < 60:
+              errors.append('roles/changepassword/defaults/main.yml: HMAC secret minimum length must remain at least 60')
+
+          ansible_cfg = Path('ansible.cfg').read_text(encoding='utf-8')
+          for required in ('host_key_checking = True', 'display_args_to_stdout = False', 'allow_world_readable_tmpfiles = False'):
+              if required not in ansible_cfg:
+                  errors.append(f'ansible.cfg: missing hardening option: {required}')
 
           normalize = Path('roles/changepassword/tasks/tasks.d/normalize.yml').read_text(encoding='utf-8')
           if 'inventory_hostname' in normalize:
