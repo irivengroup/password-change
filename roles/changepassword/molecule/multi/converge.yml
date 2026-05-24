@@ -1,32 +1,35 @@
 ---
 - name: Converge changepassword role on existing users only
   hosts: all
+  connection: community.docker.docker
   become: true
   gather_facts: true
+
   vars:
-    TGT_USER: all
-    iriven_chgpasswd_use_no_log: false
-    iriven_chgpasswd_require_hash: false
-    iriven_chgpasswd_allow_plaintext_password: true
-    iriven_chgpasswd_hash_algorithm: sha512
-    iriven_chgpasswd_default_hash_rounds: 656000
-    iriven_chgpasswd_hash_salt_mode: hmac_machine_id
-    iriven_chgpasswd_hmac_salt_secret: molecule-test-secret-minimum-24-chars
+    TGT_USER: all  # noqa var-naming[pattern]
+    iriven_chgpasswd_hmac_salt_secret: "ValidMoleculeSecret#2026WithEnoughLength"
+    iriven_chgpasswd_audit_enabled: false
+    iriven_chgpasswd_audit_only: false
+    iriven_chgpasswd_lock_enabled: false
+    iriven_chgpasswd_enable_audit_log: false
+    iriven_chgpasswd_enable_runtime_lock: false
+    iriven_chgpasswd_require_custom_hmac_secret: false
+    iriven_chgpasswd_allow_default_hmac_fallback: true
     iriven_chgpasswd_set_aging: true
     iriven_chgpasswd_min_days: 3
     iriven_chgpasswd_max_days: 90
     iriven_chgpasswd_warn_days: 14
     iriven_chgpasswd_inactive_days: null
-    iriven_chgpasswd_audit_enabled: false
     unix_local_accounts:
-    - username: moleculeops
-      password: Molecule-Test-Password-2026!
-      expire: false
-      state: unlocked
-    - username: moleculeaudit
-      password: Molecule-Audit-Password-2026!
-      expire: false
-      state: locked
+      - username: moleculeops
+        password: "Molecule-Test-Password-2026!"
+        state: unlocked
+        expire: false
+
+      - username: moleculeaudit
+        password: "Molecule-Audit-Password-2026!"
+        state: locked
+        expire: false
+
   roles:
-  - role: changepassword
-  connection: community.docker.docker
+    - role: changepassword

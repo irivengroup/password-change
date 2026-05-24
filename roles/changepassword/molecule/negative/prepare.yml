@@ -1,21 +1,21 @@
 ---
 - name: Prepare negative scenario target
   hosts: all
+  connection: community.docker.docker
   become: true
   gather_facts: false
-  tasks:
-  - name: Molecule negative | Ensure machine-id exists
-    ansible.builtin.copy:
-      dest: /etc/machine-id
-      content: '0123456789abcdef0123456789abcdef
 
-        '
-      owner: root
-      group: root
-      mode: '0444'
-  - name: Molecule negative | Create existing control user
-    ansible.builtin.user:
-      name: moleculevalid
-      shell: /bin/bash
-      state: present
-  connection: community.docker.docker
+  tasks:
+    - name: Molecule negative | Ensure machine-id exists
+      ansible.builtin.copy:
+        dest: /etc/machine-id
+        content: "0123456789abcdef0123456789abcdef\n"
+        owner: root
+        group: root
+        mode: "0444"
+
+    - name: Molecule negative | Create existing control user
+      ansible.builtin.user:
+        name: moleculevalid
+        shell: /bin/bash
+        state: present
