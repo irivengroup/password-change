@@ -4,8 +4,8 @@ dependency:
 driver:
   name: default
 platforms:
-- name: chgpassword-ubuntu
-  image: docker.io/ubuntu:22.04
+  - name: chgpassword-ubuntu
+    image: docker.io/ubuntu:22.04
 provisioner:
   name: ansible
   env:
@@ -23,9 +23,9 @@ provisioner:
         ansible_python_interpreter: /usr/bin/python3
 scenario:
   test_sequence:
-  - syntax
-  - create
-  - prepare
-  - converge
-  - verify
-  - destroy
+    - syntax
+    - create
+    - prepare
+    - converge
+    - verify
+    - destroy

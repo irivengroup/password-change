@@ -4,7 +4,7 @@ dependency:
 driver:
   name: default
 platforms:
-- name: chgpassword-ubuntu
+  - name: chgpassword-ubuntu
 provisioner:
   name: ansible
   env:
@@ -22,10 +22,10 @@ provisioner:
         ansible_python_interpreter: /usr/bin/python3
 scenario:
   test_sequence:
-  - syntax
-  - create
-  - prepare
-  - converge
-  - idempotence
-  - verify
-  - destroy
+    - syntax
+    - create
+    - prepare
+    - converge
+    - idempotence
+    - verify
+    - destroy
