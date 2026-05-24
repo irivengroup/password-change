@@ -69,10 +69,10 @@ iriven_chgpasswd_salt_length: 16
 
 # Password ageing. Omit values with null.
 # These variables intentionally keep their historical names for compatibility.
-iriven_chgpasswd_set_aging: true
-iriven_chgpasswd_min_days: 3
-iriven_chgpasswd_max_days: 90
-iriven_chgpasswd_warn_days: 14
+iriven_chgpasswd_set_aging: false
+iriven_chgpasswd_min_days: null
+iriven_chgpasswd_max_days: null
+iriven_chgpasswd_warn_days: null
 iriven_chgpasswd_inactive_days: null
 
 # Optional account lock after password change, except root unless explicitly allowed.
