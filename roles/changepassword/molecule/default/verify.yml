@@ -61,7 +61,7 @@
     - name: Verify | Assert configured ageing policy is applied
       ansible.builtin.assert:
         that:
-          - "'Minimum number of days between password change\t\t: 3' in moleculeops_chage.stdout"
-          - "'Maximum number of days between password change\t\t: 90' in moleculeops_chage.stdout"
-          - "'Number of days of warning before password expires\t: 14' in moleculeops_chage.stdout"
+          - "'Minimum number of days between password change    : 3' in moleculeops_chage.stdout"
+          - "'Maximum number of days between password change    : 90' in moleculeops_chage.stdout"
+          - "'Number of days of warning before password expires  : 14' in moleculeops_chage.stdout"
         fail_msg: Password ageing policy was not applied as expected.
