@@ -34,3 +34,7 @@ Hardening rules:
 - local `/etc/passwd` and `/etc/shadow` checks reduce the risk of mutating LDAP/IPA/AD accounts locally;
 - HMAC salt derivation uses `machine-id` by default;
 - secret values and hashes are hidden with `no_log`.
+
+## SUSE Compatibility
+
+SLES 15+ and openSUSE Leap 15.5+ are supported when local UNIX account backends, `getent`, `/etc/shadow`, and `/usr/bin/chage` are available.

@@ -22,4 +22,11 @@ galaxy_info:
         - bullseye
         - bookworm
         - trixie
+    - name: SLES
+      versions:
+        - '15'
+    - name: opensuse
+      versions:
+        - '15.5'
+        - '15.6'
 dependencies: []

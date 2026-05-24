@@ -6,7 +6,7 @@
         that:
           - ansible_system == 'Linux'
           - ansible_os_family in ['RedHat', 'Debian', 'Suse']
-        fail_msg: "Unsupported target: {{ ansible_system }} / {{ ansible_os_family }}. This role is for local Linux accounts."
+        fail_msg: "Unsupported target: {{ ansible_system }} / {{ ansible_os_family }}. Supported OS families are RedHat, Debian and Suse for local Linux accounts."
 
     - name: changepassword | Validate account list is provided
       ansible.builtin.assert:
@@ -440,5 +440,5 @@
       ansible.builtin.assert:
         that:
           - iriven_chgpasswd_chage_check.stat.exists
-        fail_msg: "chage is required for expire/aging operations but was not found at /usr/bin/chage."
+        fail_msg: "chage is required for expire/aging operations but was not found at /usr/bin/chage. On SUSE/SLES/openSUSE, install or restore the shadow package."
       when: iriven_chgpasswd_chage_check is defined and not ansible_check_mode

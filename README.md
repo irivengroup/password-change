@@ -46,6 +46,21 @@ The role targets modern Linux distributions using standard local UNIX account ba
 - AlmaLinux 8+
 - Debian 12+
 - Ubuntu 22.04+
+- SUSE Linux Enterprise Server 15+
+- openSUSE Leap 15.5+
+
+---
+
+### SUSE Compatibility Notes
+
+SUSE targets are supported through the standard local UNIX account stack. Ensure the managed host provides:
+
+- `/etc/passwd` and `/etc/shadow` local account backends
+- `getent` for account discovery
+- `/usr/bin/chage` for password ageing and expiration operations
+- login shells such as `/bin/bash` or `/usr/bin/bash` for targeted interactive accounts
+
+On SLES/openSUSE systems, `chage` is typically provided by the `shadow` package.
 
 ---
 
