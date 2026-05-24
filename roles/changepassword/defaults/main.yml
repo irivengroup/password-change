@@ -4,6 +4,12 @@
 #
 # Required per item:
 #   username: root|user
+#
+# Password source when password management is enabled:
+#   password: "..."                         # plaintext stored in Vault, hashed by the role
+#   password: "$6$rounds=656000$..."        # SHA512 crypt hash pass-through
+#   password: "$5$rounds=656000$..."        # SHA256 crypt hash pass-through
+#
 # Supported per-account properties for this role only:
 #   expire: false                            # true forces password change at next login
 #   state: unlocked                          # optional: unlocked|locked; omitted leaves lock state unchanged

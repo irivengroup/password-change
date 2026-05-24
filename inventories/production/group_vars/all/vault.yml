@@ -4,15 +4,6 @@
 
 iriven_chgpasswd_hmac_salt_secret: "replace-with-long-random-vault-secret-min-24-chars"
 
-# Local Linux accounts whose password state must be managed.
-# unix_local_accounts must be a list of dictionaries.
-#
-# Required per item:
-#   username: root|user
-# Supported per-account properties for this role only:
-#   expire: false                            # true forces password change at next login
-#   state: unlocked                          # optional: unlocked|locked; omitted leaves lock state unchanged
-#   manage_password: true                    # optional; defaults to iriven_chgpasswd_default_manage_password
 # unix_local_accounts is a list of dictionaries, not a mapping keyed by username.
 # manage_password defaults to true.
 # password is auto-detected:
