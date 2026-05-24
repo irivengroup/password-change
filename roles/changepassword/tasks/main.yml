@@ -8,10 +8,10 @@
       ansible.builtin.include_tasks: tasks.d/normalize.yml
 
     - name: changepassword | Run shadow pre-change hardening checks
-      ansible.builtin.include_tasks: tasks.d/shadow_precheck.yml
+      ansible.builtin.include_tasks: tasks.d/shadow.yml
 
     - name: changepassword | Apply password changes
-      ansible.builtin.include_tasks: tasks.d/apply_password.yml
+      ansible.builtin.include_tasks: tasks.d/apply.yml
 
     - name: changepassword | Apply password expiration and ageing
       ansible.builtin.include_tasks: tasks.d/aging.yml

@@ -78,11 +78,11 @@ If a declared account does not already exist locally on the target host, the rol
 │           ├── main.yml
 │           └── tasks.d/
 │               ├── aging.yml
-│               ├── apply_password.yml
+│               ├── apply.yml
 │               ├── audit.yml
 │               ├── normalize.yml
 │               ├── preflight.yml
-│               └── shadow_precheck.yml
+│               └── shadow.yml
 └── docs/
     └── SECURITY.md
 ```
