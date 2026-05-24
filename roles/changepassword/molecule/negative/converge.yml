@@ -12,10 +12,10 @@
           ansible.builtin.include_role:
             name: changepassword
           vars:
-            username: moleculevalid
+            changepassword_target_account: moleculevalid
             changepassword_hmac_salt_secret: "ValidNegativeSecret#2026WithEnoughLength"
-            unix_local_accounts:
-              - username: moleculevalid
+            changepassword_local_accounts:
+              - changepassword_target_account: moleculevalid
                 state: unlocked
 
         - name: Negative | Fail because missing password was accepted
@@ -33,10 +33,10 @@
           ansible.builtin.include_role:
             name: changepassword
           vars:
-            username: moleculevalid
+            changepassword_target_account: moleculevalid
             changepassword_hmac_salt_secret: "ValidNegativeSecret#2026WithEnoughLength"
-            unix_local_accounts:
-              - username: moleculevalid
+            changepassword_local_accounts:
+              - changepassword_target_account: moleculevalid
                 password: "ValidPassword#2026!"
                 state: present
 
@@ -55,10 +55,10 @@
           ansible.builtin.include_role:
             name: changepassword
           vars:
-            username: moleculevalid
+            changepassword_target_account: moleculevalid
             changepassword_hmac_salt_secret: weak
-            unix_local_accounts:
-              - username: moleculevalid
+            changepassword_local_accounts:
+              - changepassword_target_account: moleculevalid
                 password: "ValidPassword#2026!"
                 state: unlocked
 
@@ -77,10 +77,10 @@
           ansible.builtin.include_role:
             name: changepassword
           vars:
-            username: missinguser
+            changepassword_target_account: missinguser
             changepassword_hmac_salt_secret: "ValidNegativeSecret#2026WithEnoughLength"
-            unix_local_accounts:
-              - username: missinguser
+            changepassword_local_accounts:
+              - changepassword_target_account: missinguser
                 password: "ValidPassword#2026!"
                 state: unlocked
 

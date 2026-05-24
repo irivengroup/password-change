@@ -5,8 +5,8 @@
 The preferred account model is:
 
 ```yaml
-unix_local_accounts:
-  - username: root
+changepassword_local_accounts:
+  - changepassword_target_account: root
     password: "VaultProtectedPasswordOrSha512Hash"
 ```
 

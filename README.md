@@ -18,7 +18,7 @@ It is intentionally focused on password rotation and local account hardening. It
 
 - Password rotation for existing local UNIX accounts
 - Support for `root` and standard local users
-- Targeted execution through `username`
+- Targeted execution through `changepassword_target_account`
 - Bulk execution for all declared accounts
 - Required password declaration for every managed account
 - SHA512 password hashing by default
@@ -126,7 +126,7 @@ Example `inventories/production/group_vars/all/main.yml`:
 
 ```yaml
 ---
-username: root
+changepassword_target_account: root
 
 changepassword_hash_algorithm: sha512
 changepassword_require_hash: false
@@ -197,15 +197,15 @@ Example `inventories/production/group_vars/all/vault.yml`:
 # and one special character.
 changepassword_hmac_salt_secret: ""
 
-unix_local_accounts:
-  - username: root
+changepassword_local_accounts:
+  - changepassword_target_account: root
     password: "replace-with-vault-secret-root-password"
 
-  - username: ansible
+  - changepassword_target_account: ansible
     password: "replace-with-vault-secret-ansible-password"
     state: unlocked
 
-  - username: svc_backup
+  - changepassword_target_account: svc_backup
     password: "$6$rounds=656000$replaceSaltHere$replaceSha512CryptHashHere"
     state: locked
     expire: false
@@ -221,13 +221,13 @@ ansible-vault encrypt inventories/production/group_vars/all/vault.yml
 
 ## Account Declaration
 
-`unix_local_accounts` is a list of account declarations.
+`changepassword_local_accounts` is a list of account declarations.
 
 Each item must represent an account that already exists locally on the managed host.
 
 ```yaml
-unix_local_accounts:
-  - username: root
+changepassword_local_accounts:
+  - changepassword_target_account: root
     password: "StrongPassword#2026!"
     state: unlocked
     expire: false
@@ -237,7 +237,7 @@ unix_local_accounts:
 
 | Field | Required | Values | Description |
 |---|---:|---|---|
-| `username` | Yes | local UNIX username | Account to manage |
+| `changepassword_target_account` | Yes | local UNIX changepassword_target_account | Account to manage |
 | `password` | Yes | plaintext or Linux password hash | New password material |
 | `state` | No | `locked`, `unlocked` | Password lock state |
 | `expire` | No | `true`, `false` | Force password change at next login |
@@ -284,9 +284,9 @@ and the playbook:
 playbooks/change_password.yml
 ```
 
-### Without `username`
+### Without `changepassword_target_account`
 
-When `username` is not passed as an extra variable, the role uses the default value defined by the project configuration. The default target is `root`.
+When `changepassword_target_account` is not passed as an extra variable, the role uses the default value defined by the project configuration. The default target is `root`.
 
 ```bash
 ansible-playbook \
@@ -304,31 +304,31 @@ ansible-playbook \
   --vault-password-file ~/.vault_pass.txt
 ```
 
-### With `username=root`
+### With `changepassword_target_account=root`
 
-Use this mode to rotate only the `root` password, provided `root` is declared in `unix_local_accounts`.
-
-```bash
-ansible-playbook \
-  -i inventories/production/hosts.yml \
-  playbooks/change_password.yml \
-  --ask-vault-pass \
-  -e username=root
-```
-
-### With `username=<user>`
-
-Use this mode to rotate only one declared local account. Replace `<user>` with a username present in `unix_local_accounts`.
+Use this mode to rotate only the `root` password, provided `root` is declared in `changepassword_local_accounts`.
 
 ```bash
 ansible-playbook \
   -i inventories/production/hosts.yml \
   playbooks/change_password.yml \
   --ask-vault-pass \
-  -e username=ansible
+  -e changepassword_target_account=root
 ```
 
-### With `username=all`
+### With `changepassword_target_account=<user>`
+
+Use this mode to rotate only one declared local account. Replace `<user>` with a changepassword_target_account present in `changepassword_local_accounts`.
+
+```bash
+ansible-playbook \
+  -i inventories/production/hosts.yml \
+  playbooks/change_password.yml \
+  --ask-vault-pass \
+  -e changepassword_target_account=ansible
+```
+
+### With `changepassword_target_account=all`
 
 Use this mode to rotate all declared accounts.
 
@@ -337,10 +337,10 @@ ansible-playbook \
   -i inventories/production/hosts.yml \
   playbooks/change_password.yml \
   --ask-vault-pass \
-  -e username=all
+  -e changepassword_target_account=all
 ```
 
-### With `username='*'`
+### With `changepassword_target_account='*'`
 
 The wildcard target is also supported for rotating all declared accounts. Quote the value to prevent shell expansion.
 
@@ -349,10 +349,10 @@ ansible-playbook \
   -i inventories/production/hosts.yml \
   playbooks/change_password.yml \
   --ask-vault-pass \
-  -e 'username=*'
+  -e 'changepassword_target_account=*'
 ```
 
-The role fails when `username` references an account that is not declared in `unix_local_accounts`.
+The role fails when `changepassword_target_account` references an account that is not declared in `changepassword_local_accounts`.
 
 ---
 
@@ -362,7 +362,7 @@ Before executing the playbook in production, perform the following operational c
 
 ### 1. Confirm Local Account Presence
 
-Ensure every account declared in `unix_local_accounts` already exists locally on all targeted hosts.
+Ensure every account declared in `changepassword_local_accounts` already exists locally on all targeted hosts.
 
 This role does not create users.
 
@@ -371,7 +371,7 @@ This role does not create users.
 Populate `inventories/production/group_vars/all/vault.yml` with:
 
 - `changepassword_hmac_salt_secret`
-- `unix_local_accounts`
+- `changepassword_local_accounts`
 - one `password` value per account
 
 Then encrypt the file:
@@ -458,7 +458,7 @@ Execution commands are consolidated in the `Execution Examples with Vault` secti
 The role enforces multiple controls before applying password changes:
 
 - account declaration validation
-- duplicate username detection
+- duplicate changepassword_target_account detection
 - mandatory password presence
 - forbidden account protection
 - local account existence checks
@@ -526,7 +526,7 @@ For AWX or Ansible Automation Platform:
 - store Vault credentials in managed credentials
 - avoid plaintext password surveys
 - restrict job template execution with RBAC
-- require approval for `username=all`
+- require approval for `changepassword_target_account=all`
 - use separate inventories per environment
 - run validation jobs before production execution
 - preserve job artifacts for audit review

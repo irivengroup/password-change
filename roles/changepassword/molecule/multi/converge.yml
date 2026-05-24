@@ -6,7 +6,7 @@
   gather_facts: true
 
   vars:
-    username: all
+    changepassword_target_account: all
     changepassword_hmac_salt_secret: "ValidMoleculeSecret#2026WithEnoughLength"
     changepassword_audit_enabled: false
     changepassword_audit_only: false
@@ -20,13 +20,13 @@
     changepassword_max_days: 90
     changepassword_warn_days: 14
     changepassword_inactive_days: null
-    unix_local_accounts:
-      - username: moleculeops
+    changepassword_local_accounts:
+      - changepassword_target_account: moleculeops
         password: "Molecule-Test-Password-2026!"
         state: unlocked
         expire: false
 
-      - username: moleculeaudit
+      - changepassword_target_account: moleculeaudit
         password: "Molecule-Audit-Password-2026!"
         state: locked
         expire: false

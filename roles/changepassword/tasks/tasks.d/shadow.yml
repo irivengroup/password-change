@@ -16,19 +16,19 @@
           - >-
             (
               ((changepassword_shadow_raw.content | b64decode).split('\n')
-                | select('match', '^' ~ (item.username | regex_escape) ~ ':')
+                | select('match', '^' ~ (item.changepassword_target_account | regex_escape) ~ ':')
                 | list
                 | first
                 | default('::'))
               .split(':')[1]
             ) != item.final_password_hash
         fail_msg: >-
-          Refusing password reuse for '{{ item.username }}': the generated/provided hash
+          Refusing password reuse for '{{ item.changepassword_target_account }}': the generated/provided hash
           is already present in /etc/shadow. Disable changepassword_fail_if_same_hash
           only for idempotent re-runs.
       loop: "{{ changepassword_normalized_accounts }}"
       loop_control:
-        label: "{{ item.username }}"
+        label: "{{ item.changepassword_target_account }}"
       when:
         - changepassword_fail_if_same_hash | bool
       no_log: "{{ changepassword_use_no_log | bool }}"

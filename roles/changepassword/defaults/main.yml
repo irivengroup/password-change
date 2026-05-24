@@ -1,6 +1,6 @@
 ---
-unix_local_accounts:
-username: root
+changepassword_local_accounts:
+changepassword_target_account: root
 changepassword_all_targets:
   - all
   - "*"
@@ -60,7 +60,7 @@ changepassword_audit_only: false
 changepassword_lock_enabled: true
 changepassword_lock_path: /var/lock/iriven_chgpasswd.lock
 changepassword_check_shadow_backend: true
-changepassword_validate_username_regex: "^[a-z_][a-z0-9_-]{0,31}$|^root$"
+changepassword_validate_changepassword_target_account_regex: "^[a-z_][a-z0-9_-]{0,31}$|^root$"
 changepassword_cleanup_sensitive_facts: true
 changepassword_machine_id_paths:
   - /etc/machine-id

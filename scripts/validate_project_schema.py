@@ -10,7 +10,7 @@ from typing import Any
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-ACCOUNT_ALLOWED_KEYS = {"username", "password", "state", "expire"}
+ACCOUNT_ALLOWED_KEYS = {"changepassword_target_account", "password", "state", "expire"}
 ACCOUNT_STATES = {"locked", "unlocked"}
 USERNAME_RE = re.compile(r"^[a-z_][a-z0-9_-]{0,31}$|^root$")
 HASH_RE = re.compile(r"^\$(5|6)\$(rounds=[0-9]+\$)?[^$]{1,16}\$.+")
@@ -31,15 +31,15 @@ def validate_accounts(path: Path, errors: list[str]) -> None:
     data = read_yaml(path)
     if data is None or not isinstance(data, dict):
         return
-    accounts = data.get("unix_local_accounts", [])
+    accounts = data.get("changepassword_local_accounts", [])
     if accounts is None:
         return
     if not isinstance(accounts, list):
-        errors.append(f"{path}: unix_local_accounts must be a list of dictionaries")
+        errors.append(f"{path}: changepassword_local_accounts must be a list of dictionaries")
         return
     seen: set[str] = set()
     for index, account in enumerate(accounts):
-        label = f"{path}: unix_local_accounts[{index}]"
+        label = f"{path}: changepassword_local_accounts[{index}]"
         if not isinstance(account, dict):
             errors.append(f"{label}: item must be a dictionary")
             continue
@@ -49,15 +49,15 @@ def validate_accounts(path: Path, errors: list[str]) -> None:
         forbidden = set(account) & FORBIDDEN_ACCOUNT_KEYS
         if forbidden:
             errors.append(f"{label}: forbidden keys: {sorted(forbidden)}")
-        username = account.get("username")
-        if not isinstance(username, str) or not username.strip():
-            errors.append(f"{label}: username is required")
-        elif not USERNAME_RE.match(username):
-            errors.append(f"{label}: invalid username format: {username!r}")
-        elif username in seen:
-            errors.append(f"{label}: duplicate username: {username}")
+        changepassword_target_account = account.get("changepassword_target_account")
+        if not isinstance(changepassword_target_account, str) or not changepassword_target_account.strip():
+            errors.append(f"{label}: changepassword_target_account is required")
+        elif not USERNAME_RE.match(changepassword_target_account):
+            errors.append(f"{label}: invalid changepassword_target_account format: {changepassword_target_account!r}")
+        elif changepassword_target_account in seen:
+            errors.append(f"{label}: duplicate changepassword_target_account: {changepassword_target_account}")
         else:
-            seen.add(username)
+            seen.add(changepassword_target_account)
         password = account.get("password")
         if not isinstance(password, str) or not password.strip():
             errors.append(f"{label}: password is mandatory")

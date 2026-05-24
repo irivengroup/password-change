@@ -1,5 +1,5 @@
 ---
-username: root
+changepassword_target_account: root
 changepassword_hash_algorithm: sha512
 changepassword_require_hash: false
 changepassword_allow_plaintext_password: true

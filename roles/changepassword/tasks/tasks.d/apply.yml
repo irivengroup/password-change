@@ -3,25 +3,25 @@
   block:
     - name: Changepassword | Rotate password and optionally lock/unlock existing account
       ansible.builtin.user:
-        name: "{{ item.username }}"
+        name: "{{ item.changepassword_target_account }}"
         password: "{{ item.final_password_hash }}"
         update_password: always
         password_lock: "{{ true if item.state | default('unchanged') == 'locked' else false if item.state | default('unchanged')
           == 'unlocked' else omit }}"
       loop: "{{ changepassword_normalized_accounts }}"
       loop_control:
-        label: "{{ item.username }}"
+        label: "{{ item.changepassword_target_account }}"
       register: changepassword_apply_results
       no_log: "{{ changepassword_use_no_log | bool }}"
 
     - name: Changepassword | Lock account after password change when requested globally
       ansible.builtin.user:
-        name: "{{ item.username }}"
+        name: "{{ item.changepassword_target_account }}"
         password_lock: true
       loop: "{{ changepassword_normalized_accounts }}"
       loop_control:
-        label: "{{ item.username }}"
+        label: "{{ item.changepassword_target_account }}"
       no_log: "{{ changepassword_use_no_log | bool }}"
       when:
         - changepassword_lock_after_change | bool
-        - item.username != 'root' or changepassword_allow_root_lock | bool
+        - item.changepassword_target_account != 'root' or changepassword_allow_root_lock | bool
