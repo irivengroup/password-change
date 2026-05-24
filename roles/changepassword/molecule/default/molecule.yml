@@ -5,7 +5,7 @@ driver:
   name: docker
 platforms:
   - name: chgpassword-ubuntu
-    image: geerlingguy/docker-ubuntu2404-ansible:latest
+    image: docker.io/geerlingguy/docker-ubuntu2404-ansible:latest
     pre_build_image: true
     privileged: true
 provisioner:
@@ -21,7 +21,6 @@ provisioner:
       deprecation_warnings: false
 scenario:
   test_sequence:
-    - destroy
     - syntax
     - create
     - converge
