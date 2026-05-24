@@ -1,4 +1,5 @@
 ---
+
 - name: changepassword | Enforce production strict runtime controls
   ansible.builtin.assert:
     that:
@@ -111,6 +112,7 @@
         that:
           - iriven_chgpasswd_target_accounts | length > 0
         fail_msg: "No effective account selected for TGT_USER={{ iriven_chgpasswd_requested_user }}."
+
 
 - name: changepassword | Resolve machine-id identity for hash generation
   block:
@@ -471,3 +473,4 @@
       the configured minimum length and complexity requirements.
   no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
   changed_when: false
+
