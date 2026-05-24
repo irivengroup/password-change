@@ -35,7 +35,7 @@
         iriven_chgpasswd_target_accounts: []
         iriven_chgpasswd_declared_usernames: []
         iriven_chgpasswd_requested_user: ""
-        iriven_chgpasswd_selected_passwd_entries: {}
+        iriven_chgpasswd_selected_login_shells: {}
         iriven_chgpasswd_etc_passwd_raw: {}
         iriven_chgpasswd_shadow_hashes: {}
         iriven_chgpasswd_shadow_raw: {}

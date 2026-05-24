@@ -282,7 +282,10 @@
     - name: changepassword | Fail if selected account is not local to /etc/passwd
       ansible.builtin.assert:
         that:
-          - (iriven_chgpasswd_etc_passwd_raw.content | b64decode).split('\n') | select('match', '^' ~ item.username ~ ':') | list | length > 0
+          - >-
+            ((iriven_chgpasswd_etc_passwd_raw.content | b64decode).split('\n')
+            | select('match', '^' ~ (item.username | regex_escape) ~ ':')
+            | list | length) > 0
         fail_msg: >-
           Account '{{ item.username }}' is not present in /etc/passwd on {{ inventory_hostname }}.
           It may be provided by LDAP/IPA/AD/SSSD; refusing local password mutation.
@@ -292,38 +295,42 @@
       when: iriven_chgpasswd_require_etc_passwd_user | bool
       no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
 
-    - name: changepassword | Build passwd entries for selected local users
+    - name: changepassword | Build selected login shell map from builtin getent facts
       ansible.builtin.set_fact:
-        iriven_chgpasswd_selected_passwd_entries: >-
+        iriven_chgpasswd_selected_login_shells: >-
           {{
-            iriven_chgpasswd_selected_passwd_entries | default({})
+            iriven_chgpasswd_selected_login_shells | default({})
             | combine({
-                item.username: ((iriven_chgpasswd_etc_passwd_raw.content | b64decode).split('\n')
-                  | select('match', '^' ~ item.username ~ ':')
-                  | list
-                  | first)
+                item.item.username: (
+                  item.ansible_facts.getent_passwd[item.item.username][-1]
+                  | default('')
+                  | trim
+                )
               })
           }}
-      loop: "{{ iriven_chgpasswd_target_accounts }}"
+      loop: "{{ iriven_chgpasswd_getent_passwd_results.results }}"
       loop_control:
-        label: "{{ item.username }}"
-      when: iriven_chgpasswd_require_etc_passwd_user | bool
+        label: "{{ item.item.username }}"
+      when:
+        - iriven_chgpasswd_require_login_shell | bool
+        - item.ansible_facts.getent_passwd is defined
+        - item.item.username in item.ansible_facts.getent_passwd
       no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
 
     - name: changepassword | Validate selected accounts have an allowed login shell
       ansible.builtin.assert:
         that:
-          - (iriven_chgpasswd_selected_passwd_entries[item.username].split(':')[-1] | trim) in iriven_chgpasswd_allowed_login_shells
+          - item.username in iriven_chgpasswd_selected_login_shells
+          - iriven_chgpasswd_selected_login_shells[item.username] in iriven_chgpasswd_allowed_login_shells
         fail_msg: >-
-          Account '{{ item.username }}' has a non-login or non-approved shell
-          '{{ iriven_chgpasswd_selected_passwd_entries[item.username].split(':')[-1] | trim }}'.
+          Account '{{ item.username }}' has a non-login, unknown or non-approved shell
+          '{{ iriven_chgpasswd_selected_login_shells[item.username] | default('unknown') }}'.
           Refusing password change for service/system accounts.
       loop: "{{ iriven_chgpasswd_target_accounts }}"
       loop_control:
         label: "{{ item.username }}"
       when:
         - iriven_chgpasswd_require_login_shell | bool
-        - iriven_chgpasswd_require_etc_passwd_user | bool
       no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
 
 - name: changepassword | Validate password ageing prerequisites
