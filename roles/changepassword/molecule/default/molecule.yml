@@ -10,12 +10,15 @@ platforms:
     privileged: true
 provisioner:
   name: ansible
+  env:
+    ANSIBLE_DEPRECATION_WARNINGS: "False"
   config_options:
     defaults:
       roles_path: ../../..
       stdout_callback: default
       result_format: yaml
       bin_ansible_callbacks: true
+      deprecation_warnings: false
 scenario:
   test_sequence:
     - destroy
