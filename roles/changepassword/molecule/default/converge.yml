@@ -4,10 +4,9 @@
   connection: community.docker.docker
   become: true
   gather_facts: true
-
   vars:
     changepassword_target_account: all
-    changepassword_hmac_salt_secret: "ValidMoleculeSecret#2026WithEnoughLength"
+    changepassword_hmac_salt_secret: ValidMoleculeSecret#2026WithEnoughLength
     changepassword_audit_enabled: false
     changepassword_audit_only: false
     changepassword_lock_enabled: false
@@ -21,15 +20,14 @@
     changepassword_warn_days: 14
     changepassword_inactive_days: null
     changepassword_local_accounts:
-      - changepassword_target_account: moleculeops
-        password: "Molecule-Test-Password-2026!"
-        state: unlocked
-        expire: false
-
-      - changepassword_target_account: moleculeaudit
-        password: "Molecule-Audit-Password-2026!"
-        state: locked
-        expire: false
-
+    - changepassword_target_account: moleculeops
+      password: Molecule-Test-Password-2026!
+      state: unlocked
+      expire: false
+    - changepassword_target_account: moleculeaudit
+      password: Molecule-Audit-Password-2026!
+      state: locked
+      expire: false
+    ansible_python_interpreter: /usr/bin/python3
   roles:
-    - role: changepassword
+  - role: changepassword

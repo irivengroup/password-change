@@ -1,18 +1,15 @@
 ---
 dependency:
   name: galaxy
-
 driver:
   name: default
-
 platforms:
-  - name: chgpassword-ubuntu
-    image: docker.io/ubuntu:22.04
-
+- name: chgpassword-ubuntu
+  image: docker.io/ubuntu:22.04
 provisioner:
   name: ansible
   env:
-    ANSIBLE_DEPRECATION_WARNINGS: "False"
+    ANSIBLE_DEPRECATION_WARNINGS: 'False'
   config_options:
     defaults:
       deprecation_warnings: false
@@ -23,12 +20,12 @@ provisioner:
     host_vars:
       chgpassword-ubuntu:
         ansible_connection: community.docker.docker
-
+        ansible_python_interpreter: /usr/bin/python3
 scenario:
   test_sequence:
-    - syntax
-    - create
-    - prepare
-    - converge
-    - verify
-    - destroy
+  - syntax
+  - create
+  - prepare
+  - converge
+  - verify
+  - destroy
