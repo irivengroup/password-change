@@ -1,5 +1,5 @@
 ---
-- name: Destroy Molecule containers
+- name: Destroy Molecule delegated Docker target
   hosts: localhost
   connection: local
   gather_facts: false
@@ -8,7 +8,7 @@
     molecule_instance_config_path: "{{ lookup('env', 'MOLECULE_INSTANCE_CONFIG') }}"
 
   tasks:
-    - name: molecule | Remove test container
+    - name: molecule | Remove target container
       community.docker.docker_container:
         name: "{{ molecule_instance_name }}"
         state: absent

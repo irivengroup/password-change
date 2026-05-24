@@ -1,5 +1,5 @@
 ---
-- name: Create Molecule containers
+- name: Create Molecule delegated Docker target
   hosts: localhost
   connection: local
   gather_facts: false
@@ -9,24 +9,25 @@
     molecule_instance_config_path: "{{ lookup('env', 'MOLECULE_INSTANCE_CONFIG') }}"
 
   tasks:
-    - name: molecule | Pull test image
+    - name: molecule | Pull target image
       community.docker.docker_image:
         name: "{{ molecule_instance_image }}"
         source: pull
 
-    - name: molecule | Start test container
+    - name: molecule | Create and start target container
       community.docker.docker_container:
         name: "{{ molecule_instance_name }}"
         hostname: "{{ molecule_instance_name }}"
         image: "{{ molecule_instance_image }}"
         state: started
-        restart_policy: unless-stopped
-        command: /bin/sh -c "while true; do sleep 10000; done"
+        command: /bin/sh -c "while true; do sleep 3600; done"
         detach: true
         tty: true
+        restart_policy: no
         privileged: false
+        cleanup: true
 
-    - name: molecule | Persist delegated instance configuration
+    - name: molecule | Write delegated instance configuration
       ansible.builtin.copy:
         dest: "{{ molecule_instance_config_path }}"
         mode: '0600'

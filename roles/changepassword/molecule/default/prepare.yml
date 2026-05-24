@@ -1,11 +1,11 @@
 ---
-- name: Prepare Molecule target
+- name: Prepare existing local accounts for Molecule
   hosts: all
   become: true
   gather_facts: false
 
   tasks:
-    - name: molecule | Ensure deterministic machine-id exists
+    - name: molecule | Ensure deterministic machine-id exists for hash salt derivation
       ansible.builtin.copy:
         dest: /etc/machine-id
         owner: root
@@ -13,14 +13,20 @@
         mode: '0444'
         content: "0123456789abcdef0123456789abcdef\n"
 
-    - name: molecule | Ensure password rotation test user already exists
+    - name: molecule | Ensure existing local accounts required by the role test
       ansible.builtin.user:
-        name: testrotate
+        name: "{{ item }}"
         state: present
         create_home: false
         shell: /bin/bash
+      loop:
+        - moleculeops
+        - moleculeaudit
 
-    - name: molecule | Ensure test user is not locked before converge
+    - name: molecule | Ensure test accounts start unlocked
       ansible.builtin.user:
-        name: testrotate
+        name: "{{ item }}"
         password_lock: false
+      loop:
+        - moleculeops
+        - moleculeaudit

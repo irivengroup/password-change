@@ -40,6 +40,9 @@ jobs:
           ansible-lint --version
           yamllint --version
 
+      - name: Validate password hashing dependency
+        run: python -c "import passlib.hash; print('passlib available')"
+
       - name: Validate Ansible configuration
         run: |
           ansible-config dump --only-changed
