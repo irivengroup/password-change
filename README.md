@@ -130,14 +130,44 @@ iriven_chgpasswd_require_login_shell: true
 iriven_chgpasswd_require_etc_passwd_user: true
 iriven_chgpasswd_fail_if_same_hash: false
 
-iriven_chgpasswd_set_aging: true
-iriven_chgpasswd_min_days: 3
-iriven_chgpasswd_max_days: 90
-iriven_chgpasswd_warn_days: 14
+iriven_chgpasswd_set_aging: false
+iriven_chgpasswd_min_days: null
+iriven_chgpasswd_max_days: null
+iriven_chgpasswd_warn_days: null
 iriven_chgpasswd_inactive_days: null
 ```
 
 ---
+
+## Python Password Hash Generation
+
+The role accepts Linux-compatible SHA512 and SHA256 password hashes. SHA512 is recommended for production use.
+
+Generate a SHA512 crypt hash with Python:
+
+```bash
+python3 -c 'import crypt,getpass; print(crypt.crypt(getpass.getpass("Password: "), crypt.mksalt(crypt.METHOD_SHA512)))'
+```
+
+Generate a SHA256 crypt hash with Python:
+
+```bash
+python3 -c 'import crypt,getpass; print(crypt.crypt(getpass.getpass("Password: "), crypt.mksalt(crypt.METHOD_SHA256)))'
+```
+
+Alternative using `passlib`:
+
+```bash
+python3 -c 'from passlib.hash import sha512_crypt; import getpass; print(sha512_crypt.hash(getpass.getpass("Password: ")))'
+```
+
+Accepted hash prefixes:
+
+- `$6$` for SHA512 crypt
+- `$5$` for SHA256 crypt
+
+Store generated hashes only in Vault-protected inventory files and never commit real credentials in clear text.
+
 
 ## Vault Configuration
 
@@ -433,14 +463,14 @@ The role enforces multiple controls before applying password changes:
 Password ageing is configured globally:
 
 ```yaml
-iriven_chgpasswd_set_aging: true
-iriven_chgpasswd_min_days: 3
-iriven_chgpasswd_max_days: 90
-iriven_chgpasswd_warn_days: 14
+iriven_chgpasswd_set_aging: false
+iriven_chgpasswd_min_days: null
+iriven_chgpasswd_max_days: null
+iriven_chgpasswd_warn_days: null
 iriven_chgpasswd_inactive_days: null
 ```
 
-This applies a consistent password policy to all selected accounts.
+Aging is disabled by default. Set these values explicitly in inventory when a password ageing policy must be enforced.
 
 ---
 
