@@ -6,7 +6,8 @@
         name: "{{ item.username }}"
         password: "{{ item.final_password_hash }}"
         update_password: always
-        password_lock: "{{ true if item.state | default('unchanged') == 'locked' else false if item.state | default('unchanged') == 'unlocked' else omit }}"
+        password_lock: "{{ true if item.state | default('unchanged') == 'locked' else false if item.state | default('unchanged')
+          == 'unlocked' else omit }}"
       loop: "{{ iriven_chgpasswd_normalized_accounts }}"
       loop_control:
         label: "{{ item.username }}"

@@ -51,18 +51,22 @@
         - >-
           (
             item.aging_min_days is not none and
-            (iriven_chgpasswd_shadow_ageing_state.results[iriven_chgpasswd_account_index].stdout.split(':')[3] | default('')) != (item.aging_min_days | string)
+            (iriven_chgpasswd_shadow_ageing_state.results[iriven_chgpasswd_account_index].stdout.split(':')[3] | default('')) !=
+              (item.aging_min_days | string)
           ) or
           (
             item.aging_max_days is not none and
-            (iriven_chgpasswd_shadow_ageing_state.results[iriven_chgpasswd_account_index].stdout.split(':')[4] | default('')) != (item.aging_max_days | string)
+            (iriven_chgpasswd_shadow_ageing_state.results[iriven_chgpasswd_account_index].stdout.split(':')[4] | default('')) !=
+              (item.aging_max_days | string)
           ) or
           (
             item.aging_warn_days is not none and
-            (iriven_chgpasswd_shadow_ageing_state.results[iriven_chgpasswd_account_index].stdout.split(':')[5] | default('')) != (item.aging_warn_days | string)
+            (iriven_chgpasswd_shadow_ageing_state.results[iriven_chgpasswd_account_index].stdout.split(':')[5] | default('')) !=
+              (item.aging_warn_days | string)
           ) or
           (
             item.aging_inactive_days is not none and
-            (iriven_chgpasswd_shadow_ageing_state.results[iriven_chgpasswd_account_index].stdout.split(':')[6] | default('')) != (item.aging_inactive_days | string)
+            (iriven_chgpasswd_shadow_ageing_state.results[iriven_chgpasswd_account_index].stdout.split(':')[6] | default('')) !=
+              (item.aging_inactive_days | string)
           )
       changed_when: true

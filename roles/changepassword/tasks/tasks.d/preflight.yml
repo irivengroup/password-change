@@ -20,7 +20,8 @@
         that:
           - ansible_system == 'Linux'
           - ansible_os_family in ['RedHat', 'Debian', 'Suse']
-        fail_msg: "Unsupported target: {{ ansible_system }} / {{ ansible_os_family }}. Supported OS families are RedHat, Debian and Suse for local Linux accounts."
+        fail_msg: "Unsupported target: {{ ansible_system }} / {{ ansible_os_family }}. Supported OS families are RedHat, Debian
+          and Suse for local Linux accounts."
 
     - name: changepassword | Validate account list is provided
       ansible.builtin.assert:
@@ -40,7 +41,8 @@
       ansible.builtin.assert:
         that:
           - iriven_chgpasswd_requested_user | length > 0
-          - (iriven_chgpasswd_requested_user in iriven_chgpasswd_all_targets) or (iriven_chgpasswd_requested_user is match(iriven_chgpasswd_validate_username_regex))
+          - (iriven_chgpasswd_requested_user in iriven_chgpasswd_all_targets) or (iriven_chgpasswd_requested_user is
+            match(iriven_chgpasswd_validate_username_regex))
         fail_msg: >-
           TGT_USER must be a valid local account name declared in unix_local_accounts,
           or one of {{ iriven_chgpasswd_all_targets }} to target all declared accounts.
@@ -91,7 +93,8 @@
     - name: changepassword | Ensure requested account is declared in Vault variables
       ansible.builtin.assert:
         that:
-          - (iriven_chgpasswd_requested_user in iriven_chgpasswd_all_targets) or (iriven_chgpasswd_requested_user in iriven_chgpasswd_declared_usernames)
+          - (iriven_chgpasswd_requested_user in iriven_chgpasswd_all_targets) or (iriven_chgpasswd_requested_user in
+            iriven_chgpasswd_declared_usernames)
         fail_msg: >-
           TGT_USER={{ iriven_chgpasswd_requested_user }} is not declared in unix_local_accounts.
           Refusing to change an account that is not explicitly declared in Vault/inventory variables.
@@ -248,11 +251,17 @@
           - iriven_chgpasswd_salt_length | int >= 8
           - iriven_chgpasswd_salt_length | int <= 16
           - iriven_chgpasswd_allow_empty_password | bool == false
-          - not ((item.username == 'root') and ((item.state | default('unchanged')) == 'locked') and not (iriven_chgpasswd_allow_root_lock | bool))
-          - not ((item.username == 'root') and (iriven_chgpasswd_lock_after_change | bool) and not (iriven_chgpasswd_allow_root_lock | bool))
+          - not ((item.username == 'root') and ((item.state | default('unchanged')) == 'locked') and not
+            (iriven_chgpasswd_allow_root_lock | bool))
+          - not ((item.username == 'root') and (iriven_chgpasswd_lock_after_change | bool) and not
+            (iriven_chgpasswd_allow_root_lock | bool))
         fail_msg: >-
           Invalid account definition or blocked hardening policy for account '{{ item.username | default('undefined') }}'.
-          Supported account state values are unlocked and locked only. password is mandatory for every account and is auto-detected as SHA256/SHA512 crypt hash when it starts with $5$ or $6$, otherwise treated as Vault-protected plaintext. password_hash, password_plain and manage_password are not supported. Do not define per-account aging or provisioning attributes such as shell, groups, uid, home, comment, create_home or system.
+          Supported account state values are unlocked and locked only. password is mandatory for every account and is
+            auto-detected as SHA256/SHA512 crypt hash when it starts with $5$ or $6$, otherwise treated as
+            Vault-protected plaintext. password_hash, password_plain and manage_password are not supported. Do not
+            define per-account aging or provisioning attributes such as shell, groups, uid, home, comment, create_home
+            or system.
       loop: "{{ iriven_chgpasswd_target_accounts }}"
       loop_control:
         label: "{{ item.username | default('undefined') }}"
@@ -337,7 +346,8 @@
         that:
           - iriven_chgpasswd_shadow.stat.exists
           - iriven_chgpasswd_shadow.stat.isreg
-        fail_msg: "/etc/shadow is unavailable. This target may use an external identity backend; do not use this role for IPA/LDAP/AD passwords."
+        fail_msg: "/etc/shadow is unavailable. This target may use an external identity backend; do not use this role for
+          IPA/LDAP/AD passwords."
       when: iriven_chgpasswd_check_shadow_backend | bool
 
     - name: changepassword | Validate local shadow file ownership and permissions
@@ -452,7 +462,8 @@
       ansible.builtin.assert:
         that:
           - iriven_chgpasswd_chage_check.stat.exists
-        fail_msg: "chage is required for expire/aging operations but was not found at /usr/bin/chage. On SUSE/SLES/openSUSE, install or restore the shadow package."
+        fail_msg: "chage is required for expire/aging operations but was not found at /usr/bin/chage. On SUSE/SLES/openSUSE,
+          install or restore the shadow package."
       when: iriven_chgpasswd_chage_check is defined and not ansible_check_mode
 
 - name: changepassword | Refuse missing or weak custom HMAC secret in production

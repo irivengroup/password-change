@@ -81,7 +81,6 @@ jobs:
               sys.exit(1)
           PY
 
-
       - name: Run Gitleaks secret scan
         uses: gitleaks/gitleaks-action@v2
         env:
@@ -180,7 +179,8 @@ jobs:
                               errors.append(f'{path}: legacy password_hash/password_plain/manage_password found for {username}')
                           if account.get('state') == 'present':
                               errors.append(f'{path}: state=present is not supported for {username}; use locked/unlocked or omit state')
-                          for field in ('shell', 'groups', 'append', 'home', 'uid', 'gid', 'comment', 'create_home', 'system', 'aging', 'manage_password'):
+                          for field in ('shell', 'groups', 'append', 'home', 'uid', 'gid', 'comment', 'create_home', 'system', 'aging',
+                            'manage_password'):
                               if field in account:
                                   errors.append(f'{path}: provisioning/per-account policy field {field!r} is not allowed for {username}')
 
@@ -207,7 +207,8 @@ jobs:
           fallback_secret = defaults.get('iriven_chgpasswd_default_hmac_salt_secret', '')
           if len(fallback_secret) != 60:
               errors.append('roles/changepassword/defaults/main.yml: default HMAC fallback secret must be exactly 60 characters')
-          if not (any(c.isupper() for c in fallback_secret) and any(c.islower() for c in fallback_secret) and any(c.isdigit() for c in fallback_secret) and any(not c.isalnum() for c in fallback_secret)):
+          if not (any(c.isupper() for c in fallback_secret) and any(c.islower() for c in fallback_secret) and any(c.isdigit() for
+            c in fallback_secret) and any(not c.isalnum() for c in fallback_secret)):
               errors.append('roles/changepassword/defaults/main.yml: default HMAC fallback secret does not meet complexity requirements')
 
           ansible_cfg = Path('ansible.cfg').read_text(encoding='utf-8')

@@ -42,7 +42,8 @@
               'execution_mode': 'audit_only' if (iriven_chgpasswd_audit_only | bool) else 'standard',
               'password_changed': (
                 iriven_chgpasswd_apply_results.results[iriven_chgpasswd_account_index].changed | default(false)
-                if (iriven_chgpasswd_apply_results is defined and iriven_chgpasswd_apply_results.results is defined and (iriven_chgpasswd_apply_results.results | length > iriven_chgpasswd_account_index))
+                if (iriven_chgpasswd_apply_results is defined and iriven_chgpasswd_apply_results.results is defined and
+                  (iriven_chgpasswd_apply_results.results | length > iriven_chgpasswd_account_index))
                 else false
               ),
               'account_state': item.state | default('unchanged'),
