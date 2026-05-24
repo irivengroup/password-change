@@ -1,0 +1,131 @@
+---
+# Local Linux accounts whose password state must be managed.
+# unix_local_accounts must be a list of dictionaries.
+#
+# Required per item:
+#   username: root|user
+# Supported per-account properties for this role only:
+#   expire: false                            # true forces password change at next login
+#   state: unlocked                          # optional: unlocked|locked; omitted leaves lock state unchanged
+#   manage_password: true                    # optional; defaults to iriven_chgpasswd_default_manage_password
+#
+# This role does NOT create users and does NOT manage provisioning attributes.
+# Do not define shell, groups, uid, gid, home, comment, create_home or system here.
+# Password ageing is global only; do not define per-account aging.
+unix_local_accounts: []
+
+# Runtime target selector.
+# TGT_USER is intentionally named for extra-vars usage:
+#   -e TGT_USER=root       # default: manage only root when declared below
+#   -e TGT_USER=deploy     # manage only deploy when declared below
+#   -e TGT_USER=all        # manage all declared accounts
+TGT_USER: root
+iriven_chgpasswd_all_targets:
+  - all
+  - '*'
+  - ALL
+
+# Security posture.
+iriven_chgpasswd_require_hash: false
+iriven_chgpasswd_allow_plaintext_password: true
+iriven_chgpasswd_use_no_log: true
+iriven_chgpasswd_fail_if_user_missing: true
+iriven_chgpasswd_manage_root: true
+iriven_chgpasswd_allow_root_lock: false
+iriven_chgpasswd_allow_empty_password: false
+iriven_chgpasswd_default_manage_password: true
+
+# Password policy applied when password contains plaintext.
+iriven_chgpasswd_enforce_complexity: true
+iriven_chgpasswd_min_length: 16
+iriven_chgpasswd_require_upper: true
+iriven_chgpasswd_require_lower: true
+iriven_chgpasswd_require_digit: true
+iriven_chgpasswd_require_special: true
+iriven_chgpasswd_forbidden_plain_values:
+  - password
+  - Password123!
+  - ChangeMe123!
+  - Admin123!
+
+# Hashing parameters used when password contains plaintext.
+# SHA512 crypt is the default generated Linux-compatible password hash.
+# Pre-hashed password values beginning with $5$ or $6$ are passed through.
+iriven_chgpasswd_hash_algorithm: sha512
+iriven_chgpasswd_default_hash_rounds: 656000
+iriven_chgpasswd_password_hash_regex: '^\$(5|6)\$(rounds=[0-9]+\$)?[^$]{1,16}\$.+'
+iriven_chgpasswd_password_hash_prefix_regex: '^\$(5|6)\$'
+iriven_chgpasswd_hash_salt_mode: hmac_machine_id
+iriven_chgpasswd_hash_salt_prefix: iriven_chgpasswd:v2
+iriven_chgpasswd_hmac_algorithm: sha256
+iriven_chgpasswd_hmac_salt_secret: ""
+iriven_chgpasswd_salt_length: 16
+
+# Password ageing. Omit values with null.
+# These variables intentionally keep their historical names for compatibility.
+iriven_chgpasswd_set_aging: true
+iriven_chgpasswd_min_days: 3
+iriven_chgpasswd_max_days: 90
+iriven_chgpasswd_warn_days: 14
+iriven_chgpasswd_inactive_days: null
+
+# Optional account lock after password change, except root unless explicitly allowed.
+iriven_chgpasswd_lock_after_change: false
+
+# Auditing without secrets. Written on managed host.
+iriven_chgpasswd_audit_enabled: true
+iriven_chgpasswd_audit_file: /var/log/ansible/changepassword.log
+
+# Execution safety.
+iriven_chgpasswd_check_shadow_backend: true
+iriven_chgpasswd_validate_username_regex: '^[a-z_][a-z0-9_-]{0,31}$|^root$'
+iriven_chgpasswd_cleanup_sensitive_facts: true
+
+# Salt identity used for HMAC hash generation.
+# The generated salt is always derived from username + machine-id.
+iriven_chgpasswd_machine_id_paths:
+  - /etc/machine-id
+  - /var/lib/dbus/machine-id
+
+# Refuse risky local/system accounts even when TGT_USER=all.
+iriven_chgpasswd_forbidden_users:
+  - bin
+  - daemon
+  - adm
+  - lp
+  - sync
+  - shutdown
+  - halt
+  - mail
+  - operator
+  - games
+  - ftp
+  - nobody
+  - nfsnobody
+  - dbus
+  - polkitd
+  - sssd
+  - systemd-network
+  - systemd-resolve
+  - systemd-timesync
+  - systemd-coredump
+  - rpc
+  - rpcuser
+
+# Refuse non-interactive accounts unless explicitly disabled.
+iriven_chgpasswd_require_login_shell: true
+iriven_chgpasswd_allowed_login_shells:
+  - /bin/bash
+  - /usr/bin/bash
+  - /bin/sh
+  - /usr/bin/sh
+  - /bin/zsh
+  - /usr/bin/zsh
+  - /bin/ksh
+  - /usr/bin/ksh
+
+# Local-only backend guard: users must exist in /etc/passwd, not only via LDAP/IPA/AD/SSSD.
+iriven_chgpasswd_require_etc_passwd_user: true
+
+# Optional anti-reuse check. Keep false by default to preserve idempotent re-runs.
+iriven_chgpasswd_fail_if_same_hash: false

@@ -1,0 +1,19 @@
+---
+# Encrypt this whole file:
+#   ansible-vault encrypt inventories/production/group_vars/all/vault.yml
+
+iriven_chgpasswd_hmac_salt_secret: "replace-with-long-random-vault-secret-min-24-chars"
+
+# IMPORTANT: unix_local_accounts is a list of dictionaries, not a mapping keyed by username.
+unix_local_accounts:
+  - username: root
+    password: "replace-with-vault-secret-root-password"
+
+  - username: ansible
+    password: "replace-with-vault-secret-ansible-password"
+    state: unlocked
+
+  - username: svc_backup
+    password: "$6$rounds=656000$replaceSaltHere$replaceSha512CryptHashHere"
+    state: locked
+    expire: false

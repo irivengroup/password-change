@@ -1,0 +1,60 @@
+---
+- name: changepassword | Build normalized runtime data
+  block:
+    - name: changepassword | Reset normalized account list
+      ansible.builtin.set_fact:
+        iriven_chgpasswd_normalized_accounts: []
+      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+
+    - name: changepassword | Build normalized account management list
+      ansible.builtin.set_fact:
+        iriven_chgpasswd_normalized_accounts: >-
+          {{
+            iriven_chgpasswd_normalized_accounts
+            + [
+                item | combine({
+                  'manage_password': item.manage_password | default(iriven_chgpasswd_default_manage_password) | bool,
+                  'expire': item.expire | default(false) | bool,
+                  'state': item.state | default('unchanged'),
+                  'aging_min_days': iriven_chgpasswd_min_days,
+                  'aging_max_days': iriven_chgpasswd_max_days,
+                  'aging_warn_days': iriven_chgpasswd_warn_days,
+                  'aging_inactive_days': iriven_chgpasswd_inactive_days,
+                  'generated_salt': (
+                    (iriven_chgpasswd_hash_salt_prefix ~ ':' ~ item.username ~ ':' ~ iriven_chgpasswd_effective_salt_identity)
+                    | iriven_chgpasswd_hmac_salt(
+                        iriven_chgpasswd_hmac_salt_secret,
+                        iriven_chgpasswd_hmac_algorithm,
+                        iriven_chgpasswd_salt_length
+                      )
+                  ),
+                  'final_password_hash': (
+                    ''
+                    if not (item.manage_password | default(iriven_chgpasswd_default_manage_password) | bool)
+                    else (
+                      item.password
+                      if (item.password | default('') is match(iriven_chgpasswd_password_hash_prefix_regex))
+                      else (
+                        item.password
+                        | password_hash(
+                            iriven_chgpasswd_hash_algorithm,
+                            (
+                              (iriven_chgpasswd_hash_salt_prefix ~ ':' ~ item.username ~ ':' ~ iriven_chgpasswd_effective_salt_identity)
+                              | iriven_chgpasswd_hmac_salt(
+                                  iriven_chgpasswd_hmac_salt_secret,
+                                  iriven_chgpasswd_hmac_algorithm,
+                                  iriven_chgpasswd_salt_length
+                                )
+                            ),
+                            rounds=iriven_chgpasswd_default_hash_rounds
+                          )
+                      )
+                    )
+                  )
+                }, recursive=True)
+              ]
+          }}
+      loop: "{{ iriven_chgpasswd_target_accounts }}"
+      loop_control:
+        label: "{{ item.username }}@{{ inventory_hostname }}"
+      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"

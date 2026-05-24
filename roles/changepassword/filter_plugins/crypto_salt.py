@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Ansible filter plugins for ChgPassword.
+Ansible filter plugins for changepassword.
 
 Provides deterministic, secret-backed HMAC salt derivation for SHA512 crypt.
 The returned value is restricted to lowercase hex characters, which are valid
@@ -16,15 +16,15 @@ from typing import Any
 
 
 class FilterModule(object):
-    """Custom filters used by the ChgPassword role."""
+    """Custom filters used by the changepassword role."""
 
     def filters(self) -> dict[str, Any]:
         return {
-            "chgpassword_hmac_salt": self.chgpassword_hmac_salt,
+            "iriven_chgpasswd_hmac_salt": self.iriven_chgpasswd_hmac_salt,
         }
 
     @staticmethod
-    def chgpassword_hmac_salt(message: Any, secret: Any, algorithm: str = "sha256", length: int = 16) -> str:
+    def iriven_chgpasswd_hmac_salt(message: Any, secret: Any, algorithm: str = "sha256", length: int = 16) -> str:
         """Return a deterministic HMAC digest fragment suitable for crypt salt.
 
         Args:
@@ -34,10 +34,10 @@ class FilterModule(object):
             length: returned salt length. SHA512 crypt accepts max 16.
         """
         if secret is None or str(secret) == "":
-            raise AnsibleFilterError("chgpassword_hmac_salt requires a non-empty secret")
+            raise AnsibleFilterError("iriven_chgpasswd_hmac_salt requires a non-empty secret")
 
         if int(length) < 8 or int(length) > 16:
-            raise AnsibleFilterError("chgpassword_hmac_salt length must be between 8 and 16")
+            raise AnsibleFilterError("iriven_chgpasswd_hmac_salt length must be between 8 and 16")
 
         normalized_algorithm = str(algorithm).lower()
         if normalized_algorithm not in hashlib.algorithms_available:

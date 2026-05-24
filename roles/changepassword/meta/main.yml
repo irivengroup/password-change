@@ -1,6 +1,6 @@
 ---
 galaxy_info:
-  role_name: ChgPassword
+  role_name: changepassword
   namespace: iriven
   author: IRIVEN Group
   description: Hardened local Linux password rotation role, including root.

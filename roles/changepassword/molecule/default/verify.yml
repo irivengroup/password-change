@@ -1,0 +1,40 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Verify root exists with builtin getent
+      ansible.builtin.getent:
+        database: passwd
+        key: root
+        fail_key: true
+
+    - name: Verify test user exists with builtin getent
+      ansible.builtin.getent:
+        database: passwd
+        key: testrotate
+        fail_key: true
+
+    - name: Verify audit file exists
+      ansible.builtin.stat:
+        path: /var/log/ansible/changepassword.log
+      register: audit_file
+
+    - name: Assert audit file exists
+      ansible.builtin.assert:
+        that:
+          - audit_file.stat.exists
+          - audit_file.stat.mode == '0600'
+
+    - name: Read audit file
+      ansible.builtin.slurp:
+        src: /var/log/ansible/changepassword.log
+      register: audit_content
+
+    - name: Assert selected users were audited
+      ansible.builtin.assert:
+        that:
+          - "'user=root' in (audit_content.content | b64decode)"
+          - "'user=testrotate' in (audit_content.content | b64decode)"

@@ -1,0 +1,33 @@
+---
+# Encrypt this whole file:
+#   ansible-vault encrypt inventories/production/group_vars/all/vault.yml
+
+iriven_chgpasswd_hmac_salt_secret: "replace-with-long-random-vault-secret-min-24-chars"
+
+# Local Linux accounts whose password state must be managed.
+# unix_local_accounts must be a list of dictionaries.
+#
+# Required per item:
+#   username: root|user
+# Supported per-account properties for this role only:
+#   expire: false                            # true forces password change at next login
+#   state: unlocked                          # optional: unlocked|locked; omitted leaves lock state unchanged
+#   manage_password: true                    # optional; defaults to iriven_chgpasswd_default_manage_password
+# unix_local_accounts is a list of dictionaries, not a mapping keyed by username.
+# manage_password defaults to true.
+# password is auto-detected:
+#   - starts with $6$  => SHA512 crypt hash, passed through
+#   - starts with $5$  => SHA256 crypt hash, passed through
+#   - otherwise       => Vault-protected plaintext, hashed on the controller
+unix_local_accounts:
+  - username: root
+    password: "replace-with-vault-secret-root-password"
+
+  - username: ansible
+    password: "replace-with-vault-secret-ansible-password"
+    state: unlocked
+
+  - username: svc_backup
+    password: "$6$rounds=656000$replaceSaltHere$replaceSha512CryptHashHere"
+    state: locked
+    expire: false

@@ -1,0 +1,32 @@
+---
+- name: changepassword | Apply expiration and password ageing policies
+  block:
+    - name: changepassword | Expire password to force change at next login
+      ansible.builtin.command:
+        argv:
+          - /usr/bin/chage
+          - -d
+          - "0"
+          - "{{ item.username }}"
+      loop: "{{ iriven_chgpasswd_normalized_accounts }}"
+      loop_control:
+        label: "{{ item.username }}"
+      when: item.expire | bool
+      changed_when: true
+
+    - name: changepassword | Set password ageing policy
+      ansible.builtin.command:
+        argv: >-
+          {{
+            ['/usr/bin/chage']
+            + ((['-m', item.aging_min_days|string]) if item.aging_min_days is not none else [])
+            + ((['-M', item.aging_max_days|string]) if item.aging_max_days is not none else [])
+            + ((['-W', item.aging_warn_days|string]) if item.aging_warn_days is not none else [])
+            + ((['-I', item.aging_inactive_days|string]) if item.aging_inactive_days is not none else [])
+            + [item.username]
+          }}
+      loop: "{{ iriven_chgpasswd_normalized_accounts }}"
+      loop_control:
+        label: "{{ item.username }}"
+      when: iriven_chgpasswd_set_aging | bool
+      changed_when: true

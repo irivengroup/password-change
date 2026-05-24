@@ -1,0 +1,35 @@
+---
+- name: changepassword | Shadow pre-change hardening checks
+  block:
+    - name: changepassword | Read current shadow database when anti-reuse is enabled
+      ansible.builtin.slurp:
+        src: /etc/shadow
+      register: iriven_chgpasswd_shadow_raw
+      when:
+        - iriven_chgpasswd_fail_if_same_hash | bool
+        - item.manage_password | bool
+      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+
+    - name: changepassword | Refuse password reuse when requested
+      ansible.builtin.assert:
+        that:
+          - >-
+            (
+              ((iriven_chgpasswd_shadow_raw.content | b64decode).split('\n')
+                | select('match', '^' ~ item.username ~ ':')
+                | list
+                | first
+                | default('::'))
+              .split(':')[1]
+            ) != item.final_password_hash
+        fail_msg: >-
+          Refusing password reuse for '{{ item.username }}': the generated/provided hash
+          is already present in /etc/shadow. Disable iriven_chgpasswd_fail_if_same_hash
+          only for idempotent re-runs.
+      loop: "{{ iriven_chgpasswd_normalized_accounts }}"
+      loop_control:
+        label: "{{ item.username }}"
+      when:
+        - iriven_chgpasswd_fail_if_same_hash | bool
+        - item.manage_password | bool
+      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"

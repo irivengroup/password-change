@@ -1,0 +1,47 @@
+---
+- name: changepassword | Run secured password rotation workflow
+  block:
+    - name: changepassword | Preflight validation
+      ansible.builtin.include_tasks: tasks.d/preflight.yml
+
+    - name: changepassword | Normalize input data
+      ansible.builtin.include_tasks: tasks.d/normalize.yml
+
+    - name: changepassword | Run shadow pre-change hardening checks
+      ansible.builtin.include_tasks: tasks.d/shadow_precheck.yml
+
+    - name: changepassword | Apply password changes
+      ansible.builtin.include_tasks: tasks.d/apply_password.yml
+
+    - name: changepassword | Apply password expiration and ageing
+      ansible.builtin.include_tasks: tasks.d/aging.yml
+
+    - name: changepassword | Write audit events
+      ansible.builtin.include_tasks: tasks.d/audit.yml
+      when: iriven_chgpasswd_audit_enabled | bool
+
+  rescue:
+    - name: changepassword | Report secured workflow failure
+      ansible.builtin.fail:
+        msg: >-
+          changepassword failed on {{ inventory_hostname }}. Review the previous task output.
+          Secrets are hidden when iriven_chgpasswd_use_no_log=true.
+
+  always:
+    - name: changepassword | Cleanup sensitive runtime facts
+      ansible.builtin.set_fact:
+        iriven_chgpasswd_normalized_accounts: []
+        iriven_chgpasswd_existing_local_users: []
+        iriven_chgpasswd_target_accounts: []
+        iriven_chgpasswd_declared_usernames: []
+        iriven_chgpasswd_requested_user: ""
+        iriven_chgpasswd_selected_passwd_entries: {}
+        iriven_chgpasswd_etc_passwd_raw: {}
+        iriven_chgpasswd_shadow_hashes: {}
+        iriven_chgpasswd_shadow_raw: {}
+        iriven_chgpasswd_machine_id: ""
+        iriven_chgpasswd_machine_id_file: ""
+        iriven_chgpasswd_machine_id_raw: {}
+        iriven_chgpasswd_effective_salt_identity: ""
+      no_log: true
+      when: iriven_chgpasswd_cleanup_sensitive_facts | default(true) | bool
