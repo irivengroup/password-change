@@ -2,9 +2,9 @@
 unix_local_accounts: []
 username: root
 changepassword_all_targets:
-- all
-- '*'
-- ALL
+  - all
+  - '*'
+  - ALL
 changepassword_require_hash: false
 changepassword_allow_plaintext_password: true
 changepassword_use_no_log: true
@@ -19,10 +19,10 @@ changepassword_require_lower: true
 changepassword_require_digit: true
 changepassword_require_special: true
 changepassword_forbidden_plain_values:
-- password
-- Password123!
-- ChangeMe123!
-- Admin123!
+  - password
+  - Password123!
+  - ChangeMe123!
+  - Admin123!
 changepassword_hash_algorithm: sha512
 changepassword_default_hash_rounds: 656000
 changepassword_min_hash_rounds: 500000
@@ -63,41 +63,41 @@ changepassword_check_shadow_backend: true
 changepassword_validate_username_regex: ^[a-z_][a-z0-9_-]{0,31}$|^root$
 changepassword_cleanup_sensitive_facts: true
 changepassword_machine_id_paths:
-- /etc/machine-id
-- /var/lib/dbus/machine-id
+  - /etc/machine-id
+  - /var/lib/dbus/machine-id
 changepassword_forbidden_users:
-- bin
-- daemon
-- adm
-- lp
-- sync
-- shutdown
-- halt
-- mail
-- operator
-- games
-- ftp
-- nobody
-- nfsnobody
-- dbus
-- polkitd
-- sssd
-- systemd-network
-- systemd-resolve
-- systemd-timesync
-- systemd-coredump
-- rpc
-- rpcuser
+  - bin
+  - daemon
+  - adm
+  - lp
+  - sync
+  - shutdown
+  - halt
+  - mail
+  - operator
+  - games
+  - ftp
+  - nobody
+  - nfsnobody
+  - dbus
+  - polkitd
+  - sssd
+  - systemd-network
+  - systemd-resolve
+  - systemd-timesync
+  - systemd-coredump
+  - rpc
+  - rpcuser
 changepassword_require_login_shell: true
 changepassword_allowed_login_shells:
-- /bin/bash
-- /usr/bin/bash
-- /bin/sh
-- /usr/bin/sh
-- /bin/zsh
-- /usr/bin/zsh
-- /bin/ksh
-- /usr/bin/ksh
+  - /bin/bash
+  - /usr/bin/bash
+  - /bin/sh
+  - /usr/bin/sh
+  - /bin/zsh
+  - /usr/bin/zsh
+  - /bin/ksh
+  - /usr/bin/ksh
 changepassword_require_etc_passwd_user: true
 changepassword_fail_if_same_hash: false
 changepassword_enable_audit_log: true
