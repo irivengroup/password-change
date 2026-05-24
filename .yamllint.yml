@@ -1,31 +1,24 @@
 ---
 extends: default
-
 rules:
   comments:
     min-spaces-from-content: 1
-
   comments-indentation: false
-
   braces:
     max-spaces-inside: 1
-
   octal-values:
     forbid-implicit-octal: true
     forbid-explicit-octal: true
-
   indentation:
     spaces: 2
-    indent-sequences: consistent
+    indent-sequences: true
     check-multi-line-strings: false
-
   line-length:
     max: 140
     level: warning
-
   truthy:
     allowed-values:
-      - "true"
-      - "false"
-      - "on"
-      - "off"
+      - 'true'
+      - 'false'
+      - 'on'
+      - 'off'

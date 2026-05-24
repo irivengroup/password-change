@@ -8,18 +8,20 @@
     ansible_python_interpreter: /usr/bin/python3
     changepassword_target_account: all
     changepassword_hmac_salt_secret: ValidMoleculeSecret#2026WithEnoughLength
-    changepassword_audit_enabled: false
+    changepassword_audit_enabled: true
     changepassword_audit_only: false
-    changepassword_lock_enabled: false
-    changepassword_enable_audit_log: false
-    changepassword_enable_runtime_lock: false
-    changepassword_require_custom_hmac_secret: false
-    changepassword_allow_default_hmac_fallback: true
+    changepassword_lock_enabled: true
+    changepassword_enable_audit_log: true
+    changepassword_enable_runtime_lock: true
+    changepassword_require_custom_hmac_secret: true
+    changepassword_use_no_log: true
     changepassword_set_aging: true
     changepassword_min_days: 3
     changepassword_max_days: 90
     changepassword_warn_days: 14
     changepassword_inactive_days: null
+    changepassword_audit_file: /tmp/changepassword-molecule-audit.jsonl
+    changepassword_lock_path: /tmp/changepassword-molecule.lock
     changepassword_local_accounts:
       - changepassword_target_account: moleculeops
         password: Molecule-Test-Password-2026!

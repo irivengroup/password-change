@@ -9,12 +9,21 @@
   tasks:
     - name: Negative | Missing password must fail
       block:
-        - name: Negative | Run role with missing password
+        - name: Negative | Run role for missing password
           ansible.builtin.include_role:
             name: changepassword
           vars:
+            ansible_python_interpreter: /usr/bin/python3
             changepassword_target_account: moleculevalid
             changepassword_hmac_salt_secret: ValidNegativeSecret#2026WithEnoughLength
+            changepassword_enable_audit_log: true
+            changepassword_enable_runtime_lock: true
+            changepassword_require_custom_hmac_secret: true
+            changepassword_use_no_log: true
+            changepassword_audit_enabled: true
+            changepassword_lock_enabled: true
+            changepassword_audit_file: /tmp/changepassword-negative-audit.jsonl
+            changepassword_lock_path: /tmp/changepassword-negative.lock
             changepassword_local_accounts:
               - changepassword_target_account: moleculevalid
                 state: unlocked
@@ -28,12 +37,21 @@
           changed_when: false
     - name: Negative | Invalid state must fail
       block:
-        - name: Negative | Run role with invalid state
+        - name: Negative | Run role for invalid state
           ansible.builtin.include_role:
             name: changepassword
           vars:
+            ansible_python_interpreter: /usr/bin/python3
             changepassword_target_account: moleculevalid
             changepassword_hmac_salt_secret: ValidNegativeSecret#2026WithEnoughLength
+            changepassword_enable_audit_log: true
+            changepassword_enable_runtime_lock: true
+            changepassword_require_custom_hmac_secret: true
+            changepassword_use_no_log: true
+            changepassword_audit_enabled: true
+            changepassword_lock_enabled: true
+            changepassword_audit_file: /tmp/changepassword-negative-audit.jsonl
+            changepassword_lock_path: /tmp/changepassword-negative.lock
             changepassword_local_accounts:
               - changepassword_target_account: moleculevalid
                 password: ValidPassword#2026!
@@ -48,12 +66,21 @@
           changed_when: false
     - name: Negative | Weak HMAC secret must fail
       block:
-        - name: Negative | Run role with weak secret
+        - name: Negative | Run role for weak hmac secret
           ansible.builtin.include_role:
             name: changepassword
           vars:
+            ansible_python_interpreter: /usr/bin/python3
             changepassword_target_account: moleculevalid
             changepassword_hmac_salt_secret: weak
+            changepassword_enable_audit_log: true
+            changepassword_enable_runtime_lock: true
+            changepassword_require_custom_hmac_secret: true
+            changepassword_use_no_log: true
+            changepassword_audit_enabled: true
+            changepassword_lock_enabled: true
+            changepassword_audit_file: /tmp/changepassword-negative-audit.jsonl
+            changepassword_lock_path: /tmp/changepassword-negative.lock
             changepassword_local_accounts:
               - changepassword_target_account: moleculevalid
                 password: ValidPassword#2026!
@@ -68,12 +95,21 @@
           changed_when: false
     - name: Negative | Missing local user must fail
       block:
-        - name: Negative | Run role with missing local user
+        - name: Negative | Run role for missing local user
           ansible.builtin.include_role:
             name: changepassword
           vars:
+            ansible_python_interpreter: /usr/bin/python3
             changepassword_target_account: missinguser
             changepassword_hmac_salt_secret: ValidNegativeSecret#2026WithEnoughLength
+            changepassword_enable_audit_log: true
+            changepassword_enable_runtime_lock: true
+            changepassword_require_custom_hmac_secret: true
+            changepassword_use_no_log: true
+            changepassword_audit_enabled: true
+            changepassword_lock_enabled: true
+            changepassword_audit_file: /tmp/changepassword-negative-audit.jsonl
+            changepassword_lock_path: /tmp/changepassword-negative.lock
             changepassword_local_accounts:
               - changepassword_target_account: missinguser
                 password: ValidPassword#2026!
