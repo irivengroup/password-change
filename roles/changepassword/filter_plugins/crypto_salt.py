@@ -28,7 +28,7 @@ class FilterModule(object):
         """Return a deterministic HMAC digest fragment suitable for crypt salt.
 
         Args:
-            message: Stable public message, usually prefix:username:inventory_hostname.
+            message: Stable public message, currently prefix:username:machine-id.
             secret: Secret key from Ansible Vault/AWX/secret-manager.
             algorithm: hashlib algorithm name. sha256 or sha512 recommended.
             length: returned salt length. SHA512 crypt accepts max 16.

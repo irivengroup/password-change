@@ -56,5 +56,5 @@
           }}
       loop: "{{ iriven_chgpasswd_target_accounts }}"
       loop_control:
-        label: "{{ item.username }}@{{ inventory_hostname }}"
+        label: "{{ item.username }}"
       no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"

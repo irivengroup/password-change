@@ -15,11 +15,11 @@
       - username: root
         password: "Molecule-Test-Password-2026!"
         expire: false
-        state: present
+        state: unlocked
       - username: testrotate
         password: "Molecule-Test-Password-2026!"
         expire: false
-        state: present
+        state: unlocked
   pre_tasks:
     - name: Ensure molecule test user exists before password rotation
       ansible.builtin.user:
