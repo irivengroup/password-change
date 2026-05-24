@@ -223,41 +223,88 @@ iriven_chgpasswd_min_hash_rounds: 500000
 
 ---
 
-## Target Selection
+## Execution Examples with Vault
 
-The runtime selector `TGT_USER` controls which declared account is processed.
+All production executions should use Ansible Vault because `vault.yml` contains sensitive password material.
 
-Default behavior:
+The examples below use the production inventory:
 
-```yaml
-TGT_USER: root
+```text
+inventories/production/hosts.yml
 ```
 
-Change only `root`:
+and the playbook:
+
+```text
+playbooks/change_password.yml
+```
+
+### Without `TGT_USER`
+
+When `TGT_USER` is not passed as an extra variable, the role uses the default value defined by the project configuration. The default target is `root`.
 
 ```bash
-ansible-playbook playbooks/change_password.yml \
+ansible-playbook \
   -i inventories/production/hosts.yml \
+  playbooks/change_password.yml \
+  --ask-vault-pass
+```
+
+With a Vault password file:
+
+```bash
+ansible-playbook \
+  -i inventories/production/hosts.yml \
+  playbooks/change_password.yml \
+  --vault-password-file ~/.vault_pass.txt
+```
+
+### With `TGT_USER=root`
+
+Use this mode to rotate only the `root` password, provided `root` is declared in `unix_local_accounts`.
+
+```bash
+ansible-playbook \
+  -i inventories/production/hosts.yml \
+  playbooks/change_password.yml \
   --ask-vault-pass \
   -e TGT_USER=root
 ```
 
-Change one declared account:
+### With `TGT_USER=<user>`
+
+Use this mode to rotate only one declared local account. Replace `<user>` with a username present in `unix_local_accounts`.
 
 ```bash
-ansible-playbook playbooks/change_password.yml \
+ansible-playbook \
   -i inventories/production/hosts.yml \
+  playbooks/change_password.yml \
   --ask-vault-pass \
   -e TGT_USER=ansible
 ```
 
-Change all declared accounts:
+### With `TGT_USER=all`
+
+Use this mode to rotate all declared accounts.
 
 ```bash
-ansible-playbook playbooks/change_password.yml \
+ansible-playbook \
   -i inventories/production/hosts.yml \
+  playbooks/change_password.yml \
   --ask-vault-pass \
   -e TGT_USER=all
+```
+
+### With `TGT_USER='*'`
+
+The wildcard target is also supported for rotating all declared accounts. Quote the value to prevent shell expansion.
+
+```bash
+ansible-playbook \
+  -i inventories/production/hosts.yml \
+  playbooks/change_password.yml \
+  --ask-vault-pass \
+  -e 'TGT_USER=*'
 ```
 
 The role fails when `TGT_USER` references an account that is not declared in `unix_local_accounts`.
@@ -321,38 +368,11 @@ molecule test
 
 ### 6. Execute with Explicit Scope
 
-Use `TGT_USER` deliberately.
-
-For a single privileged account:
-
-```bash
-ansible-playbook playbooks/change_password.yml \
-  -i inventories/production/hosts.yml \
-  --ask-vault-pass \
-  -e TGT_USER=root
-```
-
-For all declared accounts:
-
-```bash
-ansible-playbook playbooks/change_password.yml \
-  -i inventories/production/hosts.yml \
-  --ask-vault-pass \
-  -e TGT_USER=all
-```
+Use the `Execution Examples with Vault` section as the single command reference for all supported execution modes.
 
 ### 7. Use Vault Password File When Required
 
-For controlled automation environments:
-
-```bash
-ansible-playbook playbooks/change_password.yml \
-  -i inventories/production/hosts.yml \
-  --vault-password-file ~/.vault_pass.txt \
-  -e TGT_USER=root
-```
-
-Protect the Vault password file with strict filesystem permissions:
+For controlled automation environments, prefer a protected Vault password file and restrict its permissions:
 
 ```bash
 chmod 600 ~/.vault_pass.txt
@@ -370,7 +390,7 @@ Audit entries must never contain plaintext passwords, generated hashes, or secre
 
 ---
 
-## Playbook Usage
+## Playbook
 
 Example `playbooks/change_password.yml`:
 
@@ -384,25 +404,7 @@ Example `playbooks/change_password.yml`:
     - role: changepassword
 ```
 
-Run with Vault prompt:
-
-```bash
-ansible-playbook \
-  -i inventories/production/hosts.yml \
-  playbooks/change_password.yml \
-  --ask-vault-pass \
-  -e TGT_USER=root
-```
-
-Run with Vault password file:
-
-```bash
-ansible-playbook \
-  -i inventories/production/hosts.yml \
-  playbooks/change_password.yml \
-  --vault-password-file ~/.vault_pass.txt \
-  -e TGT_USER=all
-```
+Execution commands are consolidated in the `Execution Examples with Vault` section.
 
 ---
 
