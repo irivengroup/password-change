@@ -1,5 +1,5 @@
 ---
-- name: changepassword | Write local audit trail without secrets
+- name: changepassword | Write local JSON audit trail without secrets
   block:
     - name: changepassword | Ensure audit directory exists
       ansible.builtin.file:
@@ -9,7 +9,7 @@
         group: root
         mode: '0750'
 
-    - name: changepassword | Write password/account change audit event without secrets
+    - name: changepassword | Write password rotation audit event without secrets
       ansible.builtin.lineinfile:
         path: "{{ iriven_chgpasswd_audit_file }}"
         create: true
@@ -18,7 +18,20 @@
         mode: '0600'
         insertafter: EOF
         line: >-
-          {{ ansible_date_time.iso8601 }} host={{ inventory_hostname }} user={{ item.username }} state={{ item.state }} expire={{ item.expire }} changed_by=ansible role=changepassword
+          {{
+            {
+              'timestamp': ansible_date_time.iso8601,
+              'host': inventory_hostname,
+              'role': 'changepassword',
+              'user': item.username,
+              'state': item.state,
+              'expire': item.expire,
+              'aging_enabled': iriven_chgpasswd_set_aging | bool,
+              'audit_only': iriven_chgpasswd_audit_only | bool,
+              'target_selector': iriven_chgpasswd_requested_user,
+              'changed_by': 'ansible'
+            } | to_json
+          }}
       loop: "{{ iriven_chgpasswd_normalized_accounts }}"
       loop_control:
         label: "{{ item.username }}"

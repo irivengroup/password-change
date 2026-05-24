@@ -27,6 +27,15 @@ iriven_chgpasswd_require_login_shell: true
 iriven_chgpasswd_require_etc_passwd_user: true
 iriven_chgpasswd_fail_if_same_hash: false
 
+# Execution guardrails.
+iriven_chgpasswd_audit_only: false
+iriven_chgpasswd_lock_enabled: true
+iriven_chgpasswd_lock_path: /var/lock/iriven_chgpasswd.lock
+
+# Local JSON audit trail.
+iriven_chgpasswd_audit_enabled: true
+iriven_chgpasswd_audit_file: /var/log/ansible/changepassword.jsonl
+
 # Password ageing. Omit values with null.
 iriven_chgpasswd_set_aging: true
 iriven_chgpasswd_min_days: 3

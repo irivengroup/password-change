@@ -80,9 +80,12 @@ iriven_chgpasswd_lock_after_change: false
 
 # Auditing without secrets. Written on managed host.
 iriven_chgpasswd_audit_enabled: true
-iriven_chgpasswd_audit_file: /var/log/ansible/changepassword.log
+iriven_chgpasswd_audit_file: /var/log/ansible/changepassword.jsonl
 
 # Execution safety.
+iriven_chgpasswd_audit_only: false
+iriven_chgpasswd_lock_enabled: true
+iriven_chgpasswd_lock_path: /var/lock/iriven_chgpasswd.lock
 iriven_chgpasswd_check_shadow_backend: true
 iriven_chgpasswd_validate_username_regex: '^[a-z_][a-z0-9_-]{0,31}$|^root$'
 iriven_chgpasswd_cleanup_sensitive_facts: true

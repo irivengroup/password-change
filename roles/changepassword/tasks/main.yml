@@ -1,6 +1,16 @@
 ---
 - name: changepassword | Run secured password rotation workflow
   block:
+    - name: changepassword | Acquire host-level execution lock
+      ansible.builtin.command:
+        argv:
+          - /bin/mkdir
+          - "{{ iriven_chgpasswd_lock_path }}"
+      register: iriven_chgpasswd_lock_result
+      changed_when: true
+      failed_when: iriven_chgpasswd_lock_result.rc != 0
+      when: iriven_chgpasswd_lock_enabled | bool
+
     - name: changepassword | Preflight validation
       ansible.builtin.include_tasks: tasks.d/preflight.yml
 
@@ -12,9 +22,11 @@
 
     - name: changepassword | Apply password changes
       ansible.builtin.include_tasks: tasks.d/apply.yml
+      when: not (iriven_chgpasswd_audit_only | bool)
 
     - name: changepassword | Apply password expiration and ageing
       ansible.builtin.include_tasks: tasks.d/aging.yml
+      when: not (iriven_chgpasswd_audit_only | bool)
 
     - name: changepassword | Write audit events
       ansible.builtin.include_tasks: tasks.d/audit.yml
@@ -28,6 +40,12 @@
           Secrets are hidden when iriven_chgpasswd_use_no_log=true.
 
   always:
+    - name: changepassword | Release host-level execution lock
+      ansible.builtin.file:
+        path: "{{ iriven_chgpasswd_lock_path }}"
+        state: absent
+      when: iriven_chgpasswd_lock_enabled | default(true) | bool
+
     - name: changepassword | Cleanup sensitive runtime facts
       ansible.builtin.set_fact:
         iriven_chgpasswd_normalized_accounts: []
@@ -47,6 +65,7 @@
         iriven_chgpasswd_custom_hmac_secret_is_valid: false
         iriven_chgpasswd_shadow_ageing_state: {}
         iriven_chgpasswd_apply_results: {}
+        iriven_chgpasswd_lock_result: {}
         iriven_chgpasswd_getent_passwd_results: {}
         iriven_chgpasswd_selected_shell_stats: {}
         iriven_chgpasswd_machine_id_stat: {}
