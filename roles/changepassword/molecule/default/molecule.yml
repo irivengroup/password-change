@@ -5,9 +5,10 @@ driver:
   name: docker
 platforms:
   - name: chgpassword-ubuntu
-    image: docker.io/geerlingguy/docker-ubuntu2404-ansible:latest
+    image: docker.io/geerlingguy/docker-ubuntu2204-ansible:latest
     pre_build_image: true
-    privileged: true
+    privileged: false
+    command: /bin/sh -c "while true; do sleep 10000; done"
 provisioner:
   name: ansible
   env:
