@@ -1,0 +1,57 @@
+---
+- name: Validate negative controls for changepassword
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: negative | Missing password must fail
+      ansible.builtin.include_role:
+        name: changepassword
+      vars:
+        TGT_USER: moleculevalid
+        iriven_chgpasswd_hmac_salt_secret: "ValidNegativeSecret#2026WithEnoughLength"
+        unix_local_accounts:
+          - username: moleculevalid
+            state: unlocked
+      register: negative_missing_password
+      failed_when: negative_missing_password is succeeded
+
+    - name: negative | Invalid state must fail
+      ansible.builtin.include_role:
+        name: changepassword
+      vars:
+        TGT_USER: moleculevalid
+        iriven_chgpasswd_hmac_salt_secret: "ValidNegativeSecret#2026WithEnoughLength"
+        unix_local_accounts:
+          - username: moleculevalid
+            password: "ValidPassword#2026!"
+            state: present
+      register: negative_invalid_state
+      failed_when: negative_invalid_state is succeeded
+
+    - name: negative | Weak HMAC secret must fail
+      ansible.builtin.include_role:
+        name: changepassword
+      vars:
+        TGT_USER: moleculevalid
+        iriven_chgpasswd_hmac_salt_secret: "weak"
+        unix_local_accounts:
+          - username: moleculevalid
+            password: "ValidPassword#2026!"
+            state: unlocked
+      register: negative_weak_secret
+      failed_when: negative_weak_secret is succeeded
+
+    - name: negative | Missing local user must fail
+      ansible.builtin.include_role:
+        name: changepassword
+      vars:
+        TGT_USER: missinguser
+        iriven_chgpasswd_hmac_salt_secret: "ValidNegativeSecret#2026WithEnoughLength"
+        unix_local_accounts:
+          - username: missinguser
+            password: "ValidPassword#2026!"
+            state: unlocked
+      register: negative_missing_user
+      failed_when: negative_missing_user is succeeded

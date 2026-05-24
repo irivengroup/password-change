@@ -546,6 +546,42 @@ This role is suitable for controlled environments requiring:
 
 ---
 
+
+## Production Strict Controls
+
+The role is designed for production-strict execution by default.
+
+The following controls are mandatory:
+- a custom HMAC salt secret must be provided through Vault;
+- runtime `no_log` protection must remain enabled;
+- audit logging must remain enabled;
+- runtime locking must remain enabled;
+- SHA512 rounds must respect the configured minimum.
+
+No profile variable is required. Production strict behavior is the baseline.
+
+## Test Coverage
+
+The project includes functional and negative Molecule scenarios.
+
+Functional validation covers:
+- password rotation on existing local users;
+- lock and unlock behavior;
+- password ageing behavior;
+- idempotence.
+
+Negative validation covers:
+- missing password;
+- invalid account state;
+- weak HMAC secret;
+- missing local account.
+
+Multi-distribution validation is available for:
+- Ubuntu;
+- Debian;
+- Rocky Linux;
+- openSUSE Leap.
+
 ## Authors
 
 Alfred TCHONDJO  

@@ -1,4 +1,19 @@
 ---
+
+- name: changepassword | Enforce production strict runtime controls
+  ansible.builtin.assert:
+    that:
+      - iriven_chgpasswd_use_no_log | bool
+      - iriven_chgpasswd_enable_audit_log | bool
+      - iriven_chgpasswd_enable_runtime_lock | bool
+      - iriven_chgpasswd_require_custom_hmac_secret | bool
+      - not (iriven_chgpasswd_allow_default_hmac_fallback | default(false) | bool)
+      - (iriven_chgpasswd_sha512_rounds | int) >= (iriven_chgpasswd_min_sha512_rounds | int)
+    fail_msg: >-
+      Production strict mode is mandatory: no_log, audit log, runtime lock,
+      custom HMAC secret, and SHA512 minimum rounds must be enforced.
+  changed_when: false
+
 - name: changepassword | Validate platform and role inputs
   block:
     - name: changepassword | Validate supported operating system family
@@ -442,3 +457,20 @@
           - iriven_chgpasswd_chage_check.stat.exists
         fail_msg: "chage is required for expire/aging operations but was not found at /usr/bin/chage. On SUSE/SLES/openSUSE, install or restore the shadow package."
       when: iriven_chgpasswd_chage_check is defined and not ansible_check_mode
+
+
+- name: changepassword | Refuse missing or weak custom HMAC secret in production
+  ansible.builtin.assert:
+    that:
+      - iriven_chgpasswd_hmac_salt_secret is defined
+      - iriven_chgpasswd_hmac_salt_secret | length >= iriven_chgpasswd_min_hmac_secret_length | int
+      - iriven_chgpasswd_hmac_salt_secret is regex('[A-Z]')
+      - iriven_chgpasswd_hmac_salt_secret is regex('[a-z]')
+      - iriven_chgpasswd_hmac_salt_secret is regex('[0-9]')
+      - iriven_chgpasswd_hmac_salt_secret is regex('[^A-Za-z0-9]')
+    fail_msg: >-
+      iriven_chgpasswd_hmac_salt_secret must be defined in Vault and must meet
+      the configured minimum length and complexity requirements.
+  no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+  changed_when: false
+

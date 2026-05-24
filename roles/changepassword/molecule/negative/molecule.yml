@@ -1,0 +1,28 @@
+---
+dependency:
+  name: galaxy
+
+driver:
+  name: default
+
+platforms:
+  - name: chgpassword-negative-ubuntu
+
+provisioner:
+  name: ansible
+  env:
+    ANSIBLE_DEPRECATION_WARNINGS: "False"
+  config_options:
+    defaults:
+      deprecation_warnings: false
+      stdout_callback: default
+      result_format: yaml
+      roles_path: ../../..
+
+scenario:
+  test_sequence:
+    - syntax
+    - create
+    - prepare
+    - converge
+    - destroy

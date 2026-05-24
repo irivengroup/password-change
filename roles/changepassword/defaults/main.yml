@@ -64,7 +64,7 @@ iriven_chgpasswd_hmac_algorithm: sha256
 iriven_chgpasswd_hmac_salt_secret: ""
 iriven_chgpasswd_default_hmac_salt_secret: "jf?@#67568YPZs4Y6@5jG.7=pKw9jQ.j-d1ihlFpdGKsbuHru:?U?KeP573a"
 iriven_chgpasswd_min_hmac_secret_length: 32
-iriven_chgpasswd_require_custom_hmac_secret: false
+iriven_chgpasswd_require_custom_hmac_secret: true
 iriven_chgpasswd_salt_length: 16
 
 # Password ageing. Omit values with null.
@@ -150,3 +150,7 @@ iriven_chgpasswd_require_etc_passwd_user: true
 
 # Optional anti-reuse check. Keep false by default to preserve idempotent re-runs.
 iriven_chgpasswd_fail_if_same_hash: false
+iriven_chgpasswd_enable_audit_log: true
+iriven_chgpasswd_enable_runtime_lock: true
+iriven_chgpasswd_min_sha512_rounds: 500000
+iriven_chgpasswd_allow_default_hmac_fallback: false
