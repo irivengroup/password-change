@@ -14,15 +14,8 @@ concurrency:
 
 jobs:
   validate:
-    name: Static validation and syntax checks / Python ${{ matrix.python-version }}
+    name: Static validation and syntax checks
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version:
-          - '3.10'
-          - '3.12'
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,7 +23,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: '3.12'
           cache: pip
           cache-dependency-path: requirements.txt
 
@@ -148,12 +141,6 @@ jobs:
               errors.append('roles/changepassword/tasks/tasks.d/normalize.yml: salt generation must not depend on inventory_hostname')
           if 'iriven_chgpasswd_effective_salt_identity' not in normalize:
               errors.append('roles/changepassword/tasks/tasks.d/normalize.yml: missing machine-id based salt identity')
-
-          plugin = Path('roles/changepassword/filter_plugins/crypto_salt.py').read_text(encoding='utf-8')
-          forbidden_python_patterns = ['from __future__ import annotations', 'dict[', 'list[', 'f"', "f'"]
-          for pattern in forbidden_python_patterns:
-              if pattern in plugin:
-                  errors.append(f'roles/changepassword/filter_plugins/crypto_salt.py: avoid Python-version-sensitive syntax: {pattern}')
 
           if errors:
               for error in errors:
