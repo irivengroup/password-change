@@ -131,19 +131,11 @@ jobs:
       - name: Validate playbook syntax
         run: ansible-playbook -i inventories/production/hosts.yml --syntax-check playbooks/change_password.yml
 
-      - name: Validate Molecule scenario playbook syntax directly
-        run: |
-          set -euo pipefail
-          export ANSIBLE_ROLES_PATH="$PWD/roles"
-          for playbook in \
-            roles/changepassword/molecule/default/create.yml \
-            roles/changepassword/molecule/default/prepare.yml \
-            roles/changepassword/molecule/default/converge.yml \
-            roles/changepassword/molecule/default/verify.yml \
-            roles/changepassword/molecule/default/destroy.yml; do
-            ansible-playbook --syntax-check -i localhost, "$playbook"
-          done
+      - name: Run Molecule default scenario
+        run: molecule --debug test
 
+      - name: Run Molecule negative scenario
+        run: molecule test -s negative
       - name: Validate role with ansible-lint production profile
         run: ansible-lint --profile production .
 
@@ -277,8 +269,7 @@ jobs:
         working-directory: roles/changepassword
         env:
           ANSIBLE_ROLES_PATH: ${{ github.workspace }}/roles
-        run: |
-          molecule --debug test
+        run: molecule --debug test
           molecule test -s negative
 
 # Optional multi-distribution validation:
