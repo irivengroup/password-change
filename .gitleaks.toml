@@ -1,0 +1,16 @@
+title = "IRIVEN ChangePassword gitleaks policy"
+
+[allowlist]
+description = "Project placeholders and intentionally generated non-production fallback secret"
+regexes = [
+  'iriven_chgpasswd_default_hmac_salt_secret:',
+  'iriven_chgpasswd_hmac_salt_secret:\s*""',
+  'Molecule-[A-Za-z-]+-Password-2026!',
+  'MyStrongSecret#2026!'
+]
+paths = [
+  'roles/changepassword/defaults/main.yml',
+  'inventories/production/group_vars/all/vault.yml',
+  'inventories/production/group_vars/all/vault.yml.example',
+  'roles/changepassword/molecule/default/converge.yml'
+]

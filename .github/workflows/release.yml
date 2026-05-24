@@ -1,0 +1,63 @@
+---
+name: Release
+
+"on":
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: Build complete release package
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Set release variables
+        id: vars
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME}"
+          ARCHIVE="iriven-changepassword-${VERSION}.zip"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "archive=${ARCHIVE}" >> "$GITHUB_OUTPUT"
+
+      - name: Build changelog
+        run: |
+          set -euo pipefail
+          PREVIOUS_TAG="$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)"
+          {
+            echo "# Changelog - ${{ steps.vars.outputs.version }}"
+            echo
+            if [ -n "$PREVIOUS_TAG" ]; then
+              git log --pretty=format:'- %s (%h)' "${PREVIOUS_TAG}..HEAD"
+            else
+              git log --pretty=format:'- %s (%h)'
+            fi
+            echo
+          } > CHANGELOG.md
+
+      - name: Build complete project archive
+        run: |
+          set -euo pipefail
+          ARCHIVE="${{ steps.vars.outputs.archive }}"
+          zip -r "$ARCHIVE" .             -x '.git/*'             -x '__pycache__/*'             -x '*.pyc'
+          sha256sum "$ARCHIVE" > "${ARCHIVE}.sha256"
+
+      - name: Upload release package artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: iriven-changepassword-${{ steps.vars.outputs.version }}
+          if-no-files-found: error
+          path: |
+            ${{ steps.vars.outputs.archive }}
+            ${{ steps.vars.outputs.archive }}.sha256
+            CHANGELOG.md

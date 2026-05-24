@@ -82,6 +82,11 @@ jobs:
           PY
 
 
+      - name: Run Gitleaks secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITLEAKS_CONFIG: .gitleaks.toml
+
       - name: Secret hygiene scan
         run: |
           python - <<'PY'
@@ -114,6 +119,9 @@ jobs:
                   print(error, file=sys.stderr)
               sys.exit(1)
           PY
+
+      - name: Run project schema validation
+        run: python scripts/validate_project_schema.py
 
       - name: Validate Python filter plugins
         run: python -m py_compile roles/changepassword/filter_plugins/*.py
