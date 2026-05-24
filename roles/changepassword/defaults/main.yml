@@ -4,8 +4,6 @@
 #
 # Required per item:
 #   username: root|user
-#
-# Password source when password management is enabled:
 #   password: "..."                         # plaintext stored in Vault, hashed by the role
 #   password: "$6$rounds=656000$..."        # SHA512 crypt hash pass-through
 #   password: "$5$rounds=656000$..."        # SHA256 crypt hash pass-through
@@ -13,7 +11,6 @@
 # Supported per-account properties for this role only:
 #   expire: false                            # true forces password change at next login
 #   state: unlocked                          # optional: unlocked|locked; omitted leaves lock state unchanged
-#   manage_password: true                    # optional; defaults to iriven_chgpasswd_default_manage_password
 #
 # This role does NOT create users and does NOT manage provisioning attributes.
 # Do not define shell, groups, uid, gid, home, comment, create_home or system here.
@@ -39,7 +36,6 @@ iriven_chgpasswd_fail_if_user_missing: true
 iriven_chgpasswd_manage_root: true
 iriven_chgpasswd_allow_root_lock: false
 iriven_chgpasswd_allow_empty_password: false
-iriven_chgpasswd_default_manage_password: true
 
 # Password policy applied when password contains plaintext.
 iriven_chgpasswd_enforce_complexity: true

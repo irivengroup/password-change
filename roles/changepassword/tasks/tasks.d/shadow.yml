@@ -7,7 +7,7 @@
       register: iriven_chgpasswd_shadow_raw
       when:
         - iriven_chgpasswd_fail_if_same_hash | bool
-        - iriven_chgpasswd_normalized_accounts | selectattr('manage_password') | list | length > 0
+        - iriven_chgpasswd_normalized_accounts | length > 0
       no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
 
     - name: changepassword | Refuse password reuse when requested
@@ -31,5 +31,4 @@
         label: "{{ item.username }}"
       when:
         - iriven_chgpasswd_fail_if_same_hash | bool
-        - item.manage_password | bool
       no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"

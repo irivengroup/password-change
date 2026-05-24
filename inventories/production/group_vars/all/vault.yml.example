@@ -14,7 +14,7 @@
 iriven_chgpasswd_hmac_salt_secret: ""
 
 # unix_local_accounts is a list of dictionaries, not a mapping keyed by username.
-# manage_password defaults to true.
+# password is mandatory for every account because this role is strictly a password-change role.
 # password is auto-detected:
 #   - starts with $6$  => SHA512 crypt hash, passed through
 #   - starts with $5$  => SHA256 crypt hash, passed through

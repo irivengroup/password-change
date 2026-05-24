@@ -19,7 +19,6 @@ unix_local_accounts:
 Defaults are intentionally minimal in Vault:
 
 ```yaml
-manage_password: true
 expire: false
 # state omitted => lock state unchanged
 ```

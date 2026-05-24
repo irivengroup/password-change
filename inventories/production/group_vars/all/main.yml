@@ -21,7 +21,6 @@ iriven_chgpasswd_fail_if_user_missing: true
 iriven_chgpasswd_manage_root: true
 iriven_chgpasswd_allow_root_lock: false
 iriven_chgpasswd_allow_empty_password: false
-iriven_chgpasswd_default_manage_password: true
 
 # Account hardening.
 iriven_chgpasswd_require_login_shell: true

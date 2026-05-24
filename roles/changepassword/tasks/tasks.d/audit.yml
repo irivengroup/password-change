@@ -18,7 +18,7 @@
         mode: '0600'
         insertafter: EOF
         line: >-
-          {{ ansible_date_time.iso8601 }} host={{ inventory_hostname }} user={{ item.username }} state={{ item.state }} expire={{ item.expire }} manage_password={{ item.manage_password }} changed_by=ansible role=changepassword
+          {{ ansible_date_time.iso8601 }} host={{ inventory_hostname }} user={{ item.username }} state={{ item.state }} expire={{ item.expire }} changed_by=ansible role=changepassword
       loop: "{{ iriven_chgpasswd_normalized_accounts }}"
       loop_control:
         label: "{{ item.username }}"

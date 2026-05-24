@@ -132,11 +132,13 @@ jobs:
                               errors.append(f'{path}: each unix_local_accounts item must be a dictionary')
                               continue
                           username = account.get('username', '<undefined>')
-                          if 'password_hash' in account or 'password_plain' in account:
-                              errors.append(f'{path}: legacy password_hash/password_plain found for {username}')
+                          if 'password' not in account or not str(account.get('password', '')).strip():
+                              errors.append(f'{path}: password is mandatory for {username}')
+                          if 'password_hash' in account or 'password_plain' in account or 'manage_password' in account:
+                              errors.append(f'{path}: legacy password_hash/password_plain/manage_password found for {username}')
                           if account.get('state') == 'present':
                               errors.append(f'{path}: state=present is not supported for {username}; use locked/unlocked or omit state')
-                          for field in ('shell', 'groups', 'append', 'home', 'uid', 'gid', 'comment', 'create_home', 'system', 'aging'):
+                          for field in ('shell', 'groups', 'append', 'home', 'uid', 'gid', 'comment', 'create_home', 'system', 'aging', 'manage_password'):
                               if field in account:
                                   errors.append(f'{path}: provisioning/per-account policy field {field!r} is not allowed for {username}')
 

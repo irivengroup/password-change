@@ -116,7 +116,6 @@ iriven_chgpasswd_max_days: 90
 iriven_chgpasswd_warn_days: 14
 iriven_chgpasswd_inactive_days: null
 
-iriven_chgpasswd_manage_password_default: true
 ```
 
 ### Password Ageing Defaults
@@ -184,7 +183,6 @@ Supported account properties:
 | `password` | no | Plaintext Vault-protected password or existing SHA256/SHA512 crypt hash. |
 | `state` | no | Password lock state. Allowed values: `locked`, `unlocked`. If omitted, lock state is unchanged. |
 | `expire` | no | Boolean. If `true`, force password change at next login. |
-| `manage_password` | no | Boolean. Defaults to `true`. If `false`, password value is not changed. |
 
 Unsupported legacy fields are rejected:
 

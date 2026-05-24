@@ -37,8 +37,10 @@
           - item | type_debug == 'dict'
           - item.username is defined
           - item.username | string | length > 0
+          - item.password is defined
+          - item.password | string | length > 0
         fail_msg: >-
-          Each unix_local_accounts entry must be a dictionary containing at least username.
+          Each unix_local_accounts entry must be a dictionary containing username and password.
           Expected list item format: {username: root, password: 'vault-secret-or-$5$/$6$hash'}.
       loop: "{{ unix_local_accounts }}"
       loop_control:
@@ -49,10 +51,10 @@
       ansible.builtin.assert:
         that:
           - >-
-            (item.keys() | list | difference(['username', 'password', 'state', 'expire', 'manage_password'])) | length == 0
+            (item.keys() | list | difference(['username', 'password', 'state', 'expire'])) | length == 0
         fail_msg: >-
           Unsupported keys found for account '{{ item.username | default('undefined') }}'.
-          This role only accepts username, password, state, expire and manage_password.
+          This role only accepts username, password, state and expire.
           User provisioning attributes are intentionally forbidden.
       loop: "{{ unix_local_accounts }}"
       loop_control:
@@ -204,7 +206,6 @@
           - item.username is match(iriven_chgpasswd_validate_username_regex)
           - item.state is not defined or item.state in ['unlocked', 'locked']
           - item.expire | default(false) | type_debug == 'bool'
-          - item.manage_password | default(iriven_chgpasswd_default_manage_password) | type_debug == 'bool'
           - iriven_chgpasswd_hash_algorithm in ['sha256', 'sha512']
           - iriven_chgpasswd_default_hash_rounds | int >= iriven_chgpasswd_min_hash_rounds | int
           - item.aging is not defined
@@ -220,17 +221,14 @@
           - iriven_chgpasswd_manage_root | bool or item.username != 'root'
           - item.password_hash is not defined
           - item.password_plain is not defined
+          - item.manage_password is not defined
           - item.username not in iriven_chgpasswd_forbidden_users
+          - item.password is defined
+          - item.password | string | length > 0
           - >-
-            (not (item.manage_password | default(iriven_chgpasswd_default_manage_password) | bool))
-            or
-            (item.password | default('') | length > 0)
-          - >-
-            (not (item.manage_password | default(iriven_chgpasswd_default_manage_password) | bool))
-            or
             (not iriven_chgpasswd_require_hash | bool)
             or
-            (item.password | default('') is match(iriven_chgpasswd_password_hash_prefix_regex))
+            (item.password is match(iriven_chgpasswd_password_hash_prefix_regex))
           - iriven_chgpasswd_hash_salt_mode == 'hmac_machine_id'
           - iriven_chgpasswd_hmac_algorithm in ['sha256', 'sha512']
           - iriven_chgpasswd_effective_hmac_salt_secret | length >= iriven_chgpasswd_min_hmac_secret_length | int
@@ -241,7 +239,7 @@
           - not ((item.username == 'root') and (iriven_chgpasswd_lock_after_change | bool) and not (iriven_chgpasswd_allow_root_lock | bool))
         fail_msg: >-
           Invalid account definition or blocked hardening policy for account '{{ item.username | default('undefined') }}'.
-          Supported account state values are unlocked and locked only. Only the password key is accepted when manage_password=true; password_hash and password_plain are no longer supported. password is auto-detected as SHA256/SHA512 crypt hash when it starts with $5$ or $6$, otherwise treated as Vault-protected plaintext. Do not define per-account aging or provisioning attributes such as shell, groups, uid, home, comment, create_home or system.
+          Supported account state values are unlocked and locked only. password is mandatory for every account and is auto-detected as SHA256/SHA512 crypt hash when it starts with $5$ or $6$, otherwise treated as Vault-protected plaintext. password_hash, password_plain and manage_password are not supported. Do not define per-account aging or provisioning attributes such as shell, groups, uid, home, comment, create_home or system.
       loop: "{{ iriven_chgpasswd_target_accounts }}"
       loop_control:
         label: "{{ item.username | default('undefined') }}"
@@ -256,7 +254,6 @@
       loop_control:
         label: "{{ item.username }}"
       when:
-        - item.manage_password | default(iriven_chgpasswd_default_manage_password) | bool
         - item.password | default('') is match(iriven_chgpasswd_password_hash_prefix_regex)
       no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
 
