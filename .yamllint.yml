@@ -14,6 +14,11 @@ rules:
     forbid-implicit-octal: true
     forbid-explicit-octal: true
 
+  indentation:
+    spaces: 2
+    indent-sequences: false
+    check-multi-line-strings: false
+
   line-length:
     max: 140
     level: warning
