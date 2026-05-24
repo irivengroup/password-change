@@ -1,6 +1,19 @@
 ---
 - name: changepassword | Apply expiration and password ageing policies
   block:
+    - name: changepassword | Read current shadow ageing state
+      ansible.builtin.command:
+        argv:
+          - /usr/bin/getent
+          - shadow
+          - "{{ item.username }}"
+      register: iriven_chgpasswd_shadow_ageing_state
+      loop: "{{ iriven_chgpasswd_normalized_accounts }}"
+      loop_control:
+        label: "{{ item.username }}"
+      changed_when: false
+      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+
     - name: changepassword | Expire password to force change at next login
       ansible.builtin.command:
         argv:
@@ -11,7 +24,11 @@
       loop: "{{ iriven_chgpasswd_normalized_accounts }}"
       loop_control:
         label: "{{ item.username }}"
-      when: item.expire | bool
+        index_var: iriven_chgpasswd_account_index
+      when:
+        - item.expire | bool
+        - >-
+          (iriven_chgpasswd_shadow_ageing_state.results[iriven_chgpasswd_account_index].stdout.split(':')[2] | default('')) != '0'
       changed_when: true
 
     - name: changepassword | Set password ageing policy
@@ -28,5 +45,24 @@
       loop: "{{ iriven_chgpasswd_normalized_accounts }}"
       loop_control:
         label: "{{ item.username }}"
-      when: iriven_chgpasswd_set_aging | bool
+        index_var: iriven_chgpasswd_account_index
+      when:
+        - iriven_chgpasswd_set_aging | bool
+        - >-
+          (
+            item.aging_min_days is not none and
+            (iriven_chgpasswd_shadow_ageing_state.results[iriven_chgpasswd_account_index].stdout.split(':')[3] | default('')) != (item.aging_min_days | string)
+          ) or
+          (
+            item.aging_max_days is not none and
+            (iriven_chgpasswd_shadow_ageing_state.results[iriven_chgpasswd_account_index].stdout.split(':')[4] | default('')) != (item.aging_max_days | string)
+          ) or
+          (
+            item.aging_warn_days is not none and
+            (iriven_chgpasswd_shadow_ageing_state.results[iriven_chgpasswd_account_index].stdout.split(':')[5] | default('')) != (item.aging_warn_days | string)
+          ) or
+          (
+            item.aging_inactive_days is not none and
+            (iriven_chgpasswd_shadow_ageing_state.results[iriven_chgpasswd_account_index].stdout.split(':')[6] | default('')) != (item.aging_inactive_days | string)
+          )
       changed_when: true
