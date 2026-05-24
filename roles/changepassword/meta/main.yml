@@ -20,9 +20,6 @@ galaxy_info:
     - name: SLES
       versions:
         - all
-    - name: Opensuse
-      versions:
-        - all
   galaxy_tags:
     - linux
     - security
