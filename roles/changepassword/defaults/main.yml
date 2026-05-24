@@ -47,8 +47,8 @@ changepassword_audit_file: /var/log/ansible/changepassword.json
 changepassword_audit_schema_version: 1.0
 changepassword_audit_owner: root
 changepassword_audit_group: root
-changepassword_audit_dir_mode: 0750
-changepassword_audit_file_mode: 0600
+changepassword_audit_dir_mode: "0750"
+changepassword_audit_file_mode: "0600"
 changepassword_audit_logrotate_enabled: true
 changepassword_audit_logrotate_path: /etc/logrotate.d/iriven_chgpasswd
 changepassword_audit_logrotate_frequency: daily
