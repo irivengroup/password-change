@@ -1,9 +1,16 @@
 ---
 profile: production
-skip_list: []
-warn_list:
-  - experimental
+
 exclude_paths:
-  - .cache/
-  - .github/
+  - .git/
   - .venv/
+  - collections/
+  - .cache/
+
+skip_list:
+  - var-naming[no-role-prefix]
+
+warn_list:
+  - yaml[line-length]
+
+var_naming_pattern: "^[A-Za-z_][A-Za-z0-9_]*$"

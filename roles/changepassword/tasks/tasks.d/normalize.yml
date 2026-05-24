@@ -1,12 +1,12 @@
 ---
-- name: changepassword | Build normalized runtime data
+- name: Changepassword | Build normalized runtime data
   block:
-    - name: changepassword | Reset normalized account list
+    - name: Changepassword | Reset normalized account list
       ansible.builtin.set_fact:
         iriven_chgpasswd_normalized_accounts: []
       no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
 
-    - name: changepassword | Build normalized account management list
+    - name: Changepassword | Build normalized account management list
       ansible.builtin.set_fact:
         iriven_chgpasswd_normalized_accounts: >-
           {{

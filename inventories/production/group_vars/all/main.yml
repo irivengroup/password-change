@@ -2,7 +2,7 @@
 # Non-sensitive defaults for production inventory.
 # Secrets are isolated in inventories/production/group_vars/all/vault.yml.
 
-TGT_USER: root
+TGT_USER: root  # noqa var-naming[pattern]
 
 # Hashing policy.
 iriven_chgpasswd_hash_algorithm: sha512

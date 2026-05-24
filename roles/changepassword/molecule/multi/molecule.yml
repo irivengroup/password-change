@@ -6,13 +6,13 @@ driver:
   name: default
 
 platforms:
-  - name: chgpassword-ubuntu
+  - name: Chgpassword-ubuntu
     image: docker.io/ubuntu:22.04
-  - name: chgpassword-debian
+  - name: Chgpassword-debian
     image: docker.io/debian:12
-  - name: chgpassword-rocky
+  - name: Chgpassword-rocky
     image: docker.io/rockylinux:9
-  - name: chgpassword-opensuse
+  - name: Chgpassword-opensuse
     image: docker.io/opensuse/leap:15.6
 
 provisioner:

@@ -4,7 +4,7 @@
   become: true
   gather_facts: true
   vars:
-    TGT_USER: all
+    TGT_USER: all  # noqa var-naming[pattern]
     iriven_chgpasswd_use_no_log: false
     iriven_chgpasswd_require_hash: false
     iriven_chgpasswd_allow_plaintext_password: true

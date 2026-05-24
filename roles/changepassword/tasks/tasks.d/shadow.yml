@@ -1,7 +1,7 @@
 ---
-- name: changepassword | Shadow pre-change hardening checks
+- name: Changepassword | Shadow pre-change hardening checks
   block:
-    - name: changepassword | Read current shadow database when anti-reuse is enabled
+    - name: Changepassword | Read current shadow database when anti-reuse is enabled
       ansible.builtin.slurp:
         src: /etc/shadow
       register: iriven_chgpasswd_shadow_raw
@@ -10,7 +10,7 @@
         - iriven_chgpasswd_normalized_accounts | length > 0
       no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
 
-    - name: changepassword | Refuse password reuse when requested
+    - name: Changepassword | Refuse password reuse when requested
       ansible.builtin.assert:
         that:
           - >-

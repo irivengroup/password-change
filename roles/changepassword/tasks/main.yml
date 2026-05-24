@@ -1,7 +1,7 @@
 ---
-- name: changepassword | Run secured password rotation workflow
+- name: Changepassword | Run secured password rotation workflow
   block:
-    - name: changepassword | Acquire host-level execution lock
+    - name: Changepassword | Acquire host-level execution lock
       ansible.builtin.command:
         argv:
           - /bin/mkdir
@@ -11,43 +11,43 @@
       failed_when: iriven_chgpasswd_lock_result.rc != 0
       when: iriven_chgpasswd_lock_enabled | bool
 
-    - name: changepassword | Preflight validation
+    - name: Changepassword | Preflight validation
       ansible.builtin.include_tasks: tasks.d/preflight.yml
 
-    - name: changepassword | Normalize input data
+    - name: Changepassword | Normalize input data
       ansible.builtin.include_tasks: tasks.d/normalize.yml
 
-    - name: changepassword | Run shadow pre-change hardening checks
+    - name: Changepassword | Run shadow pre-change hardening checks
       ansible.builtin.include_tasks: tasks.d/shadow.yml
 
-    - name: changepassword | Apply password changes
+    - name: Changepassword | Apply password changes
       ansible.builtin.include_tasks: tasks.d/apply.yml
       when: not (iriven_chgpasswd_audit_only | bool)
 
-    - name: changepassword | Apply password expiration and ageing
+    - name: Changepassword | Apply password expiration and ageing
       ansible.builtin.include_tasks: tasks.d/aging.yml
       when: not (iriven_chgpasswd_audit_only | bool)
 
-    - name: changepassword | Write audit events
+    - name: Changepassword | Write audit events
       ansible.builtin.include_tasks: tasks.d/audit.yml
       when: iriven_chgpasswd_audit_enabled | bool
 
   rescue:
-    - name: changepassword | Report secured workflow failure
+    - name: Changepassword | Report secured workflow failure
       ansible.builtin.fail:
         msg: >-
           changepassword failed on {{ inventory_hostname }}. Review the previous task output.
           Secrets are hidden when iriven_chgpasswd_use_no_log=true.
 
   always:
-    - name: changepassword | Release host-level execution lock
+    - name: Changepassword | Release host-level execution lock
       ansible.builtin.file:
         path: "{{ iriven_chgpasswd_lock_path }}"
         state: absent
       changed_when: false
       when: iriven_chgpasswd_lock_enabled | default(true) | bool
 
-    - name: changepassword | Cleanup sensitive runtime facts
+    - name: Changepassword | Cleanup sensitive runtime facts
       ansible.builtin.set_fact:
         iriven_chgpasswd_normalized_accounts: []
         iriven_chgpasswd_existing_local_users: []

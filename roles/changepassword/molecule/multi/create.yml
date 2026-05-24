@@ -9,12 +9,12 @@
     molecule_instance_config_path: "{{ lookup('env', 'MOLECULE_INSTANCE_CONFIG') }}"
 
   tasks:
-    - name: molecule | Pull target image
+    - name: Molecule | Pull target image
       community.docker.docker_image:
         name: "{{ molecule_instance_image }}"
         source: pull
 
-    - name: molecule | Create and start target container
+    - name: Molecule | Create and start target container
       community.docker.docker_container:
         name: "{{ molecule_instance_name }}"
         hostname: "{{ molecule_instance_name }}"
@@ -27,7 +27,7 @@
         privileged: false
         cleanup: true
 
-    - name: molecule | Write delegated instance configuration
+    - name: Molecule | Write delegated instance configuration
       ansible.builtin.copy:
         dest: "{{ molecule_instance_config_path }}"
         mode: '0600'

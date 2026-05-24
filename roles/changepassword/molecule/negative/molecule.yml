@@ -6,7 +6,7 @@ driver:
   name: default
 
 platforms:
-  - name: chgpassword-negative-ubuntu
+  - name: Chgpassword-negative-ubuntu
 
 provisioner:
   name: ansible

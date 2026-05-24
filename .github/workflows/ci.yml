@@ -146,7 +146,9 @@ jobs:
       - name: Run Molecule default scenario
         working-directory: roles/changepassword
         run: molecule --debug test
+        working-directory: roles/changepassword
 
       - name: Run Molecule negative scenario
         working-directory: roles/changepassword
         run: molecule test -s negative
+        working-directory: roles/changepassword

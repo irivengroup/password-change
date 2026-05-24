@@ -5,7 +5,7 @@
   gather_facts: false
 
   tasks:
-    - name: verify | Confirm test accounts still exist
+    - name: Verify | Confirm test accounts still exist
       ansible.builtin.getent:
         database: passwd
         key: "{{ item }}"
@@ -14,7 +14,7 @@
         - moleculeops
         - moleculeaudit
 
-    - name: verify | Read moleculeops shadow entry
+    - name: Verify | Read moleculeops shadow entry
       ansible.builtin.getent:
         database: shadow
         key: moleculeops
@@ -22,12 +22,12 @@
       register: moleculeops_shadow_getent
       no_log: true
 
-    - name: verify | Save moleculeops password hash
+    - name: Verify | Save moleculeops password hash
       ansible.builtin.set_fact:
         moleculeops_hash: "{{ moleculeops_shadow_getent.ansible_facts.getent_shadow.moleculeops[0] }}"
       no_log: true
 
-    - name: verify | Read moleculeaudit shadow entry
+    - name: Verify | Read moleculeaudit shadow entry
       ansible.builtin.getent:
         database: shadow
         key: moleculeaudit
@@ -35,12 +35,12 @@
       register: moleculeaudit_shadow_getent
       no_log: true
 
-    - name: verify | Save moleculeaudit password hash
+    - name: Verify | Save moleculeaudit password hash
       ansible.builtin.set_fact:
         moleculeaudit_hash: "{{ moleculeaudit_shadow_getent.ansible_facts.getent_shadow.moleculeaudit[0] }}"
       no_log: true
 
-    - name: verify | Assert generated hashes and lock states
+    - name: Verify | Assert generated hashes and lock states
       ansible.builtin.assert:
         that:
           - moleculeops_hash is match('^\$6\$rounds=656000\$')
@@ -49,7 +49,7 @@
         fail_msg: Password hash generation or lock state is not compliant with expected role behavior.
       no_log: true
 
-    - name: verify | Read moleculeops ageing policy
+    - name: Verify | Read moleculeops ageing policy
       ansible.builtin.command:
         argv:
           - /usr/bin/chage
@@ -58,7 +58,7 @@
       register: moleculeops_chage
       changed_when: false
 
-    - name: verify | Assert configured ageing policy is applied
+    - name: Verify | Assert configured ageing policy is applied
       ansible.builtin.assert:
         that:
           - "'Minimum number of days between password change\t\t: 3' in moleculeops_chage.stdout"

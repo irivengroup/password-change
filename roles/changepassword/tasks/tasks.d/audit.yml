@@ -1,7 +1,7 @@
 ---
-- name: changepassword | Write local JSONL audit trail without secrets
+- name: Changepassword | Write local JSONL audit trail without secrets
   block:
-    - name: changepassword | Ensure audit directory exists
+    - name: Changepassword | Ensure audit directory exists
       ansible.builtin.file:
         path: "{{ iriven_chgpasswd_audit_file | dirname }}"
         state: directory
@@ -10,7 +10,7 @@
         mode: "{{ iriven_chgpasswd_audit_dir_mode }}"
       changed_when: false
 
-    - name: changepassword | Ensure audit file exists with restricted permissions
+    - name: Changepassword | Ensure audit file exists with restricted permissions
       ansible.builtin.file:
         path: "{{ iriven_chgpasswd_audit_file }}"
         state: touch
@@ -19,7 +19,7 @@
         mode: "{{ iriven_chgpasswd_audit_file_mode }}"
       changed_when: false
 
-    - name: changepassword | Write SIEM-ready password rotation audit event without secrets
+    - name: Changepassword | Write SIEM-ready password rotation audit event without secrets
       ansible.builtin.lineinfile:
         path: "{{ iriven_chgpasswd_audit_file }}"
         create: true
@@ -63,7 +63,7 @@
         index_var: iriven_chgpasswd_account_index
       changed_when: false
 
-    - name: changepassword | Enforce audit file ownership and permissions
+    - name: Changepassword | Enforce audit file ownership and permissions
       ansible.builtin.file:
         path: "{{ iriven_chgpasswd_audit_file }}"
         state: file
@@ -72,7 +72,7 @@
         mode: "{{ iriven_chgpasswd_audit_file_mode }}"
       changed_when: false
 
-    - name: changepassword | Install audit logrotate policy
+    - name: Changepassword | Install audit logrotate policy
       ansible.builtin.copy:
         dest: "{{ iriven_chgpasswd_audit_logrotate_path }}"
         owner: root
@@ -91,7 +91,7 @@
           }
       when: iriven_chgpasswd_audit_logrotate_enabled | bool
 
-    - name: changepassword | Calculate audit file SHA256 checksum
+    - name: Changepassword | Calculate audit file SHA256 checksum
       ansible.builtin.command:
         argv:
           - /usr/bin/sha256sum
@@ -101,7 +101,7 @@
       failed_when: false
       when: iriven_chgpasswd_audit_integrity_enabled | bool
 
-    - name: changepassword | Write audit checksum sidecar
+    - name: Changepassword | Write audit checksum sidecar
       ansible.builtin.copy:
         dest: "{{ iriven_chgpasswd_audit_file }}.sha256"
         owner: "{{ iriven_chgpasswd_audit_owner }}"
@@ -113,7 +113,7 @@
         - iriven_chgpasswd_audit_integrity_enabled | bool
         - iriven_chgpasswd_audit_sha256.rc | default(1) == 0
 
-    - name: changepassword | Enable append-only protection on audit file when requested
+    - name: Changepassword | Enable append-only protection on audit file when requested
       ansible.builtin.command:
         argv:
           - /usr/bin/chattr

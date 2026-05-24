@@ -3,7 +3,7 @@ driver:
   name: default
 
 platforms:
-  - name: chgpassword-ubuntu
+  - name: Chgpassword-ubuntu
     image: docker.io/geerlingguy/docker-ubuntu2204-ansible:latest
 
 provisioner:

@@ -1,7 +1,7 @@
 ---
-- name: changepassword | Apply password and status to existing local accounts only
+- name: Changepassword | Apply password and status to existing local accounts only
   block:
-    - name: changepassword | Rotate password and optionally lock/unlock existing account
+    - name: Changepassword | Rotate password and optionally lock/unlock existing account
       ansible.builtin.user:
         name: "{{ item.username }}"
         password: "{{ item.final_password_hash }}"
@@ -14,7 +14,7 @@
       register: iriven_chgpasswd_apply_results
       no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
 
-    - name: changepassword | Lock account after password change when requested globally
+    - name: Changepassword | Lock account after password change when requested globally
       ansible.builtin.user:
         name: "{{ item.username }}"
         password_lock: true

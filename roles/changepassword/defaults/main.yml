@@ -22,7 +22,7 @@ unix_local_accounts: []
 #   -e TGT_USER=root       # default: manage only root when declared below
 #   -e TGT_USER=deploy     # manage only deploy when declared below
 #   -e TGT_USER=all        # manage all declared accounts
-TGT_USER: root
+TGT_USER: root  # noqa var-naming[pattern]
 iriven_chgpasswd_all_targets:
   - all
   - '*'
