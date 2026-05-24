@@ -1,5 +1,4 @@
 ---
-
 - name: changepassword | Enforce production strict runtime controls
   ansible.builtin.assert:
     that:
@@ -112,7 +111,6 @@
         that:
           - iriven_chgpasswd_target_accounts | length > 0
         fail_msg: "No effective account selected for TGT_USER={{ iriven_chgpasswd_requested_user }}."
-
 
 - name: changepassword | Resolve machine-id identity for hash generation
   block:
@@ -353,7 +351,6 @@
           Expected owner root, group root/shadow, mode 0600/0640.
       when: iriven_chgpasswd_check_shadow_backend | bool
 
-
     - name: changepassword | Read /etc/passwd for local-only backend validation
       ansible.builtin.slurp:
         src: /etc/passwd
@@ -458,7 +455,6 @@
         fail_msg: "chage is required for expire/aging operations but was not found at /usr/bin/chage. On SUSE/SLES/openSUSE, install or restore the shadow package."
       when: iriven_chgpasswd_chage_check is defined and not ansible_check_mode
 
-
 - name: changepassword | Refuse missing or weak custom HMAC secret in production
   ansible.builtin.assert:
     that:
@@ -473,4 +469,3 @@
       the configured minimum length and complexity requirements.
   no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
   changed_when: false
-
