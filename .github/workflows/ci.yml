@@ -94,26 +94,26 @@ jobs:
           import re
           import sys
 
-          patterns = [
-              re.compile(r'(?i)(aws_secret_access_key|private_key|BEGIN RSA PRIVATE KEY|BEGIN OPENSSH PRIVATE KEY)'),
-              re.compile(r"(?i)(password|secret|token)\s*[:=]\s*[\"\']?[A-Za-z0-9_@#%+=:.,/!$?&*~-]{20,}[\"\']?"),
-          ]
-          allowlist = {
-              'roles/changepassword/defaults/main.yml',
-              'inventories/production/group_vars/all/vault.yml',
-              'inventories/production/group_vars/all/vault.yml.example',
-              'roles/changepassword/molecule/default/converge.yml',
-          }
+          # Lightweight guardrail for private keys only.
+          # Full secret detection is handled by Gitleaks using .gitleaks.toml.
+          # Avoid broad password/secret regexes here because they create false
+          # positives in README examples, validation code and Ansible variables.
+          private_key_pattern = re.compile(
+              r"(?i)(BEGIN RSA PRIVATE KEY|BEGIN OPENSSH PRIVATE KEY|BEGIN PRIVATE KEY)"
+          )
+
+          ignored_dirs = {'.git', '.cache', '.venv', '__pycache__', '.github'}
           errors = []
+
           for path in Path('.').rglob('*'):
-              if not path.is_file() or path.parts[0] in {'.git', '.cache', '.venv'}:
+              if not path.is_file():
                   continue
-              rel = str(path)
+              if any(part in ignored_dirs for part in path.parts):
+                  continue
               text = path.read_text(encoding='utf-8', errors='ignore')
-              for pattern in patterns:
-                  if pattern.search(text) and rel not in allowlist:
-                      errors.append(f'{rel}: potential secret-like value detected')
-                      break
+              if private_key_pattern.search(text):
+                  errors.append(f'{path}: private key material detected')
+
           if errors:
               for error in errors:
                   print(error, file=sys.stderr)
