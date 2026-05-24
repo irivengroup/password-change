@@ -1,0 +1,4 @@
+# RHEL 7 control node profile.
+# Requires a separately installed Python 3.10+ interpreter/virtualenv.
+# The RHEL 7 system Python 2.7 is not supported by this project.
+-r requirements.txt

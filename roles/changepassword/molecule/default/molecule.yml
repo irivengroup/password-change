@@ -13,5 +13,17 @@ provisioner:
   config_options:
     defaults:
       roles_path: ../../..
+      stdout_callback: default
+      result_format: yaml
+      bin_ansible_callbacks: true
+scenario:
+  test_sequence:
+    - destroy
+    - syntax
+    - create
+    - converge
+    - idempotence
+    - verify
+    - destroy
 verifier:
   name: ansible

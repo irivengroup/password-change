@@ -14,8 +14,14 @@ concurrency:
 
 jobs:
   validate:
-    name: Static validation and syntax checks
+    name: Static validation and syntax checks / Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+          - '3.10'
+          - '3.12'
 
     steps:
       - name: Checkout
@@ -24,8 +30,9 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: ${{ matrix.python-version }}
           cache: pip
+          cache-dependency-path: requirements.txt
 
       - name: Install validation tooling
         run: |
@@ -39,6 +46,14 @@ jobs:
           ansible-playbook --version
           ansible-lint --version
           yamllint --version
+
+      - name: Validate Ansible configuration
+        run: |
+          ansible-config dump --only-changed
+          if grep -R "stdout_callback = yaml" -n ansible.cfg roles/changepassword/molecule/default/molecule.yml; then
+            echo "Deprecated stdout_callback=yaml is not allowed" >&2
+            exit 1
+          fi
 
       - name: Install Ansible requirements
         run: ansible-galaxy collection install -r requirements.yml --force
@@ -77,6 +92,14 @@ jobs:
       - name: Validate playbook syntax
         run: ansible-playbook -i inventories/production/hosts.yml --syntax-check playbooks/change_password.yml
 
+      - name: Validate Molecule converge syntax directly
+        run: |
+          ANSIBLE_ROLES_PATH="$PWD/roles" \
+          ansible-playbook \
+            --syntax-check \
+            -i roles/changepassword/molecule/default/../../../../inventories/production/hosts.yml \
+            roles/changepassword/molecule/default/converge.yml
+
       - name: Validate role with ansible-lint production profile
         run: ansible-lint --profile production .
 
@@ -84,15 +107,10 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          import re
           import sys
           import yaml
 
           errors = []
-
-          allowed_files = {
-              Path('playbooks/change_password.yml'),
-          }
 
           for path in sorted(Path('.').rglob('*')):
               if path.parts[0] in {'.git', '.cache', '.venv'}:
@@ -131,6 +149,12 @@ jobs:
           if 'iriven_chgpasswd_effective_salt_identity' not in normalize:
               errors.append('roles/changepassword/tasks/tasks.d/normalize.yml: missing machine-id based salt identity')
 
+          plugin = Path('roles/changepassword/filter_plugins/crypto_salt.py').read_text(encoding='utf-8')
+          forbidden_python_patterns = ['from __future__ import annotations', 'dict[', 'list[', 'f"', "f'"]
+          for pattern in forbidden_python_patterns:
+              if pattern in plugin:
+                  errors.append(f'roles/changepassword/filter_plugins/crypto_salt.py: avoid Python-version-sensitive syntax: {pattern}')
+
           if errors:
               for error in errors:
                   print(error, file=sys.stderr)
@@ -151,15 +175,26 @@ jobs:
         with:
           python-version: '3.12'
           cache: pip
+          cache-dependency-path: requirements.txt
 
       - name: Install Molecule tooling
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Validate Ansible configuration
+        run: |
+          ansible-config dump --only-changed
+          if grep -R "stdout_callback = yaml" -n ansible.cfg roles/changepassword/molecule/default/molecule.yml; then
+            echo "Deprecated stdout_callback=yaml is not allowed" >&2
+            exit 1
+          fi
+
       - name: Install Ansible requirements
         run: ansible-galaxy collection install -r requirements.yml --force
 
       - name: Run Molecule test
         working-directory: roles/changepassword
-        run: molecule test
+        env:
+          ANSIBLE_ROLES_PATH: ${{ github.workspace }}/roles
+        run: molecule --debug test
