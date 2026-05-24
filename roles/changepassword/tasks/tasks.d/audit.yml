@@ -8,6 +8,7 @@
         owner: root
         group: root
         mode: '0750'
+      changed_when: false
 
     - name: changepassword | Write password rotation audit event without secrets
       ansible.builtin.lineinfile:
@@ -32,6 +33,7 @@
               'changed_by': 'ansible'
             } | to_json
           }}
+      changed_when: false
       loop: "{{ iriven_chgpasswd_normalized_accounts }}"
       loop_control:
         label: "{{ item.username }}"

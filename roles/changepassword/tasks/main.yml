@@ -7,7 +7,7 @@
           - /bin/mkdir
           - "{{ iriven_chgpasswd_lock_path }}"
       register: iriven_chgpasswd_lock_result
-      changed_when: true
+      changed_when: false
       failed_when: iriven_chgpasswd_lock_result.rc != 0
       when: iriven_chgpasswd_lock_enabled | bool
 
@@ -44,6 +44,7 @@
       ansible.builtin.file:
         path: "{{ iriven_chgpasswd_lock_path }}"
         state: absent
+      changed_when: false
       when: iriven_chgpasswd_lock_enabled | default(true) | bool
 
     - name: changepassword | Cleanup sensitive runtime facts
@@ -70,4 +71,5 @@
         iriven_chgpasswd_selected_shell_stats: {}
         iriven_chgpasswd_machine_id_stat: {}
       no_log: true
+      changed_when: false
       when: iriven_chgpasswd_cleanup_sensitive_facts | default(true) | bool
