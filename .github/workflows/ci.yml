@@ -81,6 +81,40 @@ jobs:
               sys.exit(1)
           PY
 
+
+      - name: Secret hygiene scan
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          import sys
+
+          patterns = [
+              re.compile(r'(?i)(aws_secret_access_key|private_key|BEGIN RSA PRIVATE KEY|BEGIN OPENSSH PRIVATE KEY)'),
+              re.compile(r'(?i)(password|secret|token)\s*[:=]\s*["']?[A-Za-z0-9_@#%+=:.,/!$?&*~-]{20,}["']?'),
+          ]
+          allowlist = {
+              'roles/changepassword/defaults/main.yml',
+              'inventories/production/group_vars/all/vault.yml',
+              'inventories/production/group_vars/all/vault.yml.example',
+              'roles/changepassword/molecule/default/converge.yml',
+          }
+          errors = []
+          for path in Path('.').rglob('*'):
+              if not path.is_file() or path.parts[0] in {'.git', '.cache', '.venv'}:
+                  continue
+              rel = str(path)
+              text = path.read_text(encoding='utf-8', errors='ignore')
+              for pattern in patterns:
+                  if pattern.search(text) and rel not in allowlist:
+                      errors.append(f'{rel}: potential secret-like value detected')
+                      break
+          if errors:
+              for error in errors:
+                  print(error, file=sys.stderr)
+              sys.exit(1)
+          PY
+
       - name: Validate Python filter plugins
         run: python -m py_compile roles/changepassword/filter_plugins/*.py
 
@@ -152,6 +186,16 @@ jobs:
               errors.append('roles/changepassword/defaults/main.yml: hash rounds must not be below the configured minimum')
           if int(defaults.get('iriven_chgpasswd_min_hmac_secret_length', 0)) < 32:
               errors.append('roles/changepassword/defaults/main.yml: HMAC secret minimum length must remain at least 32')
+          if defaults.get('iriven_chgpasswd_audit_file') != '/var/log/ansible/changepassword.json':
+              errors.append('roles/changepassword/defaults/main.yml: audit file path must remain /var/log/ansible/changepassword.json')
+          if defaults.get('iriven_chgpasswd_audit_file_mode') != '0600':
+              errors.append('roles/changepassword/defaults/main.yml: audit file mode must remain 0600')
+          if defaults.get('iriven_chgpasswd_audit_dir_mode') != '0750':
+              errors.append('roles/changepassword/defaults/main.yml: audit directory mode must remain 0750')
+          if defaults.get('iriven_chgpasswd_audit_logrotate_enabled') is not True:
+              errors.append('roles/changepassword/defaults/main.yml: audit logrotate must remain enabled by default')
+          if defaults.get('iriven_chgpasswd_audit_integrity_enabled') is not True:
+              errors.append('roles/changepassword/defaults/main.yml: audit checksum sidecar must remain enabled by default')
           fallback_secret = defaults.get('iriven_chgpasswd_default_hmac_salt_secret', '')
           if len(fallback_secret) != 60:
               errors.append('roles/changepassword/defaults/main.yml: default HMAC fallback secret must be exactly 60 characters')
@@ -166,8 +210,13 @@ jobs:
           normalize = Path('roles/changepassword/tasks/tasks.d/normalize.yml').read_text(encoding='utf-8')
           if 'inventory_hostname' in normalize:
               errors.append('roles/changepassword/tasks/tasks.d/normalize.yml: salt generation must not depend on inventory_hostname')
-          if 'iriven_chgpasswd_effective_salt_identity' not in normalize:
-              errors.append('roles/changepassword/tasks/tasks.d/normalize.yml: missing machine-id based salt identity')
+          audit = Path('roles/changepassword/tasks/tasks.d/audit.yml').read_text(encoding='utf-8')
+          for forbidden in ('final_password_hash', 'generated_salt', 'effective_hmac', 'hmac_salt_secret', 'machine_id'):
+              if forbidden in audit:
+                  errors.append(f'roles/changepassword/tasks/tasks.d/audit.yml: forbidden sensitive token found: {forbidden}')
+          for required in ('to_json', 'schema_version', 'timestamp_utc', 'target_user', 'execution_mode', 'password_changed'):
+              if required not in audit:
+                  errors.append(f'roles/changepassword/tasks/tasks.d/audit.yml: missing audit field/control: {required}')
 
           if errors:
               for error in errors:

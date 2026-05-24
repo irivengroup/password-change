@@ -34,7 +34,13 @@ iriven_chgpasswd_lock_path: /var/lock/iriven_chgpasswd.lock
 
 # Local JSON audit trail.
 iriven_chgpasswd_audit_enabled: true
-iriven_chgpasswd_audit_file: /var/log/ansible/changepassword.jsonl
+iriven_chgpasswd_audit_file: /var/log/ansible/changepassword.json
+iriven_chgpasswd_audit_schema_version: "1.0"
+iriven_chgpasswd_audit_dir_mode: '0750'
+iriven_chgpasswd_audit_file_mode: '0600'
+iriven_chgpasswd_audit_logrotate_enabled: true
+iriven_chgpasswd_audit_integrity_enabled: true
+iriven_chgpasswd_audit_append_only: false
 
 # Password ageing. Omit values with null.
 iriven_chgpasswd_set_aging: true

@@ -70,6 +70,7 @@
         iriven_chgpasswd_getent_passwd_results: {}
         iriven_chgpasswd_selected_shell_stats: {}
         iriven_chgpasswd_machine_id_stat: {}
+        iriven_chgpasswd_audit_sha256: {}
       no_log: true
       changed_when: false
       when: iriven_chgpasswd_cleanup_sensitive_facts | default(true) | bool
