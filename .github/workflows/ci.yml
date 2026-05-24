@@ -277,7 +277,8 @@ jobs:
         working-directory: roles/changepassword
         env:
           ANSIBLE_ROLES_PATH: ${{ github.workspace }}/roles
-        run: molecule --debug test
+        run: |
+          molecule --debug test
           molecule test -s negative
 
 # Optional multi-distribution validation:
