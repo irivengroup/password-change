@@ -3,34 +3,34 @@
   block:
     - name: Changepassword | Ensure audit directory exists
       ansible.builtin.file:
-        path: "{{ iriven_chgpasswd_audit_file | dirname }}"
+        path: "{{ changepassword_audit_file | dirname }}"
         state: directory
-        owner: "{{ iriven_chgpasswd_audit_owner }}"
-        group: "{{ iriven_chgpasswd_audit_group }}"
-        mode: "{{ iriven_chgpasswd_audit_dir_mode }}"
+        owner: "{{ changepassword_audit_owner }}"
+        group: "{{ changepassword_audit_group }}"
+        mode: "{{ changepassword_audit_dir_mode }}"
       changed_when: false
 
     - name: Changepassword | Ensure audit file exists with restricted permissions
       ansible.builtin.file:
-        path: "{{ iriven_chgpasswd_audit_file }}"
+        path: "{{ changepassword_audit_file }}"
         state: touch
-        owner: "{{ iriven_chgpasswd_audit_owner }}"
-        group: "{{ iriven_chgpasswd_audit_group }}"
-        mode: "{{ iriven_chgpasswd_audit_file_mode }}"
+        owner: "{{ changepassword_audit_owner }}"
+        group: "{{ changepassword_audit_group }}"
+        mode: "{{ changepassword_audit_file_mode }}"
       changed_when: false
 
     - name: Changepassword | Write SIEM-ready password rotation audit event without secrets
       ansible.builtin.lineinfile:
-        path: "{{ iriven_chgpasswd_audit_file }}"
+        path: "{{ changepassword_audit_file }}"
         create: true
-        owner: "{{ iriven_chgpasswd_audit_owner }}"
-        group: "{{ iriven_chgpasswd_audit_group }}"
-        mode: "{{ iriven_chgpasswd_audit_file_mode }}"
+        owner: "{{ changepassword_audit_owner }}"
+        group: "{{ changepassword_audit_group }}"
+        mode: "{{ changepassword_audit_file_mode }}"
         insertafter: EOF
         line: >-
           {{
             {
-              'schema_version': iriven_chgpasswd_audit_schema_version,
+              'schema_version': changepassword_audit_schema_version,
               'timestamp_utc': ansible_date_time.iso8601,
               'event_type': 'unix_local_password_change',
               'project': 'iriven-changepassword',
@@ -38,87 +38,87 @@
               'host': inventory_hostname,
               'ansible_fqdn': ansible_fqdn | default(''),
               'target_user': item.username,
-              'target_selector': iriven_chgpasswd_requested_user,
-              'execution_mode': 'audit_only' if (iriven_chgpasswd_audit_only | bool) else 'standard',
+              'target_selector': changepassword_requested_user,
+              'execution_mode': 'audit_only' if (changepassword_audit_only | bool) else 'standard',
               'password_changed': (
-                iriven_chgpasswd_apply_results.results[iriven_chgpasswd_account_index].changed | default(false)
-                if (iriven_chgpasswd_apply_results is defined and iriven_chgpasswd_apply_results.results is defined and
-                  (iriven_chgpasswd_apply_results.results | length > iriven_chgpasswd_account_index))
+                changepassword_apply_results.results[changepassword_account_index].changed | default(false)
+                if (changepassword_apply_results is defined and changepassword_apply_results.results is defined and
+                  (changepassword_apply_results.results | length > changepassword_account_index))
                 else false
               ),
               'account_state': item.state | default('unchanged'),
               'expire_requested': item.expire | default(false) | bool,
-              'aging_enabled': iriven_chgpasswd_set_aging | bool,
-              'aging_min_days': iriven_chgpasswd_min_days,
-              'aging_max_days': iriven_chgpasswd_max_days,
-              'aging_warn_days': iriven_chgpasswd_warn_days,
-              'aging_inactive_days': iriven_chgpasswd_inactive_days,
+              'aging_enabled': changepassword_set_aging | bool,
+              'aging_min_days': changepassword_min_days,
+              'aging_max_days': changepassword_max_days,
+              'aging_warn_days': changepassword_warn_days,
+              'aging_inactive_days': changepassword_inactive_days,
               'operator': ansible_user_id | default('ansible'),
               'controller_user': lookup('env', 'USER') | default('', true)
             } | to_json
           }}
-      loop: "{{ iriven_chgpasswd_normalized_accounts }}"
+      loop: "{{ changepassword_normalized_accounts }}"
       loop_control:
         label: "{{ item.username }}"
-        index_var: iriven_chgpasswd_account_index
+        index_var: changepassword_account_index
       changed_when: false
 
     - name: Changepassword | Enforce audit file ownership and permissions
       ansible.builtin.file:
-        path: "{{ iriven_chgpasswd_audit_file }}"
+        path: "{{ changepassword_audit_file }}"
         state: file
-        owner: "{{ iriven_chgpasswd_audit_owner }}"
-        group: "{{ iriven_chgpasswd_audit_group }}"
-        mode: "{{ iriven_chgpasswd_audit_file_mode }}"
+        owner: "{{ changepassword_audit_owner }}"
+        group: "{{ changepassword_audit_group }}"
+        mode: "{{ changepassword_audit_file_mode }}"
       changed_when: false
 
     - name: Changepassword | Install audit logrotate policy
       ansible.builtin.copy:
-        dest: "{{ iriven_chgpasswd_audit_logrotate_path }}"
+        dest: "{{ changepassword_audit_logrotate_path }}"
         owner: root
         group: root
         mode: '0644'
         content: |
-          {{ iriven_chgpasswd_audit_file }} {
-              {{ iriven_chgpasswd_audit_logrotate_frequency }}
-              rotate {{ iriven_chgpasswd_audit_logrotate_rotate }}
+          {{ changepassword_audit_file }} {
+              {{ changepassword_audit_logrotate_frequency }}
+              rotate {{ changepassword_audit_logrotate_rotate }}
               missingok
               notifempty
-              create {{ iriven_chgpasswd_audit_file_mode }} {{ iriven_chgpasswd_audit_owner }} {{ iriven_chgpasswd_audit_group }}
-          {% if iriven_chgpasswd_audit_logrotate_compress | bool %}
+              create {{ changepassword_audit_file_mode }} {{ changepassword_audit_owner }} {{ changepassword_audit_group }}
+          {% if changepassword_audit_logrotate_compress | bool %}
               compress
           {% endif %}
           }
-      when: iriven_chgpasswd_audit_logrotate_enabled | bool
+      when: changepassword_audit_logrotate_enabled | bool
 
     - name: Changepassword | Calculate audit file SHA256 checksum
       ansible.builtin.command:
         argv:
           - /usr/bin/sha256sum
-          - "{{ iriven_chgpasswd_audit_file }}"
-      register: iriven_chgpasswd_audit_sha256
+          - "{{ changepassword_audit_file }}"
+      register: changepassword_audit_sha256
       changed_when: false
       failed_when: false
-      when: iriven_chgpasswd_audit_integrity_enabled | bool
+      when: changepassword_audit_integrity_enabled | bool
 
     - name: Changepassword | Write audit checksum sidecar
       ansible.builtin.copy:
-        dest: "{{ iriven_chgpasswd_audit_file }}.sha256"
-        owner: "{{ iriven_chgpasswd_audit_owner }}"
-        group: "{{ iriven_chgpasswd_audit_group }}"
-        mode: "{{ iriven_chgpasswd_audit_file_mode }}"
-        content: "{{ iriven_chgpasswd_audit_sha256.stdout | default('') }}\n"
+        dest: "{{ changepassword_audit_file }}.sha256"
+        owner: "{{ changepassword_audit_owner }}"
+        group: "{{ changepassword_audit_group }}"
+        mode: "{{ changepassword_audit_file_mode }}"
+        content: "{{ changepassword_audit_sha256.stdout | default('') }}\n"
       changed_when: false
       when:
-        - iriven_chgpasswd_audit_integrity_enabled | bool
-        - iriven_chgpasswd_audit_sha256.rc | default(1) == 0
+        - changepassword_audit_integrity_enabled | bool
+        - changepassword_audit_sha256.rc | default(1) == 0
 
     - name: Changepassword | Enable append-only protection on audit file when requested
       ansible.builtin.command:
         argv:
           - /usr/bin/chattr
           - +a
-          - "{{ iriven_chgpasswd_audit_file }}"
+          - "{{ changepassword_audit_file }}"
       changed_when: false
       failed_when: false
-      when: iriven_chgpasswd_audit_append_only | bool
+      when: changepassword_audit_append_only | bool

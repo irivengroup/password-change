@@ -5,11 +5,11 @@
       ansible.builtin.command:
         argv:
           - /bin/mkdir
-          - "{{ iriven_chgpasswd_lock_path }}"
-      register: iriven_chgpasswd_lock_result
+          - "{{ changepassword_lock_path }}"
+      register: changepassword_lock_result
       changed_when: false
-      failed_when: iriven_chgpasswd_lock_result.rc != 0
-      when: iriven_chgpasswd_lock_enabled | bool
+      failed_when: changepassword_lock_result.rc != 0
+      when: changepassword_lock_enabled | bool
 
     - name: Changepassword | Preflight validation
       ansible.builtin.include_tasks: tasks.d/preflight.yml
@@ -22,55 +22,55 @@
 
     - name: Changepassword | Apply password changes
       ansible.builtin.include_tasks: tasks.d/apply.yml
-      when: not (iriven_chgpasswd_audit_only | bool)
+      when: not (changepassword_audit_only | bool)
 
     - name: Changepassword | Apply password expiration and ageing
       ansible.builtin.include_tasks: tasks.d/aging.yml
-      when: not (iriven_chgpasswd_audit_only | bool)
+      when: not (changepassword_audit_only | bool)
 
     - name: Changepassword | Write audit events
       ansible.builtin.include_tasks: tasks.d/audit.yml
-      when: iriven_chgpasswd_audit_enabled | bool
+      when: changepassword_audit_enabled | bool
 
   rescue:
     - name: Changepassword | Report secured workflow failure
       ansible.builtin.fail:
         msg: >-
           changepassword failed on {{ inventory_hostname }}. Review the previous task output.
-          Secrets are hidden when iriven_chgpasswd_use_no_log=true.
+          Secrets are hidden when changepassword_use_no_log=true.
 
   always:
     - name: Changepassword | Release host-level execution lock
       ansible.builtin.file:
-        path: "{{ iriven_chgpasswd_lock_path }}"
+        path: "{{ changepassword_lock_path }}"
         state: absent
       changed_when: false
-      when: iriven_chgpasswd_lock_enabled | default(true) | bool
+      when: changepassword_lock_enabled | default(true) | bool
 
     - name: Changepassword | Cleanup sensitive runtime facts
       ansible.builtin.set_fact:
-        iriven_chgpasswd_normalized_accounts: []
-        iriven_chgpasswd_existing_local_users: []
-        iriven_chgpasswd_target_accounts: []
-        iriven_chgpasswd_declared_usernames: []
-        iriven_chgpasswd_requested_user: ""
-        iriven_chgpasswd_selected_login_shells: {}
-        iriven_chgpasswd_etc_passwd_raw: {}
-        iriven_chgpasswd_shadow_hashes: {}
-        iriven_chgpasswd_shadow_raw: {}
-        iriven_chgpasswd_machine_id: ""
-        iriven_chgpasswd_machine_id_file: ""
-        iriven_chgpasswd_machine_id_raw: {}
-        iriven_chgpasswd_effective_salt_identity: ""
-        iriven_chgpasswd_effective_hmac_salt_secret: ""
-        iriven_chgpasswd_custom_hmac_secret_is_valid: false
-        iriven_chgpasswd_shadow_ageing_state: {}
-        iriven_chgpasswd_apply_results: {}
-        iriven_chgpasswd_lock_result: {}
-        iriven_chgpasswd_getent_passwd_results: {}
-        iriven_chgpasswd_selected_shell_stats: {}
-        iriven_chgpasswd_machine_id_stat: {}
-        iriven_chgpasswd_audit_sha256: {}
+        changepassword_normalized_accounts: []
+        changepassword_existing_local_users: []
+        changepassword_target_accounts: []
+        changepassword_declared_usernames: []
+        changepassword_requested_user: ""
+        changepassword_selected_login_shells: {}
+        changepassword_etc_passwd_raw: {}
+        changepassword_shadow_hashes: {}
+        changepassword_shadow_raw: {}
+        changepassword_machine_id: ""
+        changepassword_machine_id_file: ""
+        changepassword_machine_id_raw: {}
+        changepassword_effective_salt_identity: ""
+        changepassword_effective_hmac_salt_secret: ""
+        changepassword_custom_hmac_secret_is_valid: false
+        changepassword_shadow_ageing_state: {}
+        changepassword_apply_results: {}
+        changepassword_lock_result: {}
+        changepassword_getent_passwd_results: {}
+        changepassword_selected_shell_stats: {}
+        changepassword_machine_id_stat: {}
+        changepassword_audit_sha256: {}
       no_log: true
       changed_when: false
-      when: iriven_chgpasswd_cleanup_sensitive_facts | default(true) | bool
+      when: changepassword_cleanup_sensitive_facts | default(true) | bool

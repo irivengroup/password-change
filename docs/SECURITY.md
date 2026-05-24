@@ -26,7 +26,7 @@ expire: false
 Hardening rules:
 
 - only `password` may be declared; legacy keys `password` and `password` are rejected;
-- per-account `aging:` is rejected; use global `iriven_chgpasswd_*` variables;
+- per-account `aging:` is rejected; use global `changepassword_*` variables;
 - user creation is intentionally unsupported; the account must already exist locally;
 - provisioning attributes such as `shell`, `groups`, `append`, `uid`, `group`, `home`, `comment`, `create_home` and `system` are rejected;
 - forbidden system accounts are rejected;

@@ -8,10 +8,10 @@
 # Complexity: at least one uppercase letter, one lowercase letter, one digit,
 # and one special character.
 # If this value is empty or does not satisfy the policy defined in defaults/main.yml,
-# the role automatically falls back to iriven_chgpasswd_default_hmac_salt_secret.
+# the role automatically falls back to changepassword_default_hmac_salt_secret.
 # Example:
-# iriven_chgpasswd_hmac_salt_secret: "MyStrongCustomSecret#2026-ChangeThis"
-iriven_chgpasswd_hmac_salt_secret: ""
+# changepassword_hmac_salt_secret: "MyStrongCustomSecret#2026-ChangeThis"
+changepassword_hmac_salt_secret: ""
 
 # unix_local_accounts is a list of dictionaries, not a mapping keyed by username.
 # password is mandatory for every account because this role is strictly a password-change role.

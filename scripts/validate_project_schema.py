@@ -78,30 +78,30 @@ def validate_defaults(errors: list[str]) -> None:
         errors.append(f"{path}: defaults must be a mapping")
         return
     expected_values = {
-        "iriven_chgpasswd_hash_algorithm": "sha512",
-        "iriven_chgpasswd_hash_salt_mode": "hmac_machine_id",
-        "iriven_chgpasswd_audit_file": "/var/log/ansible/changepassword.json",
-        "iriven_chgpasswd_audit_file_mode": "0600",
-        "iriven_chgpasswd_audit_dir_mode": "0750",
+        "changepassword_hash_algorithm": "sha512",
+        "changepassword_hash_salt_mode": "hmac_machine_id",
+        "changepassword_audit_file": "/var/log/ansible/changepassword.json",
+        "changepassword_audit_file_mode": "0600",
+        "changepassword_audit_dir_mode": "0750",
     }
     for key, expected in expected_values.items():
         if defaults.get(key) != expected:
             errors.append(f"{path}: {key} must be {expected!r}")
-    if defaults.get("iriven_chgpasswd_set_aging") is not False:
-        errors.append(f"{path}: iriven_chgpasswd_set_aging must default to false")
+    if defaults.get("changepassword_set_aging") is not False:
+        errors.append(f"{path}: changepassword_set_aging must default to false")
     for key in (
-        "iriven_chgpasswd_min_days", "iriven_chgpasswd_max_days",
-        "iriven_chgpasswd_warn_days", "iriven_chgpasswd_inactive_days",
+        "changepassword_min_days", "changepassword_max_days",
+        "changepassword_warn_days", "changepassword_inactive_days",
     ):
         if defaults.get(key) is not None:
             errors.append(f"{path}: {key} must default to null")
-    if int(defaults.get("iriven_chgpasswd_min_hash_rounds", 0)) < 500000:
+    if int(defaults.get("changepassword_min_hash_rounds", 0)) < 500000:
         errors.append(f"{path}: minimum hash rounds must be >= 500000")
-    if int(defaults.get("iriven_chgpasswd_default_hash_rounds", 0)) < int(defaults.get("iriven_chgpasswd_min_hash_rounds", 0)):
+    if int(defaults.get("changepassword_default_hash_rounds", 0)) < int(defaults.get("changepassword_min_hash_rounds", 0)):
         errors.append(f"{path}: default hash rounds must be >= minimum hash rounds")
-    if int(defaults.get("iriven_chgpasswd_min_hmac_secret_length", 0)) < 32:
+    if int(defaults.get("changepassword_min_hmac_secret_length", 0)) < 32:
         errors.append(f"{path}: HMAC secret minimum length must be >= 32")
-    fallback = defaults.get("iriven_chgpasswd_default_hmac_salt_secret", "")
+    fallback = defaults.get("changepassword_default_hmac_salt_secret", "")
     if not isinstance(fallback, str) or len(fallback) != 60:
         errors.append(f"{path}: default HMAC fallback secret must be exactly 60 characters")
     elif not (any(c.isupper() for c in fallback) and any(c.islower() for c in fallback) and any(c.isdigit() for c in fallback) and any(not c.isalnum() for c in fallback)):

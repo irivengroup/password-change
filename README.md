@@ -18,7 +18,7 @@ It is intentionally focused on password rotation and local account hardening. It
 
 - Password rotation for existing local UNIX accounts
 - Support for `root` and standard local users
-- Targeted execution through `TGT_USER`
+- Targeted execution through `username`
 - Bulk execution for all declared accounts
 - Required password declaration for every managed account
 - SHA512 password hashing by default
@@ -126,30 +126,30 @@ Example `inventories/production/group_vars/all/main.yml`:
 
 ```yaml
 ---
-TGT_USER: root
+username: root
 
-iriven_chgpasswd_hash_algorithm: sha512
-iriven_chgpasswd_require_hash: false
-iriven_chgpasswd_allow_plaintext_password: true
-iriven_chgpasswd_default_hash_rounds: 656000
-iriven_chgpasswd_min_hash_rounds: 500000
-iriven_chgpasswd_min_hmac_secret_length: 32
+changepassword_hash_algorithm: sha512
+changepassword_require_hash: false
+changepassword_allow_plaintext_password: true
+changepassword_default_hash_rounds: 656000
+changepassword_min_hash_rounds: 500000
+changepassword_min_hmac_secret_length: 32
 
-iriven_chgpasswd_use_no_log: true
-iriven_chgpasswd_fail_if_user_missing: true
-iriven_chgpasswd_manage_root: true
-iriven_chgpasswd_allow_root_lock: false
-iriven_chgpasswd_allow_empty_password: false
+changepassword_use_no_log: true
+changepassword_fail_if_user_missing: true
+changepassword_manage_root: true
+changepassword_allow_root_lock: false
+changepassword_allow_empty_password: false
 
-iriven_chgpasswd_require_login_shell: true
-iriven_chgpasswd_require_etc_passwd_user: true
-iriven_chgpasswd_fail_if_same_hash: false
+changepassword_require_login_shell: true
+changepassword_require_etc_passwd_user: true
+changepassword_fail_if_same_hash: false
 
-iriven_chgpasswd_set_aging: false
-iriven_chgpasswd_min_days: null
-iriven_chgpasswd_max_days: null
-iriven_chgpasswd_warn_days: null
-iriven_chgpasswd_inactive_days: null
+changepassword_set_aging: false
+changepassword_min_days: null
+changepassword_max_days: null
+changepassword_warn_days: null
+changepassword_inactive_days: null
 ```
 
 ---
@@ -195,7 +195,7 @@ Example `inventories/production/group_vars/all/vault.yml`:
 # Minimum: 32 characters.
 # Complexity: at least one uppercase letter, one lowercase letter, one digit,
 # and one special character.
-iriven_chgpasswd_hmac_salt_secret: ""
+changepassword_hmac_salt_secret: ""
 
 unix_local_accounts:
   - username: root
@@ -261,9 +261,9 @@ Plaintext values are processed by the role and converted into Linux-compatible p
 Recommended production posture:
 
 ```yaml
-iriven_chgpasswd_hash_algorithm: sha512
-iriven_chgpasswd_default_hash_rounds: 656000
-iriven_chgpasswd_min_hash_rounds: 500000
+changepassword_hash_algorithm: sha512
+changepassword_default_hash_rounds: 656000
+changepassword_min_hash_rounds: 500000
 ```
 
 ---
@@ -284,9 +284,9 @@ and the playbook:
 playbooks/change_password.yml
 ```
 
-### Without `TGT_USER`
+### Without `username`
 
-When `TGT_USER` is not passed as an extra variable, the role uses the default value defined by the project configuration. The default target is `root`.
+When `username` is not passed as an extra variable, the role uses the default value defined by the project configuration. The default target is `root`.
 
 ```bash
 ansible-playbook \
@@ -304,7 +304,7 @@ ansible-playbook \
   --vault-password-file ~/.vault_pass.txt
 ```
 
-### With `TGT_USER=root`
+### With `username=root`
 
 Use this mode to rotate only the `root` password, provided `root` is declared in `unix_local_accounts`.
 
@@ -313,10 +313,10 @@ ansible-playbook \
   -i inventories/production/hosts.yml \
   playbooks/change_password.yml \
   --ask-vault-pass \
-  -e TGT_USER=root
+  -e username=root
 ```
 
-### With `TGT_USER=<user>`
+### With `username=<user>`
 
 Use this mode to rotate only one declared local account. Replace `<user>` with a username present in `unix_local_accounts`.
 
@@ -325,10 +325,10 @@ ansible-playbook \
   -i inventories/production/hosts.yml \
   playbooks/change_password.yml \
   --ask-vault-pass \
-  -e TGT_USER=ansible
+  -e username=ansible
 ```
 
-### With `TGT_USER=all`
+### With `username=all`
 
 Use this mode to rotate all declared accounts.
 
@@ -337,10 +337,10 @@ ansible-playbook \
   -i inventories/production/hosts.yml \
   playbooks/change_password.yml \
   --ask-vault-pass \
-  -e TGT_USER=all
+  -e username=all
 ```
 
-### With `TGT_USER='*'`
+### With `username='*'`
 
 The wildcard target is also supported for rotating all declared accounts. Quote the value to prevent shell expansion.
 
@@ -349,10 +349,10 @@ ansible-playbook \
   -i inventories/production/hosts.yml \
   playbooks/change_password.yml \
   --ask-vault-pass \
-  -e 'TGT_USER=*'
+  -e 'username=*'
 ```
 
-The role fails when `TGT_USER` references an account that is not declared in `unix_local_accounts`.
+The role fails when `username` references an account that is not declared in `unix_local_accounts`.
 
 ---
 
@@ -370,7 +370,7 @@ This role does not create users.
 
 Populate `inventories/production/group_vars/all/vault.yml` with:
 
-- `iriven_chgpasswd_hmac_salt_secret`
+- `changepassword_hmac_salt_secret`
 - `unix_local_accounts`
 - one `password` value per account
 
@@ -478,11 +478,11 @@ The role enforces multiple controls before applying password changes:
 Password ageing is configured globally:
 
 ```yaml
-iriven_chgpasswd_set_aging: false
-iriven_chgpasswd_min_days: null
-iriven_chgpasswd_max_days: null
-iriven_chgpasswd_warn_days: null
-iriven_chgpasswd_inactive_days: null
+changepassword_set_aging: false
+changepassword_min_days: null
+changepassword_max_days: null
+changepassword_warn_days: null
+changepassword_inactive_days: null
 ```
 
 Aging is disabled by default. Set these values explicitly in inventory when a password ageing policy must be enforced.
@@ -526,7 +526,7 @@ For AWX or Ansible Automation Platform:
 - store Vault credentials in managed credentials
 - avoid plaintext password surveys
 - restrict job template execution with RBAC
-- require approval for `TGT_USER=all`
+- require approval for `username=all`
 - use separate inventories per environment
 - run validation jobs before production execution
 - preserve job artifacts for audit review

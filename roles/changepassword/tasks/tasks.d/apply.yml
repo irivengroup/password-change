@@ -8,20 +8,20 @@
         update_password: always
         password_lock: "{{ true if item.state | default('unchanged') == 'locked' else false if item.state | default('unchanged')
           == 'unlocked' else omit }}"
-      loop: "{{ iriven_chgpasswd_normalized_accounts }}"
+      loop: "{{ changepassword_normalized_accounts }}"
       loop_control:
         label: "{{ item.username }}"
-      register: iriven_chgpasswd_apply_results
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+      register: changepassword_apply_results
+      no_log: "{{ changepassword_use_no_log | bool }}"
 
     - name: Changepassword | Lock account after password change when requested globally
       ansible.builtin.user:
         name: "{{ item.username }}"
         password_lock: true
-      loop: "{{ iriven_chgpasswd_normalized_accounts }}"
+      loop: "{{ changepassword_normalized_accounts }}"
       loop_control:
         label: "{{ item.username }}"
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+      no_log: "{{ changepassword_use_no_log | bool }}"
       when:
-        - iriven_chgpasswd_lock_after_change | bool
-        - item.username != 'root' or iriven_chgpasswd_allow_root_lock | bool
+        - changepassword_lock_after_change | bool
+        - item.username != 'root' or changepassword_allow_root_lock | bool

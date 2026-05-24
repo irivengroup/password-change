@@ -7,10 +7,5 @@ exclude_paths:
   - collections/
   - .cache/
 
-skip_list:
-  - var-naming[no-role-prefix]
-
 warn_list:
   - yaml[line-length]
-
-var_naming_pattern: "^[A-Za-z_][A-Za-z0-9_]*$"

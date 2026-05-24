@@ -27,22 +27,22 @@ class FilterModule(object):
 
     def filters(self):
         return {
-            "iriven_chgpasswd_hmac_salt": self.iriven_chgpasswd_hmac_salt,
+            "changepassword_hmac_salt": self.changepassword_hmac_salt,
         }
 
     @staticmethod
-    def iriven_chgpasswd_hmac_salt(message, secret, algorithm="sha256", length=16):
+    def changepassword_hmac_salt(message, secret, algorithm="sha256", length=16):
         """Return a deterministic HMAC digest fragment suitable for crypt salt."""
         if secret is None or str(secret) == "":
-            raise AnsibleFilterError("iriven_chgpasswd_hmac_salt requires a non-empty secret")
+            raise AnsibleFilterError("changepassword_hmac_salt requires a non-empty secret")
 
         try:
             salt_length = int(length)
         except (TypeError, ValueError):
-            raise AnsibleFilterError("iriven_chgpasswd_hmac_salt length must be an integer")
+            raise AnsibleFilterError("changepassword_hmac_salt length must be an integer")
 
         if salt_length < 8 or salt_length > 16:
-            raise AnsibleFilterError("iriven_chgpasswd_hmac_salt length must be between 8 and 16")
+            raise AnsibleFilterError("changepassword_hmac_salt length must be between 8 and 16")
 
         normalized_algorithm = str(algorithm).lower()
         if normalized_algorithm not in hashlib.algorithms_available:

@@ -6,20 +6,20 @@
   gather_facts: true
 
   vars:
-    TGT_USER: all  # noqa var-naming[pattern]
-    iriven_chgpasswd_hmac_salt_secret: "ValidMoleculeSecret#2026WithEnoughLength"
-    iriven_chgpasswd_audit_enabled: false
-    iriven_chgpasswd_audit_only: false
-    iriven_chgpasswd_lock_enabled: false
-    iriven_chgpasswd_enable_audit_log: false
-    iriven_chgpasswd_enable_runtime_lock: false
-    iriven_chgpasswd_require_custom_hmac_secret: false
-    iriven_chgpasswd_allow_default_hmac_fallback: true
-    iriven_chgpasswd_set_aging: true
-    iriven_chgpasswd_min_days: 3
-    iriven_chgpasswd_max_days: 90
-    iriven_chgpasswd_warn_days: 14
-    iriven_chgpasswd_inactive_days: null
+    username: all
+    changepassword_hmac_salt_secret: "ValidMoleculeSecret#2026WithEnoughLength"
+    changepassword_audit_enabled: false
+    changepassword_audit_only: false
+    changepassword_lock_enabled: false
+    changepassword_enable_audit_log: false
+    changepassword_enable_runtime_lock: false
+    changepassword_require_custom_hmac_secret: false
+    changepassword_allow_default_hmac_fallback: true
+    changepassword_set_aging: true
+    changepassword_min_days: 3
+    changepassword_max_days: 90
+    changepassword_warn_days: 14
+    changepassword_inactive_days: null
     unix_local_accounts:
       - username: moleculeops
         password: "Molecule-Test-Password-2026!"
