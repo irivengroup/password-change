@@ -1,0 +1,43 @@
+---
+- name: Create Molecule containers
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    molecule_instance_name: chgpassword-ubuntu
+    molecule_instance_image: docker.io/geerlingguy/docker-ubuntu2204-ansible:latest
+    molecule_instance_config_path: "{{ lookup('env', 'MOLECULE_INSTANCE_CONFIG') }}"
+
+  tasks:
+    - name: molecule | Pull test image
+      community.docker.docker_image:
+        name: "{{ molecule_instance_image }}"
+        source: pull
+
+    - name: molecule | Start test container
+      community.docker.docker_container:
+        name: "{{ molecule_instance_name }}"
+        hostname: "{{ molecule_instance_name }}"
+        image: "{{ molecule_instance_image }}"
+        state: started
+        restart_policy: unless-stopped
+        command: /bin/sh -c "while true; do sleep 10000; done"
+        detach: true
+        tty: true
+        privileged: false
+
+    - name: molecule | Persist delegated instance configuration
+      ansible.builtin.copy:
+        dest: "{{ molecule_instance_config_path }}"
+        mode: '0600'
+        content: >-
+          {{
+            [
+              {
+                'instance': molecule_instance_name,
+                'address': molecule_instance_name,
+                'user': 'root',
+                'connection': 'community.docker.docker'
+              }
+            ] | to_json
+          }}

@@ -1,0 +1,26 @@
+---
+- name: Prepare Molecule target
+  hosts: all
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: molecule | Ensure deterministic machine-id exists
+      ansible.builtin.copy:
+        dest: /etc/machine-id
+        owner: root
+        group: root
+        mode: '0444'
+        content: "0123456789abcdef0123456789abcdef\n"
+
+    - name: molecule | Ensure password rotation test user already exists
+      ansible.builtin.user:
+        name: testrotate
+        state: present
+        create_home: false
+        shell: /bin/bash
+
+    - name: molecule | Ensure test user is not locked before converge
+      ansible.builtin.user:
+        name: testrotate
+        password_lock: false

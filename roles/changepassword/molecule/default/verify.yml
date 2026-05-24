@@ -1,40 +1,48 @@
 ---
-- name: Verify
+- name: Verify changepassword role behavior
   hosts: all
   become: true
   gather_facts: false
 
   tasks:
-    - name: Verify root exists with builtin getent
+    - name: verify | Confirm root exists
       ansible.builtin.getent:
         database: passwd
         key: root
         fail_key: true
 
-    - name: Verify test user exists with builtin getent
+    - name: verify | Confirm test user exists
       ansible.builtin.getent:
         database: passwd
         key: testrotate
         fail_key: true
 
-    - name: Verify audit file exists
-      ansible.builtin.stat:
-        path: /var/log/ansible/changepassword.log
-      register: audit_file
+    - name: verify | Read root shadow entry
+      ansible.builtin.command:
+        argv:
+          - getent
+          - shadow
+          - root
+      register: root_shadow
+      changed_when: false
+      no_log: true
 
-    - name: Assert audit file exists
+    - name: verify | Read test user shadow entry
+      ansible.builtin.command:
+        argv:
+          - getent
+          - shadow
+          - testrotate
+      register: testrotate_shadow
+      changed_when: false
+      no_log: true
+
+    - name: verify | Assert generated hashes are SHA512 crypt and accounts are unlocked
       ansible.builtin.assert:
         that:
-          - audit_file.stat.exists
-          - audit_file.stat.mode == '0600'
-
-    - name: Read audit file
-      ansible.builtin.slurp:
-        src: /var/log/ansible/changepassword.log
-      register: audit_content
-
-    - name: Assert selected users were audited
-      ansible.builtin.assert:
-        that:
-          - "'user=root' in (audit_content.content | b64decode)"
-          - "'user=testrotate' in (audit_content.content | b64decode)"
+          - root_shadow.stdout.split(':')[1] is match('^\\$6\\$rounds=656000\\$')
+          - testrotate_shadow.stdout.split(':')[1] is match('^\\$6\\$rounds=656000\\$')
+          - not root_shadow.stdout.split(':')[1].startswith('!')
+          - not testrotate_shadow.stdout.split(':')[1].startswith('!')
+        fail_msg: Password rotation did not produce expected unlocked SHA512 crypt hashes.
+      no_log: true

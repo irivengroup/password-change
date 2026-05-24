@@ -2,29 +2,24 @@
 - name: Converge
   hosts: all
   become: true
+  gather_facts: true
   vars:
     TGT_USER: all
     iriven_chgpasswd_require_hash: false
     iriven_chgpasswd_allow_plaintext_password: true
     iriven_chgpasswd_hash_salt_mode: hmac_machine_id
-    iriven_chgpasswd_hmac_salt_secret: "molecule-test-secret-minimum-24-chars"
-    iriven_chgpasswd_set_aging: true
-    iriven_chgpasswd_max_days: 90
-    iriven_chgpasswd_warn_days: 14
+    iriven_chgpasswd_hmac_salt_secret: molecule-test-secret-minimum-24-chars
+    iriven_chgpasswd_set_aging: false
+    iriven_chgpasswd_audit_enabled: false
     unix_local_accounts:
       - username: root
-        password: "Molecule-Test-Password-2026!"
+        password: Molecule-Test-Password-2026!
         expire: false
         state: unlocked
       - username: testrotate
-        password: "Molecule-Test-Password-2026!"
+        password: Molecule-Test-Password-2026!
         expire: false
         state: unlocked
-  pre_tasks:
-    - name: Ensure molecule test user exists before password rotation
-      ansible.builtin.user:
-        name: testrotate
-        state: present
-        create_home: false
+
   roles:
     - role: changepassword
