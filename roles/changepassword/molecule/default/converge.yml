@@ -4,7 +4,7 @@
   become: true
   gather_facts: true
   vars:
-    TGT_USER: all  # noqa var-naming[pattern]
+    TGT_USER: all
     iriven_chgpasswd_use_no_log: false
     iriven_chgpasswd_require_hash: false
     iriven_chgpasswd_allow_plaintext_password: true
@@ -19,14 +19,14 @@
     iriven_chgpasswd_inactive_days: null
     iriven_chgpasswd_audit_enabled: false
     unix_local_accounts:
-      - username: moleculeops
-        password: Molecule-Test-Password-2026!
-        expire: false
-        state: unlocked
-      - username: moleculeaudit
-        password: Molecule-Audit-Password-2026!
-        expire: false
-        state: locked
-
+    - username: moleculeops
+      password: Molecule-Test-Password-2026!
+      expire: false
+      state: unlocked
+    - username: moleculeaudit
+      password: Molecule-Audit-Password-2026!
+      expire: false
+      state: locked
   roles:
-    - role: changepassword
+  - role: changepassword
+  connection: community.docker.docker

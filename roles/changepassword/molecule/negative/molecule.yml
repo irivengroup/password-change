@@ -1,28 +1,28 @@
 ---
 dependency:
   name: galaxy
-
 driver:
   name: default
-
 platforms:
-  - name: Chgpassword-negative-ubuntu
-
+- name: Chgpassword-negative-ubuntu
 provisioner:
   name: ansible
   env:
-    ANSIBLE_DEPRECATION_WARNINGS: "False"
+    ANSIBLE_DEPRECATION_WARNINGS: 'False'
   config_options:
     defaults:
       deprecation_warnings: false
       stdout_callback: default
       result_format: yaml
       roles_path: ../../..
-
+  inventory:
+    host_vars:
+      chgpassword-negative-ubuntu:
+        ansible_connection: community.docker.docker
 scenario:
   test_sequence:
-    - syntax
-    - create
-    - prepare
-    - converge
-    - destroy
+  - syntax
+  - create
+  - prepare
+  - converge
+  - destroy

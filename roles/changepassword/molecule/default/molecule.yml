@@ -1,15 +1,13 @@
 ---
 driver:
   name: default
-
 platforms:
-  - name: Chgpassword-ubuntu
-    image: docker.io/geerlingguy/docker-ubuntu2204-ansible:latest
-
+- name: Chgpassword-ubuntu
+  image: docker.io/geerlingguy/docker-ubuntu2204-ansible:latest
 provisioner:
   name: ansible
   env:
-    ANSIBLE_DEPRECATION_WARNINGS: "False"
+    ANSIBLE_DEPRECATION_WARNINGS: 'False'
   playbooks:
     create: create.yml
     prepare: prepare.yml
@@ -27,16 +25,14 @@ provisioner:
       result_format: yaml
       bin_ansible_callbacks: true
       deprecation_warnings: false
-
 scenario:
   test_sequence:
-    - syntax
-    - create
-    - prepare
-    - converge
-    - idempotence
-    - verify
-    - destroy
-
+  - syntax
+  - create
+  - prepare
+  - converge
+  - idempotence
+  - verify
+  - destroy
 verifier:
   name: ansible

@@ -3,30 +3,30 @@
   hosts: all
   become: true
   gather_facts: false
-
   tasks:
-    - name: Molecule | Ensure deterministic machine-id exists for hash salt derivation
-      ansible.builtin.copy:
-        dest: /etc/machine-id
-        owner: root
-        group: root
-        mode: '0444'
-        content: "0123456789abcdef0123456789abcdef\n"
+  - name: Molecule | Ensure deterministic machine-id exists for hash salt derivation
+    ansible.builtin.copy:
+      dest: /etc/machine-id
+      owner: root
+      group: root
+      mode: '0444'
+      content: '0123456789abcdef0123456789abcdef
 
-    - name: Molecule | Ensure existing local accounts required by the role test
-      ansible.builtin.user:
-        name: "{{ item }}"
-        state: present
-        create_home: false
-        shell: /bin/bash
-      loop:
-        - moleculeops
-        - moleculeaudit
-
-    - name: Molecule | Ensure test accounts start unlocked
-      ansible.builtin.user:
-        name: "{{ item }}"
-        password_lock: false
-      loop:
-        - moleculeops
-        - moleculeaudit
+        '
+  - name: Molecule | Ensure existing local accounts required by the role test
+    ansible.builtin.user:
+      name: '{{ item }}'
+      state: present
+      create_home: false
+      shell: /bin/bash
+    loop:
+    - moleculeops
+    - moleculeaudit
+  - name: Molecule | Ensure test accounts start unlocked
+    ansible.builtin.user:
+      name: '{{ item }}'
+      password_lock: false
+    loop:
+    - moleculeops
+    - moleculeaudit
+  connection: community.docker.docker
