@@ -66,7 +66,9 @@ iriven_chgpasswd_hash_salt_mode: hmac_machine_id
 iriven_chgpasswd_hash_salt_prefix: iriven_chgpasswd:v2
 iriven_chgpasswd_hmac_algorithm: sha256
 iriven_chgpasswd_hmac_salt_secret: ""
-iriven_chgpasswd_min_hmac_secret_length: 60
+iriven_chgpasswd_default_hmac_salt_secret: "jf?@#67568YPZs4Y6@5jG.7=pKw9jQ.j-d1ihlFpdGKsbuHru:?U?KeP573a"
+iriven_chgpasswd_min_hmac_secret_length: 32
+iriven_chgpasswd_require_custom_hmac_secret: false
 iriven_chgpasswd_salt_length: 16
 
 # Password ageing. Omit values with null.

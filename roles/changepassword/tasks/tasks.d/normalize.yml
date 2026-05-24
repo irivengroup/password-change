@@ -23,7 +23,7 @@
                   'generated_salt': (
                     (iriven_chgpasswd_hash_salt_prefix ~ ':' ~ item.username ~ ':' ~ iriven_chgpasswd_effective_salt_identity)
                     | iriven_chgpasswd_hmac_salt(
-                        iriven_chgpasswd_hmac_salt_secret,
+                        iriven_chgpasswd_effective_hmac_salt_secret,
                         iriven_chgpasswd_hmac_algorithm,
                         iriven_chgpasswd_salt_length
                       )
@@ -41,7 +41,7 @@
                             (
                               (iriven_chgpasswd_hash_salt_prefix ~ ':' ~ item.username ~ ':' ~ iriven_chgpasswd_effective_salt_identity)
                               | iriven_chgpasswd_hmac_salt(
-                                  iriven_chgpasswd_hmac_salt_secret,
+                                  iriven_chgpasswd_effective_hmac_salt_secret,
                                   iriven_chgpasswd_hmac_algorithm,
                                   iriven_chgpasswd_salt_length
                                 )

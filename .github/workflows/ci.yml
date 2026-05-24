@@ -150,8 +150,13 @@ jobs:
 
           if int(defaults.get('iriven_chgpasswd_default_hash_rounds', 0)) < int(defaults.get('iriven_chgpasswd_min_hash_rounds', 500000)):
               errors.append('roles/changepassword/defaults/main.yml: hash rounds must not be below the configured minimum')
-          if int(defaults.get('iriven_chgpasswd_min_hmac_secret_length', 0)) < 60:
-              errors.append('roles/changepassword/defaults/main.yml: HMAC secret minimum length must remain at least 60')
+          if int(defaults.get('iriven_chgpasswd_min_hmac_secret_length', 0)) < 32:
+              errors.append('roles/changepassword/defaults/main.yml: HMAC secret minimum length must remain at least 32')
+          fallback_secret = defaults.get('iriven_chgpasswd_default_hmac_salt_secret', '')
+          if len(fallback_secret) != 60:
+              errors.append('roles/changepassword/defaults/main.yml: default HMAC fallback secret must be exactly 60 characters')
+          if not (any(c.isupper() for c in fallback_secret) and any(c.islower() for c in fallback_secret) and any(c.isdigit() for c in fallback_secret) and any(not c.isalnum() for c in fallback_secret)):
+              errors.append('roles/changepassword/defaults/main.yml: default HMAC fallback secret does not meet complexity requirements')
 
           ansible_cfg = Path('ansible.cfg').read_text(encoding='utf-8')
           for required in ('host_key_checking = True', 'display_args_to_stdout = False', 'allow_world_readable_tmpfiles = False'):

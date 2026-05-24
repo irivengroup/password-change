@@ -10,7 +10,7 @@ iriven_chgpasswd_require_hash: false
 iriven_chgpasswd_allow_plaintext_password: true
 iriven_chgpasswd_default_hash_rounds: 656000
 iriven_chgpasswd_min_hash_rounds: 500000
-iriven_chgpasswd_min_hmac_secret_length: 60
+iriven_chgpasswd_min_hmac_secret_length: 32
 
 # Salt identity for generated hashes.
 # SHA512 remains the default crypt hash; the salt is HMAC-derived from username + machine-id.

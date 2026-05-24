@@ -43,6 +43,8 @@
         iriven_chgpasswd_machine_id_file: ""
         iriven_chgpasswd_machine_id_raw: {}
         iriven_chgpasswd_effective_salt_identity: ""
+        iriven_chgpasswd_effective_hmac_salt_secret: ""
+        iriven_chgpasswd_custom_hmac_secret_is_valid: false
         iriven_chgpasswd_shadow_ageing_state: {}
         iriven_chgpasswd_apply_results: {}
         iriven_chgpasswd_getent_passwd_results: {}

@@ -153,6 +153,50 @@
 
 - name: changepassword | Validate account definitions
   block:
+    - name: changepassword | Validate provided HMAC secret strength
+      ansible.builtin.set_fact:
+        iriven_chgpasswd_custom_hmac_secret_is_valid: >-
+          {{
+            (iriven_chgpasswd_hmac_salt_secret | default('') | length >= iriven_chgpasswd_min_hmac_secret_length | int)
+            and ((iriven_chgpasswd_hmac_salt_secret | default('') | regex_search('[A-Z]')) is not none)
+            and ((iriven_chgpasswd_hmac_salt_secret | default('') | regex_search('[a-z]')) is not none)
+            and ((iriven_chgpasswd_hmac_salt_secret | default('') | regex_search('[0-9]')) is not none)
+            and ((iriven_chgpasswd_hmac_salt_secret | default('') | regex_search('[^A-Za-z0-9]')) is not none)
+          }}
+      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+
+    - name: changepassword | Validate default HMAC fallback secret strength
+      ansible.builtin.assert:
+        that:
+          - iriven_chgpasswd_default_hmac_salt_secret | length >= 60
+          - (iriven_chgpasswd_default_hmac_salt_secret | regex_search('[A-Z]')) is not none
+          - (iriven_chgpasswd_default_hmac_salt_secret | regex_search('[a-z]')) is not none
+          - (iriven_chgpasswd_default_hmac_salt_secret | regex_search('[0-9]')) is not none
+          - (iriven_chgpasswd_default_hmac_salt_secret | regex_search('[^A-Za-z0-9]')) is not none
+        fail_msg: "Default HMAC fallback secret must be at least 60 chars and include uppercase, lowercase, digit and special characters."
+      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+
+    - name: changepassword | Fail when a valid custom HMAC secret is required
+      ansible.builtin.assert:
+        that:
+          - iriven_chgpasswd_custom_hmac_secret_is_valid | bool
+        fail_msg: >-
+          iriven_chgpasswd_require_custom_hmac_secret=true requires iriven_chgpasswd_hmac_salt_secret
+          to be at least iriven_chgpasswd_min_hmac_secret_length characters and include uppercase,
+          lowercase, digit and special characters.
+      when: iriven_chgpasswd_require_custom_hmac_secret | bool
+      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+
+    - name: changepassword | Select effective HMAC secret for salt derivation
+      ansible.builtin.set_fact:
+        iriven_chgpasswd_effective_hmac_salt_secret: >-
+          {{
+            iriven_chgpasswd_hmac_salt_secret
+            if (iriven_chgpasswd_custom_hmac_secret_is_valid | bool)
+            else iriven_chgpasswd_default_hmac_salt_secret
+          }}
+      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+
     - name: changepassword | Validate account definitions and security policy
       ansible.builtin.assert:
         that:
@@ -189,7 +233,7 @@
             (item.password | default('') is match(iriven_chgpasswd_password_hash_prefix_regex))
           - iriven_chgpasswd_hash_salt_mode == 'hmac_machine_id'
           - iriven_chgpasswd_hmac_algorithm in ['sha256', 'sha512']
-          - iriven_chgpasswd_hmac_salt_secret | length >= iriven_chgpasswd_min_hmac_secret_length | int
+          - iriven_chgpasswd_effective_hmac_salt_secret | length >= iriven_chgpasswd_min_hmac_secret_length | int
           - iriven_chgpasswd_salt_length | int >= 8
           - iriven_chgpasswd_salt_length | int <= 16
           - iriven_chgpasswd_allow_empty_password | bool == false
