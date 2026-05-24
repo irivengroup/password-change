@@ -133,9 +133,11 @@ jobs:
 
       - name: Run Molecule default scenario
         run: molecule --debug test
+        working-directory: roles/changepassword
 
       - name: Run Molecule negative scenario
         run: molecule test -s negative
+        working-directory: roles/changepassword
       - name: Validate role with ansible-lint production profile
         run: ansible-lint --profile production .
 
@@ -270,6 +272,7 @@ jobs:
         env:
           ANSIBLE_ROLES_PATH: ${{ github.workspace }}/roles
         run: molecule --debug test
+        working-directory: roles/changepassword
           molecule test -s negative
 
 # Optional multi-distribution validation:
