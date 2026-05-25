@@ -2,11 +2,11 @@
 changepassword_manage_root: true
 changepassword_allow_root_lock: false
 changepassword_lock_enabled: true
-changepassword_lock_path: /var/lock/iriven_chgpasswd.lock
+changepassword_lock_path: /var/lock/changepasswd.lock
 changepassword_audit_enabled: true
 changepassword_audit_owner: root
 changepassword_audit_group: root
-changepassword_audit_file: /var/log/ansible/changepassword.json
+changepassword_audit_file: /var/log/ansible/changepassword.jsonl
 changepassword_audit_schema_version: 1.0
 changepassword_audit_dir_mode: '0750'
 changepassword_audit_file_mode: '0600'

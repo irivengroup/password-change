@@ -77,7 +77,7 @@ def validate_defaults(errors: list[str]) -> None:
     expected_values = {
         "changepassword_hash_algorithm": "sha512",
         "changepassword_hash_salt_mode": "hmac_machine_id",
-        "changepassword_audit_file": "/var/log/ansible/changepassword.json",
+        "changepassword_audit_file": "/var/log/ansible/changepassword.jsonl",
         "changepassword_audit_file_mode": "0600",
         "changepassword_audit_dir_mode": "0750",
     }
