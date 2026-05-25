@@ -103,7 +103,7 @@
       loop_control:
         label: '{{ item.username | default(''undefined'') }}'
       no_log: '{{ changepassword_use_no_log | bool }}'
-    - name: Changepassword | Build declared account changepassword_target_account list
+    - name: Changepassword | Build declared account username list
       ansible.builtin.set_fact:
         changepassword_runtime_accounts: '{{ changepassword_local_accounts | map(attribute=''username'') | list }}'
       no_log: '{{ changepassword_use_no_log | bool }}'

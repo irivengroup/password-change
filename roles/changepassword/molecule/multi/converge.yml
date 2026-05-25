@@ -5,7 +5,6 @@
   gather_facts: true
   become: false
   check_mode: true
-
   vars:
     changepassword_use_no_log: false
     changepassword_audit_enabled: false
@@ -14,7 +13,7 @@
     changepassword_set_aging: false
     changepassword_require_etc_passwd_user: false
     changepassword_fail_if_same_hash: false
-    changepassword_hmac_salt_secret: Molecule-Hmac-Secret-2026!
+    changepassword_hmac_salt_secret: Molecule-Hmac-Secret-2026-Strong-Value!
     changepassword_target_account: all
     changepassword_local_accounts:
       - username: root
@@ -29,6 +28,5 @@
         password: $6$rounds=656000$rbcdefghijklmnop$21234567890123456789012345678901234567890123456789012345678901234567890123456789
         state: unlocked
         expire: false
-
   roles:
     - role: changepassword
