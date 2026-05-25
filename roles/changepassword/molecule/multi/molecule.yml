@@ -4,9 +4,7 @@ dependency:
 driver:
   name: default
 platforms:
-
-
-  - name: localhost
+- name: localhost
 provisioner:
   name: ansible
   inventory:
@@ -15,13 +13,13 @@ provisioner:
         ansible_connection: local
         ansible_python_interpreter: '{{ ansible_playbook_python }}'
   env:
-    ANSIBLE_ROLES_PATH: ${MOLECULE_PROJECT_DIRECTORY}/..:${ANSIBLE_ROLES_PATH:-}
+    ANSIBLE_ROLES_PATH: ${MOLECULE_PROJECT_DIRECTORY}/..
 verifier:
   name: ansible
 scenario:
   test_sequence:
-    - syntax
-    - prepare
-    - converge
-    - idempotence
-    - verify
+  - syntax
+  - prepare
+  - converge
+  - idempotence
+  - verify
