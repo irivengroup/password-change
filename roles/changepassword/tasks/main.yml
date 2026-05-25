@@ -51,8 +51,8 @@
       ansible.builtin.set_fact:
         changepassword_normalized_accounts: []
         changepassword_existing_local_users: []
-        changepassword_effective_target_accounts: []
-        changepassword_declared_changepassword_effective_target_accounts: []
+        changepassword_target_accounts: []
+        changepassword_declared_changepassword_target_accounts: []
         changepassword_requested_user: ""
         changepassword_selected_login_shells: {}
         changepassword_etc_passwd_raw: {}
