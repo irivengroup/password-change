@@ -37,9 +37,9 @@ jobs:
       - name: Validate YAML style
         run: yamllint .
       - name: Validate YAML parsing
-        run: "python - <<'PY'\nfrom pathlib import Path\nimport sys\nimport yaml\n\nfailed = False\nfor path in list(Path(\".\").rglob(\"*.yml\"\
-          )) + list(Path(\".\").rglob(\"*.yaml\")):\n    try:\n        yaml.safe_load(path.read_text(encoding=\"utf-8\"))\n    except Exception\
-          \ as exc:\n        print(f\"{path}: {exc}\", file=sys.stderr)\n        failed = True\nsys.exit(1 if failed else 0)\nPY\n"
+        run: "python - <<'PY'from pathlib import Pathimport sysimport yamlfailed = Falsefor path in list(Path(\".\").rglob(\"*.yml\"\
+          )) + list(Path(\".\").rglob(\"*.yaml\")):    try:        yaml.safe_load(path.read_text(encoding=\"utf-8\"))    except Exception\
+          \ as exc:        print(f\"{path}: {exc}\", file=sys.stderr)        failed = Truesys.exit(1 if failed else 0)PY"
       - name: Validate project schema
         run: python scripts/validate_project.py
       - name: Compile Python plugins
@@ -47,7 +47,7 @@ jobs:
       - name: Validate inventory
         run: ansible-inventory -i inventories/production/hosts.yml --list
       - name: Syntax-check playbook
-        run: "ansible-playbook \\\n  -i inventories/production/hosts.yml \\\n  playbooks/changepassword.yml \\\n  --syntax-check\n"
+        run: "ansible-playbook \\  -i inventories/production/hosts.yml \\  playbooks/changepassword.yml \\  --syntax-check"
       - name: Run ansible-lint
         run: ansible-lint --profile production
       - name: Run Gitleaks

@@ -39,7 +39,6 @@ Hardening rules:
 
 SLES 15+ and openSUSE Leap 15.5+ are supported when local UNIX account backends, `getent`, `/etc/shadow`, and `/usr/bin/chage` are available.
 
-
 ## Production Strict Baseline
 
 Production strict execution is the default baseline. Deployments must provide a compliant custom HMAC salt secret through Vault and keep audit logging, runtime locking, and no-log protections enabled.

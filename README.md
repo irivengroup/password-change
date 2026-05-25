@@ -115,7 +115,7 @@ inventories/
             └── vault.yml
 ```
 
-`main.yml` contains non-sensitive operational defaults.  
+`main.yml` contains non-sensitive operational defaults.
 `vault.yml` contains sensitive account and password data and must be encrypted with Ansible Vault.
 
 ---
@@ -182,7 +182,6 @@ Accepted hash prefixes:
 - `$5$` for SHA256 crypt
 
 Store generated hashes only in Vault-protected inventory files and never commit real credentials in clear text.
-
 
 ## Vault Configuration
 
@@ -546,7 +545,6 @@ This role is suitable for controlled environments requiring:
 
 ---
 
-
 ## Production Strict Controls
 
 The role is designed for production-strict execution by default.
@@ -584,7 +582,7 @@ Multi-distribution validation is available for:
 
 ## Authors
 
-Alfred TCHONDJO  
+Alfred TCHONDJO
 Project Initiator — IRIVEN Group
 
 ---

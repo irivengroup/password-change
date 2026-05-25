@@ -5,7 +5,6 @@ from pathlib import Path
 import sys
 import yaml
 
-
 VAULT_FILE = Path("inventories/production/group_vars/all/vault.yml")
 ACCOUNT_LIST_KEY = "changepassword_local_accounts"
 ACCOUNT_NAME_KEY = "username"

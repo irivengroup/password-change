@@ -28,5 +28,5 @@
       ansible.builtin.copy:
         dest: '{{ molecule_instance_config }}'
         mode: '0600'
-        content: "---\n- instance: chgpassword-negative-ubuntu\n  address: chgpassword-negative-ubuntu\n  user: root\n  connection: community.docker.docker\n\
-          \  ansible_python_interpreter: /usr/bin/python3\n"
+        content: "---- instance: chgpassword-negative-ubuntu  address: chgpassword-negative-ubuntu  user: root  connection: community.docker.docker\
+          \  ansible_python_interpreter: /usr/bin/python3"
