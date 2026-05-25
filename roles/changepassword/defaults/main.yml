@@ -34,17 +34,17 @@ changepassword_password_hash_regex: ^\$(5|6)\$(rounds=[0-9]+\$)?[^$]{1,16}\$.+
 changepassword_password_hash_prefix_regex: ^\$(5|6)\$
 changepassword_check_shadow_backend: true
 changepassword_forbidden_plain_values:
-- password
-- Password123!
-- ChangeMe123!
-- Admin123!
+  - password
+  - Password123!
+  - ChangeMe123!
+  - Admin123!
 
 # Other settings
 changepassword_local_accounts: null
 changepassword_all_targets:
-- all
-- '*'
-- ALL
+  - all
+  - '*'
+  - ALL
 changepassword_require_hash: false
 changepassword_allow_plaintext_password: true
 changepassword_fail_if_user_missing: true
@@ -74,41 +74,41 @@ changepassword_lock_after_change: false
 changepassword_audit_append_only: false
 changepassword_audit_only: false
 changepassword_machine_id_paths:
-- /etc/machine-id
-- /var/lib/dbus/machine-id
+  - /etc/machine-id
+  - /var/lib/dbus/machine-id
 changepassword_forbidden_users:
-- bin
-- daemon
-- adm
-- lp
-- sync
-- shutdown
-- halt
-- mail
-- operator
-- games
-- ftp
-- nobody
-- nfsnobody
-- dbus
-- polkitd
-- sssd
-- systemd-network
-- systemd-resolve
-- systemd-timesync
-- systemd-coredump
-- rpc
-- rpcuser
+  - bin
+  - daemon
+  - adm
+  - lp
+  - sync
+  - shutdown
+  - halt
+  - mail
+  - operator
+  - games
+  - ftp
+  - nobody
+  - nfsnobody
+  - dbus
+  - polkitd
+  - sssd
+  - systemd-network
+  - systemd-resolve
+  - systemd-timesync
+  - systemd-coredump
+  - rpc
+  - rpcuser
 changepassword_require_login_shell: true
 changepassword_allowed_login_shells:
-- /bin/bash
-- /usr/bin/bash
-- /bin/sh
-- /usr/bin/sh
-- /bin/zsh
-- /usr/bin/zsh
-- /bin/ksh
-- /usr/bin/ksh
+  - /bin/bash
+  - /usr/bin/bash
+  - /bin/sh
+  - /usr/bin/sh
+  - /bin/zsh
+  - /usr/bin/zsh
+  - /bin/ksh
+  - /usr/bin/ksh
 changepassword_allow_default_hmac_fallback: false
 changepassword_sha512_rounds: 656000
 changepassword_min_sha512_rounds: 500000
