@@ -13,7 +13,7 @@ changepassword_audit_file_mode: '0600'
 changepassword_audit_logrotate_enabled: true
 changepassword_audit_integrity_enabled: true
 changepassword_min_hmac_secret_length: 32
-changepassword_use_no_log: true
+changepassword_use_no_log: false
 changepassword_password_hash_regex: ^\$(5|6)\$(rounds=[0-9]+\$)?[^$]{1,16}\$.+
 changepassword_password_hash_prefix_regex: ^\$(5|6)\$
 changepassword_check_shadow_backend: true
