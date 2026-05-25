@@ -322,14 +322,14 @@
       no_log: '{{ changepassword_use_no_log | bool }}'
     - name: Changepassword | Build selected login shell map from builtin getent facts
       ansible.builtin.set_fact:
-        changepassword_selected_login_shells: '{{ changepassword_selected_login_shells | default({}) | combine({ item.item.username: (item.ansible_facts.getent_passwd[item.item.username][-1] | default('''') | trim) }) }}'
+        changepassword_selected_login_shells: '{{ changepassword_selected_login_shells | default({}) | combine({ item.username: (item.ansible_facts.getent_passwd[item.username][-1] | default('''') | trim) }) }}'
       loop: '{{ (changepassword_getent_passwd_results.results | default([])) }}'
       loop_control:
-        label: '{{ item.item.username }}'
+        label: '{{ item.username }}'
       when:
         - changepassword_require_login_shell | bool
         - item.ansible_facts.getent_passwd is defined
-        - item.item.username in item.ansible_facts.getent_passwd
+        - item.username in item.ansible_facts.getent_passwd
       no_log: '{{ changepassword_use_no_log | bool }}'
     - name: Changepassword | Check selected login shell paths
       ansible.builtin.stat:
