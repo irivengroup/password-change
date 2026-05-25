@@ -1,31 +1,4 @@
 ---
-- name: Changepassword | Build declared account username list
-  ansible.builtin.set_fact:
-    changepassword_declared_usernames: '{{ changepassword_local_accounts | map(attribute=''username'') | list }}'
-  changed_when: false
-  no_log: '{{ changepassword_use_no_log | bool }}'
-- name: Changepassword | Ensure requested account is declared in Vault variables
-  ansible.builtin.assert:
-    that:
-      - changepassword_target_account_normalized in ['all', '*'] or changepassword_target_account_normalized in changepassword_declared_usernames
-    fail_msg: Requested changepassword_target_account is not declared in changepassword_local_accounts.
-  changed_when: false
-  no_log: '{{ changepassword_use_no_log | bool }}'
-- name: Changepassword | Build target account list
-  ansible.builtin.set_fact:
-    changepassword_target_accounts: '{{ changepassword_local_accounts if changepassword_target_account_normalized in [''all'', ''*''] else (changepassword_local_accounts | selectattr(''username'', ''equalto'', changepassword_target_account_normalized) | list) }}'
-  changed_when: false
-  no_log: '{{ changepassword_use_no_log | bool }}'
-- name: Changepassword | Validate target account list
-  ansible.builtin.assert:
-    that:
-      - changepassword_target_accounts is defined
-      - changepassword_target_accounts is iterable
-      - changepassword_target_accounts | list | length > 0
-      - changepassword_target_accounts | map(attribute='username') | list | length == changepassword_target_accounts | list | length
-    fail_msg: No target account selected from changepassword_local_accounts.
-  changed_when: false
-  no_log: '{{ changepassword_use_no_log | bool }}'
 - name: Changepassword | Normalize runtime target selector
   ansible.builtin.set_fact:
     changepassword_target_account_normalized: '{{ (changepassword_target_account | default(''root'', true) | string | trim | lower) if (changepassword_target_account | default(''root'', true) | string | trim | lower) in [''all'', ''*''] else (changepassword_target_account | default(''root'', true) | string | trim) }}'
@@ -64,14 +37,15 @@
         fail_msg: 'changepassword_local_accounts must be a non-empty list of dictionaries, for example: changepassword_local_accounts: [{username: root, password: ''vault-secret-or-$5$/$6$hash''}].'
     - name: Changepassword | Normalize runtime target selector
       ansible.builtin.set_fact:
-        changepassword_requested_user: '{{ changepassword_target_account | default(''root'') | string | trim }}'
-      no_log: '{{ changepassword_use_no_log | bool }}'
+        changepassword_target_account_normalized: '{{ (changepassword_target_account | default(''root'', true) | string | trim | lower) if (changepassword_target_account | default(''root'', true) | string | trim | lower) in [''all'', ''*''] else (changepassword_target_account | default(''root'', true) | string | trim) }}'
+      changed_when: false
     - name: Changepassword | Validate runtime target selector
       ansible.builtin.assert:
         that:
-          - changepassword_requested_user | length > 0
-          - (changepassword_requested_user in changepassword_all_targets) or (changepassword_requested_user is match(changepassword_target_account_regex))
-        fail_msg: changepassword_target_account must be a valid local account name declared in changepassword_local_accounts, or one of {{ changepassword_all_targets }} to target all declared accounts.
+          - changepassword_target_account_normalized | length > 0
+          - changepassword_target_account_normalized in ['all', '*'] or changepassword_target_account_normalized is match(changepassword_target_account_regex)
+        fail_msg: changepassword_target_account must be omitted/default(root), a valid local username, all, ALL, or *.
+      changed_when: false
     - name: Changepassword | Validate each account item is a dictionary
       ansible.builtin.assert:
         that:
@@ -80,7 +54,7 @@
           - item.username | string | length > 0
           - item.password is defined
           - item.password | string | length > 0
-        fail_msg: 'Each changepassword_local_accounts entry must be a dictionary containing changepassword_target_account and password. Expected list item format: {username: root, password: ''vault-secret-or-$5$/$6$hash''}.'
+        fail_msg: Each changepassword_local_accounts entry must contain username and password.
       loop: '{{ changepassword_local_accounts }}'
       loop_control:
         label: '{{ item.username | default(''undefined'') }}'
@@ -89,7 +63,7 @@
       ansible.builtin.assert:
         that:
           - (item.keys() | list | difference(['username', 'password', 'state', 'expire'])) | length == 0
-        fail_msg: Unsupported keys found for account '{{ item.username | default('undefined') }}'. This role only accepts username, password, state and expire. User provisioning attributes are intentionally forbidden.
+        fail_msg: Unsupported keys found for account '{{ item.username | default('undefined') }}'.
       loop: '{{ changepassword_local_accounts }}'
       loop_control:
         label: '{{ item.username | default(''undefined'') }}'
@@ -97,27 +71,38 @@
     - name: Changepassword | Build declared account username list
       ansible.builtin.set_fact:
         changepassword_declared_usernames: '{{ changepassword_local_accounts | map(attribute=''username'') | list }}'
+      changed_when: false
       no_log: '{{ changepassword_use_no_log | bool }}'
     - name: Changepassword | Refuse duplicate account declarations
       ansible.builtin.assert:
         that:
           - changepassword_declared_usernames | length == changepassword_declared_usernames | unique | list | length
-        fail_msg: Duplicate usernames found in changepassword_local_accounts. Keep exactly one dictionary per username.
+        fail_msg: Duplicate usernames found in changepassword_local_accounts.
+      changed_when: false
       no_log: '{{ changepassword_use_no_log | bool }}'
     - name: Changepassword | Ensure requested account is declared in Vault variables
       ansible.builtin.assert:
         that:
-          - (changepassword_requested_user in changepassword_all_targets) or (changepassword_requested_user in changepassword_declared_usernames)
-        fail_msg: username={{ changepassword_requested_user }} is not declared in changepassword_local_accounts. Refusing to change an account that is not explicitly declared in Vault/inventory variables.
-    - name: Changepassword | Build effective target account list
-      ansible.builtin.set_fact:
-        usernames: "{{\n  changepassword_local_accounts\n  if changepassword_requested_user in changepassword_all_targets\n  else (changepassword_local_accounts | selectattr('username', 'equalto', changepassword_requested_user) | list)\n}}"
+          - changepassword_target_account_normalized in ['all', '*'] or changepassword_target_account_normalized in changepassword_declared_usernames
+        fail_msg: Requested changepassword_target_account is not declared in changepassword_local_accounts.
+      changed_when: false
       no_log: '{{ changepassword_use_no_log | bool }}'
-    - name: Changepassword | Validate effective target account list
+    - name: Changepassword | Build target account list
+      ansible.builtin.set_fact:
+        changepassword_target_accounts: '{{ changepassword_local_accounts if changepassword_target_account_normalized in [''all'', ''*''] else (changepassword_local_accounts | selectattr(''username'', ''equalto'', changepassword_target_account_normalized) | list) }}'
+        usernames: '{{ changepassword_local_accounts if changepassword_target_account_normalized in [''all'', ''*''] else (changepassword_local_accounts | selectattr(''username'', ''equalto'', changepassword_target_account_normalized) | list) }}'
+      changed_when: false
+      no_log: '{{ changepassword_use_no_log | bool }}'
+    - name: Changepassword | Validate target account list
       ansible.builtin.assert:
         that:
-          - usernames | length > 0
-        fail_msg: No effective account selected for username={{ changepassword_requested_user }}.
+          - changepassword_target_accounts is defined
+          - changepassword_target_accounts is iterable
+          - changepassword_target_accounts | list | length > 0
+          - changepassword_target_accounts | map(attribute='username') | list | length == changepassword_target_accounts | list | length
+        fail_msg: No target account selected from changepassword_local_accounts.
+      changed_when: false
+      no_log: '{{ changepassword_use_no_log | bool }}'
 - name: Changepassword | Resolve machine-id identity for hash generation
   block:
     - name: Changepassword | Check machine-id candidate files
