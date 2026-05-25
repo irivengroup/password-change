@@ -10,7 +10,7 @@ from typing import Any
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-ACCOUNT_ALLOWED_KEYS = {"changepassword_target_account", "password", "state", "expire"}
+ACCOUNT_ALLOWED_KEYS = {"username", "password", "state", "expire"}
 ACCOUNT_STATES = {"locked", "unlocked"}
 USERNAME_RE = re.compile(r"^[a-z_][a-z0-9_-]{0,31}$|^root$")
 HASH_RE = re.compile(r"^\$(5|6)\$(rounds=[0-9]+\$)?[^$]{1,16}\$.+")
@@ -19,13 +19,11 @@ FORBIDDEN_ACCOUNT_KEYS = {
     "append", "home", "uid", "gid", "comment", "create_home", "system", "aging",
 }
 
-
 def read_yaml(path: Path) -> Any:
     text = path.read_text(encoding="utf-8")
     if text.startswith("$ANSIBLE_VAULT;"):
         return None
     return yaml.safe_load(text) or {}
-
 
 def validate_accounts(path: Path, errors: list[str]) -> None:
     data = read_yaml(path)
@@ -49,7 +47,7 @@ def validate_accounts(path: Path, errors: list[str]) -> None:
         forbidden = set(account) & FORBIDDEN_ACCOUNT_KEYS
         if forbidden:
             errors.append(f"{label}: forbidden keys: {sorted(forbidden)}")
-        changepassword_target_account = account.get("changepassword_target_account")
+        changepassword_target_account = account.get("username")
         if not isinstance(changepassword_target_account, str) or not changepassword_target_account.strip():
             errors.append(f"{label}: changepassword_target_account is required")
         elif not USERNAME_RE.match(changepassword_target_account):
@@ -69,7 +67,6 @@ def validate_accounts(path: Path, errors: list[str]) -> None:
         expire = account.get("expire")
         if expire is not None and not isinstance(expire, bool):
             errors.append(f"{label}: expire must be boolean")
-
 
 def validate_defaults(errors: list[str]) -> None:
     path = ROOT / "roles/changepassword/defaults/main.yml"
@@ -107,7 +104,6 @@ def validate_defaults(errors: list[str]) -> None:
     elif not (any(c.isupper() for c in fallback) and any(c.islower() for c in fallback) and any(c.isdigit() for c in fallback) and any(not c.isalnum() for c in fallback)):
         errors.append(f"{path}: default HMAC fallback secret must meet complexity requirements")
 
-
 def validate_static_files(errors: list[str]) -> None:
     required_files = [
         "roles/changepassword/tasks/tasks.d/apply.yml",
@@ -143,7 +139,6 @@ def validate_static_files(errors: list[str]) -> None:
         if required not in audit:
             errors.append(f"audit.yml: missing audit field/control: {required}")
 
-
 def main() -> None:
     errors: list[str] = []
     for path in sorted((ROOT / "inventories").rglob("vault.yml*")):
@@ -157,7 +152,6 @@ def main() -> None:
             print(error, file=sys.stderr)
         raise SystemExit(1)
     print("IRIVEN ChangePassword schema validation passed")
-
 
 if __name__ == "__main__":
     main()
