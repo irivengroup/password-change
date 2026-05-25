@@ -1,11 +1,9 @@
 ---
 profile: production
 exclude_paths:
-  - .cache/
-  - .venv/
-  - .tox/
-  - .molecule/
+- .cache/
+- .venv/
+- .tox/
+- .molecule/
 warn_list:
-  - yaml[line-length]
-mock_filters:
-  - changepassword_hmac_salt
+- yaml[line-length]
