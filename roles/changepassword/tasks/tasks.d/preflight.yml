@@ -42,7 +42,7 @@
         that:
           - changepassword_requested_user | length > 0
           - (changepassword_requested_user in changepassword_all_targets) or (changepassword_requested_user is
-            match(changepassword_validate_changepassword_target_account_regex))
+            match(changepassword_account_regex))
         fail_msg: >-
           changepassword_target_account must be a valid local account name declared in changepassword_local_accounts,
           or one of {{ changepassword_all_targets }} to target all declared accounts.
@@ -79,13 +79,13 @@
 
     - name: Changepassword | Build declared account changepassword_target_account list
       ansible.builtin.set_fact:
-        changepassword_declared_changepassword_target_accounts: "{{ changepassword_local_accounts | map(attribute='username') | list }}"
+        changepassword_runtime_accounts: "{{ changepassword_local_accounts | map(attribute='username') | list }}"
       no_log: "{{ changepassword_use_no_log | bool }}"
 
     - name: Changepassword | Refuse duplicate account declarations
       ansible.builtin.assert:
         that:
-          - changepassword_declared_changepassword_target_accounts | length == changepassword_declared_changepassword_target_accounts | unique | list | length
+          - changepassword_runtime_accounts | length == changepassword_runtime_accounts | unique | list | length
         fail_msg: >-
           Duplicate changepassword_target_accounts found in changepassword_local_accounts. Keep exactly one dictionary per changepassword_target_account.
       no_log: "{{ changepassword_use_no_log | bool }}"
@@ -94,7 +94,7 @@
       ansible.builtin.assert:
         that:
           - (changepassword_requested_user in changepassword_all_targets) or (changepassword_requested_user in
-            changepassword_declared_changepassword_target_accounts)
+            changepassword_runtime_accounts)
         fail_msg: >-
           changepassword_target_account={{ changepassword_requested_user }} is not declared in changepassword_local_accounts.
           Refusing to change an account that is not explicitly declared in Vault/inventory variables.
@@ -219,7 +219,7 @@
       ansible.builtin.assert:
         that:
           - item.username is defined
-          - item.username is match(changepassword_validate_changepassword_target_account_regex)
+          - item.username is match(changepassword_account_regex)
           - item.state is not defined or item.state in ['unlocked', 'locked']
           - item.expire | default(false) | type_debug == 'bool'
           - changepassword_hash_algorithm in ['sha256', 'sha512']
