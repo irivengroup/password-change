@@ -161,7 +161,7 @@
       ansible.builtin.assert:
         that:
           - item.username is defined
-          - item.username is match(username_regex)
+          - item.username is match(changepassword_target_account_regex)
           - item.state is not defined or item.state in ['unlocked', 'locked']
           - item.expire | default(false) | type_debug == 'bool'
           - changepassword_hash_algorithm in ['sha256', 'sha512']
@@ -220,7 +220,7 @@
           - (not changepassword_require_lower | bool) or (item.password is regex('[a-z]'))
           - (not changepassword_require_digit | bool) or (item.password is regex('[0-9]'))
           - (not changepassword_require_special | bool) or (item.password is regex('[^A-Za-z0-9]'))
-          - item.password not in changepassword_forbidden_plain_values
+          - item.password | lower not in (changepassword_forbidden_plain_values | map('lower') | list)
           - item.password != item.username
         fail_msg: Clear-text password for '{{ item.username }}' does not satisfy the local complexity policy.
       loop: '{{ usernames }}'
