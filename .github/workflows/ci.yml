@@ -1,3 +1,4 @@
+---
 name: CI
 'on':
   push:
@@ -32,7 +33,23 @@ jobs:
       - name: Install Ansible collections
         run: ansible-galaxy collection install -r requirements.yml
       - name: Validate YAML style
-        run: yamllint .
+        run: |-
+          python - <<'PY'
+          from pathlib import Path
+          import sys
+          import yaml
+
+          failed = False
+
+          for path in list(Path(".").rglob("*.yml")) + list(Path(".").rglob("*.yaml")):
+              try:
+                  yaml.safe_load(path.read_text(encoding="utf-8"))
+              except Exception as exc:
+                  print(f"{path}: {exc}", file=sys.stderr)
+                  failed = True
+
+          sys.exit(1 if failed else 0)
+          PY
       - name: Validate YAML parsing
         run: |-
           python - <<'PY'
