@@ -4,7 +4,6 @@
   connection: local
   gather_facts: true
   become: false
-
   vars:
     changepassword_use_no_log: false
     changepassword_audit_enabled: false
@@ -20,15 +19,12 @@
         password: $6$rounds=656000$abcdefghijklmnop$01234567890123456789012345678901234567890123456789012345678901234567890123456789
         state: unlocked
         expire: false
-
   tasks:
     - name: Negative | Run role and expect preflight rejection
       ansible.builtin.include_role:
         name: changepassword
-      check_mode: true
       register: changepassword_negative_result
       failed_when: false
-
     - name: Negative | Assert unknown requested account is rejected
       ansible.builtin.assert:
         that:
