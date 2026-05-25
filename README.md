@@ -18,7 +18,7 @@ It is intentionally focused on password rotation and local account hardening. It
 
 - Password rotation for existing local UNIX accounts
 - Support for `root` and standard local users
-- Targeted execution through `changepassword_target_account`
+- Targeted execution through `TGT_USER`
 - Bulk execution for all declared accounts
 - Required password declaration for every managed account
 - SHA512 password hashing by default
@@ -115,7 +115,7 @@ inventories/
             └── vault.yml
 ```
 
-`main.yml` contains non-sensitive operational defaults.
+`main.yml` contains non-sensitive operational defaults.  
 `vault.yml` contains sensitive account and password data and must be encrypted with Ansible Vault.
 
 ---
@@ -126,30 +126,30 @@ Example `inventories/production/group_vars/all/main.yml`:
 
 ```yaml
 ---
-changepassword_target_account: root
+TGT_USER: root
 
-changepassword_hash_algorithm: sha512
-changepassword_require_hash: false
-changepassword_allow_plaintext_password: true
-changepassword_default_hash_rounds: 656000
-changepassword_min_hash_rounds: 500000
-changepassword_min_hmac_secret_length: 32
+iriven_chgpasswd_hash_algorithm: sha512
+iriven_chgpasswd_require_hash: false
+iriven_chgpasswd_allow_plaintext_password: true
+iriven_chgpasswd_default_hash_rounds: 656000
+iriven_chgpasswd_min_hash_rounds: 500000
+iriven_chgpasswd_min_hmac_secret_length: 32
 
-changepassword_use_no_log: true
-changepassword_fail_if_user_missing: true
-changepassword_manage_root: true
-changepassword_allow_root_lock: false
-changepassword_allow_empty_password: false
+iriven_chgpasswd_use_no_log: true
+iriven_chgpasswd_fail_if_user_missing: true
+iriven_chgpasswd_manage_root: true
+iriven_chgpasswd_allow_root_lock: false
+iriven_chgpasswd_allow_empty_password: false
 
-changepassword_require_login_shell: true
-changepassword_require_etc_passwd_user: true
-changepassword_fail_if_same_hash: false
+iriven_chgpasswd_require_login_shell: true
+iriven_chgpasswd_require_etc_passwd_user: true
+iriven_chgpasswd_fail_if_same_hash: false
 
-changepassword_set_aging: false
-changepassword_min_days: null
-changepassword_max_days: null
-changepassword_warn_days: null
-changepassword_inactive_days: null
+iriven_chgpasswd_set_aging: false
+iriven_chgpasswd_min_days: null
+iriven_chgpasswd_max_days: null
+iriven_chgpasswd_warn_days: null
+iriven_chgpasswd_inactive_days: null
 ```
 
 ---
@@ -183,6 +183,7 @@ Accepted hash prefixes:
 
 Store generated hashes only in Vault-protected inventory files and never commit real credentials in clear text.
 
+
 ## Vault Configuration
 
 Example `inventories/production/group_vars/all/vault.yml`:
@@ -194,9 +195,9 @@ Example `inventories/production/group_vars/all/vault.yml`:
 # Minimum: 32 characters.
 # Complexity: at least one uppercase letter, one lowercase letter, one digit,
 # and one special character.
-changepassword_hmac_salt_secret: ""
+iriven_chgpasswd_hmac_salt_secret: ""
 
-changepassword_local_accounts:
+unix_local_accounts:
   - username: root
     password: "replace-with-vault-secret-root-password"
 
@@ -220,12 +221,12 @@ ansible-vault encrypt inventories/production/group_vars/all/vault.yml
 
 ## Account Declaration
 
-`changepassword_local_accounts` is a list of account declarations.
+`unix_local_accounts` is a list of account declarations.
 
 Each item must represent an account that already exists locally on the managed host.
 
 ```yaml
-changepassword_local_accounts:
+unix_local_accounts:
   - username: root
     password: "StrongPassword#2026!"
     state: unlocked
@@ -236,7 +237,7 @@ changepassword_local_accounts:
 
 | Field | Required | Values | Description |
 |---|---:|---|---|
-| `changepassword_target_account` | Yes | local UNIX changepassword_target_account | Account to manage |
+| `username` | Yes | local UNIX username | Account to manage |
 | `password` | Yes | plaintext or Linux password hash | New password material |
 | `state` | No | `locked`, `unlocked` | Password lock state |
 | `expire` | No | `true`, `false` | Force password change at next login |
@@ -260,9 +261,9 @@ Plaintext values are processed by the role and converted into Linux-compatible p
 Recommended production posture:
 
 ```yaml
-changepassword_hash_algorithm: sha512
-changepassword_default_hash_rounds: 656000
-changepassword_min_hash_rounds: 500000
+iriven_chgpasswd_hash_algorithm: sha512
+iriven_chgpasswd_default_hash_rounds: 656000
+iriven_chgpasswd_min_hash_rounds: 500000
 ```
 
 ---
@@ -283,9 +284,9 @@ and the playbook:
 playbooks/change_password.yml
 ```
 
-### Without `changepassword_target_account`
+### Without `TGT_USER`
 
-When `changepassword_target_account` is not passed as an extra variable, the role uses the default value defined by the project configuration. The default target is `root`.
+When `TGT_USER` is not passed as an extra variable, the role uses the default value defined by the project configuration. The default target is `root`.
 
 ```bash
 ansible-playbook \
@@ -303,31 +304,31 @@ ansible-playbook \
   --vault-password-file ~/.vault_pass.txt
 ```
 
-### With `changepassword_target_account=root`
+### With `TGT_USER=root`
 
-Use this mode to rotate only the `root` password, provided `root` is declared in `changepassword_local_accounts`.
-
-```bash
-ansible-playbook \
-  -i inventories/production/hosts.yml \
-  playbooks/change_password.yml \
-  --ask-vault-pass \
-  -e changepassword_target_account=root
-```
-
-### With `changepassword_target_account=<user>`
-
-Use this mode to rotate only one declared local account. Replace `<user>` with a changepassword_target_account present in `changepassword_local_accounts`.
+Use this mode to rotate only the `root` password, provided `root` is declared in `unix_local_accounts`.
 
 ```bash
 ansible-playbook \
   -i inventories/production/hosts.yml \
   playbooks/change_password.yml \
   --ask-vault-pass \
-  -e changepassword_target_account=ansible
+  -e TGT_USER=root
 ```
 
-### With `changepassword_target_account=all`
+### With `TGT_USER=<user>`
+
+Use this mode to rotate only one declared local account. Replace `<user>` with a username present in `unix_local_accounts`.
+
+```bash
+ansible-playbook \
+  -i inventories/production/hosts.yml \
+  playbooks/change_password.yml \
+  --ask-vault-pass \
+  -e TGT_USER=ansible
+```
+
+### With `TGT_USER=all`
 
 Use this mode to rotate all declared accounts.
 
@@ -336,10 +337,10 @@ ansible-playbook \
   -i inventories/production/hosts.yml \
   playbooks/change_password.yml \
   --ask-vault-pass \
-  -e changepassword_target_account=all
+  -e TGT_USER=all
 ```
 
-### With `changepassword_target_account='*'`
+### With `TGT_USER='*'`
 
 The wildcard target is also supported for rotating all declared accounts. Quote the value to prevent shell expansion.
 
@@ -348,10 +349,10 @@ ansible-playbook \
   -i inventories/production/hosts.yml \
   playbooks/change_password.yml \
   --ask-vault-pass \
-  -e 'changepassword_target_account=*'
+  -e 'TGT_USER=*'
 ```
 
-The role fails when `changepassword_target_account` references an account that is not declared in `changepassword_local_accounts`.
+The role fails when `TGT_USER` references an account that is not declared in `unix_local_accounts`.
 
 ---
 
@@ -361,7 +362,7 @@ Before executing the playbook in production, perform the following operational c
 
 ### 1. Confirm Local Account Presence
 
-Ensure every account declared in `changepassword_local_accounts` already exists locally on all targeted hosts.
+Ensure every account declared in `unix_local_accounts` already exists locally on all targeted hosts.
 
 This role does not create users.
 
@@ -369,8 +370,8 @@ This role does not create users.
 
 Populate `inventories/production/group_vars/all/vault.yml` with:
 
-- `changepassword_hmac_salt_secret`
-- `changepassword_local_accounts`
+- `iriven_chgpasswd_hmac_salt_secret`
+- `unix_local_accounts`
 - one `password` value per account
 
 Then encrypt the file:
@@ -457,7 +458,7 @@ Execution commands are consolidated in the `Execution Examples with Vault` secti
 The role enforces multiple controls before applying password changes:
 
 - account declaration validation
-- duplicate changepassword_target_account detection
+- duplicate username detection
 - mandatory password presence
 - forbidden account protection
 - local account existence checks
@@ -477,11 +478,11 @@ The role enforces multiple controls before applying password changes:
 Password ageing is configured globally:
 
 ```yaml
-changepassword_set_aging: false
-changepassword_min_days: null
-changepassword_max_days: null
-changepassword_warn_days: null
-changepassword_inactive_days: null
+iriven_chgpasswd_set_aging: false
+iriven_chgpasswd_min_days: null
+iriven_chgpasswd_max_days: null
+iriven_chgpasswd_warn_days: null
+iriven_chgpasswd_inactive_days: null
 ```
 
 Aging is disabled by default. Set these values explicitly in inventory when a password ageing policy must be enforced.
@@ -525,7 +526,7 @@ For AWX or Ansible Automation Platform:
 - store Vault credentials in managed credentials
 - avoid plaintext password surveys
 - restrict job template execution with RBAC
-- require approval for `changepassword_target_account=all`
+- require approval for `TGT_USER=all`
 - use separate inventories per environment
 - run validation jobs before production execution
 - preserve job artifacts for audit review
@@ -544,6 +545,7 @@ This role is suitable for controlled environments requiring:
 - separation between password operations and identity provisioning
 
 ---
+
 
 ## Production Strict Controls
 
@@ -582,7 +584,7 @@ Multi-distribution validation is available for:
 
 ## Authors
 
-Alfred TCHONDJO
+Alfred TCHONDJO  
 Project Initiator — IRIVEN Group
 
 ---

@@ -1,36 +1,28 @@
 ---
 dependency:
   name: galaxy
-  options:
-    requirements-file: ${MOLECULE_PROJECT_DIRECTORY}/../../requirements.yml
+
 driver:
   name: default
+
 platforms:
-  - name: localhost
-    groups:
-      - molecule
+  - name: chgpassword-negative-ubuntu
+
 provisioner:
   name: ansible
-  inventory:
-    host_vars:
-      localhost:
-        ansible_connection: local
-        ansible_python_interpreter: '{{ ansible_playbook_python }}'
+  env:
+    ANSIBLE_DEPRECATION_WARNINGS: "False"
   config_options:
     defaults:
-      callbacks_enabled: profile_tasks
-      host_key_checking: false
-      retry_files_enabled: false
-      stdout_callback: yaml
-  env:
-    ANSIBLE_ROLES_PATH: ${MOLECULE_PROJECT_DIRECTORY}/..:${ANSIBLE_ROLES_PATH:-}
-    ANSIBLE_FORCE_COLOR: '1'
-verifier:
-  name: ansible
+      deprecation_warnings: false
+      stdout_callback: default
+      result_format: yaml
+      roles_path: ../../..
+
 scenario:
   test_sequence:
     - syntax
+    - create
     - prepare
     - converge
-    - idempotence
-    - verify
+    - destroy

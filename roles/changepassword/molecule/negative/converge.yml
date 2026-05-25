@@ -1,38 +1,93 @@
 ---
-- name: Converge invalid target negative scenario
-  hosts: localhost
-  connection: local
+- name: Validate negative controls for changepassword
+  hosts: all
+  become: true
   gather_facts: true
-  become: false
-
-  vars:
-    changepassword_use_no_log: false
-    changepassword_audit_enabled: false
-    changepassword_enable_audit_log: false
-    changepassword_lock_enabled: false
-    changepassword_enable_runtime_lock: false
-    changepassword_check_shadow_backend: false
-    changepassword_set_aging: false
-    changepassword_require_etc_passwd_user: false
-    changepassword_fail_if_same_hash: false
-    changepassword_hmac_salt_secret: Molecule-Hmac-Secret-2026!
-    changepassword_target_account: ghost
-    changepassword_local_accounts:
-      - username: root
-        password: $6$rounds=656000$abcdefghijklmnop$01234567890123456789012345678901234567890123456789012345678901234567890123456789
-        state: unlocked
-        expire: false
 
   tasks:
-    - name: Molecule | Run role with invalid target and expect failure
-      ansible.builtin.include_role:
-        name: changepassword
-      check_mode: true
-      register: changepassword_negative_result
-      failed_when: false
+    - name: negative | Missing password must fail
+      block:
+        - name: negative | Run role with missing password
+          ansible.builtin.include_role:
+            name: changepassword
+          vars:
+            TGT_USER: moleculevalid
+            iriven_chgpasswd_hmac_salt_secret: "ValidNegativeSecret#2026WithEnoughLength"
+            unix_local_accounts:
+              - username: moleculevalid
+                state: unlocked
 
-    - name: Molecule | Assert invalid target is rejected
-      ansible.builtin.assert:
-        that:
-          - changepassword_negative_result is failed
-        fail_msg: Invalid target account was not rejected by preflight.
+        - name: negative | Fail because missing password was accepted
+          ansible.builtin.fail:
+            msg: "Role accepted an account without password."
+      rescue:
+        - name: negative | Missing password rejected as expected
+          ansible.builtin.debug:
+            msg: "Missing password rejected as expected."
+          changed_when: false
+
+    - name: negative | Invalid state must fail
+      block:
+        - name: negative | Run role with invalid state
+          ansible.builtin.include_role:
+            name: changepassword
+          vars:
+            TGT_USER: moleculevalid
+            iriven_chgpasswd_hmac_salt_secret: "ValidNegativeSecret#2026WithEnoughLength"
+            unix_local_accounts:
+              - username: moleculevalid
+                password: "ValidPassword#2026!"
+                state: present
+
+        - name: negative | Fail because invalid state was accepted
+          ansible.builtin.fail:
+            msg: "Role accepted an invalid state."
+      rescue:
+        - name: negative | Invalid state rejected as expected
+          ansible.builtin.debug:
+            msg: "Invalid state rejected as expected."
+          changed_when: false
+
+    - name: negative | Weak HMAC secret must fail
+      block:
+        - name: negative | Run role with weak secret
+          ansible.builtin.include_role:
+            name: changepassword
+          vars:
+            TGT_USER: moleculevalid
+            iriven_chgpasswd_hmac_salt_secret: "weak"
+            unix_local_accounts:
+              - username: moleculevalid
+                password: "ValidPassword#2026!"
+                state: unlocked
+
+        - name: negative | Fail because weak secret was accepted
+          ansible.builtin.fail:
+            msg: "Role accepted a weak HMAC secret."
+      rescue:
+        - name: negative | Weak secret rejected as expected
+          ansible.builtin.debug:
+            msg: "Weak secret rejected as expected."
+          changed_when: false
+
+    - name: negative | Missing local user must fail
+      block:
+        - name: negative | Run role with missing local user
+          ansible.builtin.include_role:
+            name: changepassword
+          vars:
+            TGT_USER: missinguser
+            iriven_chgpasswd_hmac_salt_secret: "ValidNegativeSecret#2026WithEnoughLength"
+            unix_local_accounts:
+              - username: missinguser
+                password: "ValidPassword#2026!"
+                state: unlocked
+
+        - name: negative | Fail because missing user was accepted
+          ansible.builtin.fail:
+            msg: "Role accepted a missing local user."
+      rescue:
+        - name: negative | Missing local user rejected as expected
+          ansible.builtin.debug:
+            msg: "Missing local user rejected as expected."
+          changed_when: false

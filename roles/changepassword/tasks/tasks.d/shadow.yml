@@ -1,21 +1,21 @@
 ---
-- name: Changepassword | Shadow pre-change hardening checks
+- name: changepassword | Shadow pre-change hardening checks
   block:
-    - name: Changepassword | Read current shadow database when anti-reuse is enabled
+    - name: changepassword | Read current shadow database when anti-reuse is enabled
       ansible.builtin.slurp:
         src: /etc/shadow
-      register: changepassword_shadow_raw
+      register: iriven_chgpasswd_shadow_raw
       when:
-        - changepassword_fail_if_same_hash | bool
-        - changepassword_normalized_accounts | length > 0
-      no_log: "{{ changepassword_use_no_log | bool }}"
+        - iriven_chgpasswd_fail_if_same_hash | bool
+        - iriven_chgpasswd_normalized_accounts | length > 0
+      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
 
-    - name: Changepassword | Refuse password reuse when requested
+    - name: changepassword | Refuse password reuse when requested
       ansible.builtin.assert:
         that:
           - >-
             (
-              ((changepassword_shadow_raw.content | b64decode).split('')
+              ((iriven_chgpasswd_shadow_raw.content | b64decode).split('\n')
                 | select('match', '^' ~ (item.username | regex_escape) ~ ':')
                 | list
                 | first
@@ -24,11 +24,11 @@
             ) != item.final_password_hash
         fail_msg: >-
           Refusing password reuse for '{{ item.username }}': the generated/provided hash
-          is already present in /etc/shadow. Disable changepassword_fail_if_same_hash
+          is already present in /etc/shadow. Disable iriven_chgpasswd_fail_if_same_hash
           only for idempotent re-runs.
-      loop: "{{ changepassword_normalized_accounts }}"
+      loop: "{{ iriven_chgpasswd_normalized_accounts }}"
       loop_control:
         label: "{{ item.username }}"
       when:
-        - changepassword_fail_if_same_hash | bool
-      no_log: "{{ changepassword_use_no_log | bool }}"
+        - iriven_chgpasswd_fail_if_same_hash | bool
+      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"

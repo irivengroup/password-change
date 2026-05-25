@@ -1,13 +1,67 @@
 ---
-- name: Verify multi Molecule scenario
-  hosts: localhost
-  connection: local
+- name: Verify changepassword role effects
+  hosts: all
+  become: true
   gather_facts: false
 
   tasks:
-    - name: Verify | Assert all selector contract
+    - name: verify | Confirm test accounts still exist
+      ansible.builtin.getent:
+        database: passwd
+        key: "{{ item }}"
+        fail_key: true
+      loop:
+        - moleculeops
+        - moleculeaudit
+
+    - name: verify | Read moleculeops shadow entry
+      ansible.builtin.getent:
+        database: shadow
+        key: moleculeops
+        fail_key: true
+      register: moleculeops_shadow_getent
+      no_log: true
+
+    - name: verify | Save moleculeops password hash
+      ansible.builtin.set_fact:
+        moleculeops_hash: "{{ moleculeops_shadow_getent.ansible_facts.getent_shadow.moleculeops[0] }}"
+      no_log: true
+
+    - name: verify | Read moleculeaudit shadow entry
+      ansible.builtin.getent:
+        database: shadow
+        key: moleculeaudit
+        fail_key: true
+      register: moleculeaudit_shadow_getent
+      no_log: true
+
+    - name: verify | Save moleculeaudit password hash
+      ansible.builtin.set_fact:
+        moleculeaudit_hash: "{{ moleculeaudit_shadow_getent.ansible_facts.getent_shadow.moleculeaudit[0] }}"
+      no_log: true
+
+    - name: verify | Assert generated hashes and lock states
       ansible.builtin.assert:
         that:
-          - changepassword_target_account in ['all', 'ALL', '*']
-      vars:
-        changepassword_target_account: all
+          - moleculeops_hash is match('^\$6\$rounds=656000\$')
+          - not moleculeops_hash.startswith('!')
+          - moleculeaudit_hash is match('^!\$6\$rounds=656000\$')
+        fail_msg: Password hash generation or lock state is not compliant with expected role behavior.
+      no_log: true
+
+    - name: verify | Read moleculeops ageing policy
+      ansible.builtin.command:
+        argv:
+          - /usr/bin/chage
+          - -l
+          - moleculeops
+      register: moleculeops_chage
+      changed_when: false
+
+    - name: verify | Assert configured ageing policy is applied
+      ansible.builtin.assert:
+        that:
+          - "'Minimum number of days between password change\t\t: 3' in moleculeops_chage.stdout"
+          - "'Maximum number of days between password change\t\t: 90' in moleculeops_chage.stdout"
+          - "'Number of days of warning before password expires\t: 14' in moleculeops_chage.stdout"
+        fail_msg: Password ageing policy was not applied as expected.

@@ -1,24 +1,32 @@
 ---
-- name: Prepare Molecule localhost test context
-  hosts: localhost
-  connection: local
+- name: Prepare existing local accounts for Molecule
+  hosts: all
+  become: true
   gather_facts: false
 
   tasks:
-    - name: Molecule | Create runtime directories
-      ansible.builtin.file:
-        path: "{{ item }}"
-        state: directory
-        mode: "0755"
-      loop:
-        - /tmp/changepassword-molecule
-        - /tmp/changepassword-molecule/audit
-
-    - name: Molecule | Create deterministic fake shadow backend
+    - name: molecule | Ensure deterministic machine-id exists for hash salt derivation
       ansible.builtin.copy:
-        dest: "/tmp/changepassword-molecule/shadow"
-        mode: "0600"
-        content: |
-          root:$6$rounds=656000$saltstring$dummyhash:19700:0:99999:7:::
-          moleculeops:$6$rounds=656000$saltstring$dummyhash:19700:0:99999:7:::
-          moleculeapp:$6$rounds=656000$saltstring$dummyhash:19700:0:99999:7:::
+        dest: /etc/machine-id
+        owner: root
+        group: root
+        mode: '0444'
+        content: "0123456789abcdef0123456789abcdef\n"
+
+    - name: molecule | Ensure existing local accounts required by the role test
+      ansible.builtin.user:
+        name: "{{ item }}"
+        state: present
+        create_home: false
+        shell: /bin/bash
+      loop:
+        - moleculeops
+        - moleculeaudit
+
+    - name: molecule | Ensure test accounts start unlocked
+      ansible.builtin.user:
+        name: "{{ item }}"
+        password_lock: false
+      loop:
+        - moleculeops
+        - moleculeaudit

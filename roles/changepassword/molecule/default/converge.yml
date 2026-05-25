@@ -1,28 +1,32 @@
 ---
-- name: Converge default root target
-  hosts: localhost
-  connection: local
+- name: Converge changepassword role on existing users only
+  hosts: all
+  become: true
   gather_facts: true
-  become: false
-  check_mode: true
-
   vars:
-    changepassword_use_no_log: false
-    changepassword_audit_enabled: false
-    changepassword_enable_audit_log: false
-    changepassword_lock_enabled: false
-    changepassword_enable_runtime_lock: false
-    changepassword_check_shadow_backend: false
-    changepassword_set_aging: false
-    changepassword_require_etc_passwd_user: false
-    changepassword_fail_if_same_hash: false
-    changepassword_hmac_salt_secret: Molecule-Hmac-Secret-2026!
-    changepassword_target_account: root
-    changepassword_local_accounts:
-      - username: root
-        password: $6$rounds=656000$abcdefghijklmnop$01234567890123456789012345678901234567890123456789012345678901234567890123456789
-        state: unlocked
+    TGT_USER: all
+    iriven_chgpasswd_use_no_log: false
+    iriven_chgpasswd_require_hash: false
+    iriven_chgpasswd_allow_plaintext_password: true
+    iriven_chgpasswd_hash_algorithm: sha512
+    iriven_chgpasswd_default_hash_rounds: 656000
+    iriven_chgpasswd_hash_salt_mode: hmac_machine_id
+    iriven_chgpasswd_hmac_salt_secret: molecule-test-secret-minimum-24-chars
+    iriven_chgpasswd_set_aging: true
+    iriven_chgpasswd_min_days: 3
+    iriven_chgpasswd_max_days: 90
+    iriven_chgpasswd_warn_days: 14
+    iriven_chgpasswd_inactive_days: null
+    iriven_chgpasswd_audit_enabled: false
+    unix_local_accounts:
+      - username: moleculeops
+        password: Molecule-Test-Password-2026!
         expire: false
+        state: unlocked
+      - username: moleculeaudit
+        password: Molecule-Audit-Password-2026!
+        expire: false
+        state: locked
 
   roles:
     - role: changepassword

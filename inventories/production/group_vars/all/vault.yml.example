@@ -8,18 +8,18 @@
 # Complexity: at least one uppercase letter, one lowercase letter, one digit,
 # and one special character.
 # If this value is empty or does not satisfy the policy defined in defaults/main.yml,
-# the role automatically falls back to changepassword_default_hmac_salt_secret.
+# the role automatically falls back to iriven_chgpasswd_default_hmac_salt_secret.
 # Example:
-# changepassword_hmac_salt_secret: "MyStrongCustomSecret#2026-ChangeThis"
-changepassword_hmac_salt_secret: ""
+# iriven_chgpasswd_hmac_salt_secret: "MyStrongCustomSecret#2026-ChangeThis"
+iriven_chgpasswd_hmac_salt_secret: ""
 
-# changepassword_local_accounts is a list of dictionaries, not a mapping keyed by changepassword_target_account.
+# unix_local_accounts is a list of dictionaries, not a mapping keyed by username.
 # password is mandatory for every account because this role is strictly a password-change role.
 # password is auto-detected:
 #   - starts with $6$  => SHA512 crypt hash, passed through
 #   - starts with $5$  => SHA256 crypt hash, passed through
 #   - otherwise       => Vault-protected plaintext, hashed on the controller
-changepassword_local_accounts:
+unix_local_accounts:
   - username: root
     password: "replace-with-vault-secret-root-password"
 

@@ -1,37 +1,37 @@
 ---
-- name: Changepassword | Apply expiration and password ageing policies
+- name: changepassword | Apply expiration and password ageing policies
   block:
-    - name: Changepassword | Read current shadow ageing state
+    - name: changepassword | Read current shadow ageing state
       ansible.builtin.command:
         argv:
           - /usr/bin/getent
           - shadow
           - "{{ item.username }}"
-      register: changepassword_shadow_ageing_state
-      loop: "{{ changepassword_normalized_accounts }}"
+      register: iriven_chgpasswd_shadow_ageing_state
+      loop: "{{ iriven_chgpasswd_normalized_accounts }}"
       loop_control:
         label: "{{ item.username }}"
       changed_when: false
-      no_log: "{{ changepassword_use_no_log | bool }}"
+      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
 
-    - name: Changepassword | Expire password to force change at next login
+    - name: changepassword | Expire password to force change at next login
       ansible.builtin.command:
         argv:
           - /usr/bin/chage
           - -d
           - "0"
           - "{{ item.username }}"
-      loop: "{{ changepassword_normalized_accounts }}"
+      loop: "{{ iriven_chgpasswd_normalized_accounts }}"
       loop_control:
         label: "{{ item.username }}"
-        index_var: changepassword_account_index
+        index_var: iriven_chgpasswd_account_index
       when:
         - item.expire | bool
         - >-
-          (changepassword_shadow_ageing_state.results[changepassword_account_index].stdout.split(':')[2] | default('')) != '0'
+          (iriven_chgpasswd_shadow_ageing_state.results[iriven_chgpasswd_account_index].stdout.split(':')[2] | default('')) != '0'
       changed_when: true
 
-    - name: Changepassword | Set password ageing policy
+    - name: changepassword | Set password ageing policy
       ansible.builtin.command:
         argv: >-
           {{
@@ -42,31 +42,31 @@
             + ((['-I', item.aging_inactive_days|string]) if item.aging_inactive_days is not none else [])
             + [item.username]
           }}
-      loop: "{{ changepassword_normalized_accounts }}"
+      loop: "{{ iriven_chgpasswd_normalized_accounts }}"
       loop_control:
         label: "{{ item.username }}"
-        index_var: changepassword_account_index
+        index_var: iriven_chgpasswd_account_index
       when:
-        - changepassword_set_aging | bool
+        - iriven_chgpasswd_set_aging | bool
         - >-
           (
             item.aging_min_days is not none and
-            (changepassword_shadow_ageing_state.results[changepassword_account_index].stdout.split(':')[3] | default('')) !=
+            (iriven_chgpasswd_shadow_ageing_state.results[iriven_chgpasswd_account_index].stdout.split(':')[3] | default('')) !=
               (item.aging_min_days | string)
           ) or
           (
             item.aging_max_days is not none and
-            (changepassword_shadow_ageing_state.results[changepassword_account_index].stdout.split(':')[4] | default('')) !=
+            (iriven_chgpasswd_shadow_ageing_state.results[iriven_chgpasswd_account_index].stdout.split(':')[4] | default('')) !=
               (item.aging_max_days | string)
           ) or
           (
             item.aging_warn_days is not none and
-            (changepassword_shadow_ageing_state.results[changepassword_account_index].stdout.split(':')[5] | default('')) !=
+            (iriven_chgpasswd_shadow_ageing_state.results[iriven_chgpasswd_account_index].stdout.split(':')[5] | default('')) !=
               (item.aging_warn_days | string)
           ) or
           (
             item.aging_inactive_days is not none and
-            (changepassword_shadow_ageing_state.results[changepassword_account_index].stdout.split(':')[6] | default('')) !=
+            (iriven_chgpasswd_shadow_ageing_state.results[iriven_chgpasswd_account_index].stdout.split(':')[6] | default('')) !=
               (item.aging_inactive_days | string)
           )
       changed_when: true

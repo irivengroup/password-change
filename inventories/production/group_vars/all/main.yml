@@ -1,32 +1,50 @@
 ---
-changepassword_target_account: root
-changepassword_hash_algorithm: sha512
-changepassword_require_hash: false
-changepassword_allow_plaintext_password: true
-changepassword_default_hash_rounds: 656000
-changepassword_min_hash_rounds: 500000
-changepassword_min_hmac_secret_length: 32
-changepassword_use_no_log: true
-changepassword_fail_if_user_missing: true
-changepassword_manage_root: true
-changepassword_allow_root_lock: false
-changepassword_allow_empty_password: false
-changepassword_require_login_shell: true
-changepassword_require_etc_passwd_user: true
-changepassword_fail_if_same_hash: false
-changepassword_audit_only: false
-changepassword_lock_enabled: true
-changepassword_lock_path: /var/lock/iriven_chgpasswd.lock
-changepassword_audit_enabled: true
-changepassword_audit_file: /var/log/ansible/changepassword.json
-changepassword_audit_schema_version: '1.0'
-changepassword_audit_dir_mode: '0750'
-changepassword_audit_file_mode: '0600'
-changepassword_audit_logrotate_enabled: true
-changepassword_audit_integrity_enabled: true
-changepassword_audit_append_only: false
-changepassword_set_aging: true
-changepassword_min_days: 7
-changepassword_max_days: 90
-changepassword_warn_days: 14
-changepassword_inactive_days: null
+# Non-sensitive defaults for production inventory.
+# Secrets are isolated in inventories/production/group_vars/all/vault.yml.
+
+TGT_USER: root
+
+# Hashing policy.
+iriven_chgpasswd_hash_algorithm: sha512
+iriven_chgpasswd_require_hash: false
+iriven_chgpasswd_allow_plaintext_password: true
+iriven_chgpasswd_default_hash_rounds: 656000
+iriven_chgpasswd_min_hash_rounds: 500000
+iriven_chgpasswd_min_hmac_secret_length: 32
+
+# Salt identity for generated hashes.
+# SHA512 remains the default crypt hash; the salt is HMAC-derived from username + machine-id.
+
+# Runtime security posture.
+iriven_chgpasswd_use_no_log: true
+iriven_chgpasswd_fail_if_user_missing: true
+iriven_chgpasswd_manage_root: true
+iriven_chgpasswd_allow_root_lock: false
+iriven_chgpasswd_allow_empty_password: false
+
+# Account hardening.
+iriven_chgpasswd_require_login_shell: true
+iriven_chgpasswd_require_etc_passwd_user: true
+iriven_chgpasswd_fail_if_same_hash: false
+
+# Execution guardrails.
+iriven_chgpasswd_audit_only: false
+iriven_chgpasswd_lock_enabled: true
+iriven_chgpasswd_lock_path: /var/lock/iriven_chgpasswd.lock
+
+# Local JSON audit trail.
+iriven_chgpasswd_audit_enabled: true
+iriven_chgpasswd_audit_file: /var/log/ansible/changepassword.json
+iriven_chgpasswd_audit_schema_version: "1.0"
+iriven_chgpasswd_audit_dir_mode: '0750'
+iriven_chgpasswd_audit_file_mode: '0600'
+iriven_chgpasswd_audit_logrotate_enabled: true
+iriven_chgpasswd_audit_integrity_enabled: true
+iriven_chgpasswd_audit_append_only: false
+
+# Password ageing. Omit values with null.
+iriven_chgpasswd_set_aging: true
+iriven_chgpasswd_min_days: 3
+iriven_chgpasswd_max_days: 90
+iriven_chgpasswd_warn_days: 14
+iriven_chgpasswd_inactive_days: null

@@ -1,9 +1,9 @@
 ---
 profile: production
-exclude_paths:
-- .cache/
-- .venv/
-- .tox/
-- .molecule/
+skip_list: []
 warn_list:
-- yaml[line-length]
+  - experimental
+exclude_paths:
+  - .cache/
+  - .github/
+  - .venv/

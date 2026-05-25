@@ -1,42 +1,115 @@
 ---
-changepassword_local_accounts: null
-changepassword_target_account: root
-changepassword_all_targets:
+# Local Linux accounts whose password state must be managed.
+# unix_local_accounts must be a list of dictionaries.
+#
+# Required per item:
+#   username: root|user
+#   password: "..."                         # plaintext stored in Vault, hashed by the role
+#   password: "$6$rounds=656000$..."        # SHA512 crypt hash pass-through
+#   password: "$5$rounds=656000$..."        # SHA256 crypt hash pass-through
+#
+# Supported per-account properties for this role only:
+#   expire: false                            # true forces password change at next login
+#   state: unlocked                          # optional: unlocked|locked; omitted leaves lock state unchanged
+#
+# This role does NOT create users and does NOT manage provisioning attributes.
+# Do not define shell, groups, uid, gid, home, comment, create_home or system here.
+# Password ageing is global only; do not define per-account aging.
+unix_local_accounts: []
+
+# Runtime target selector.
+# TGT_USER is intentionally named for extra-vars usage:
+#   -e TGT_USER=root       # default: manage only root when declared below
+#   -e TGT_USER=deploy     # manage only deploy when declared below
+#   -e TGT_USER=all        # manage all declared accounts
+TGT_USER: root
+iriven_chgpasswd_all_targets:
   - all
   - '*'
   - ALL
-changepassword_require_hash: false
-changepassword_allow_plaintext_password: true
-changepassword_fail_if_user_missing: true
-changepassword_allow_empty_password: false
-changepassword_enforce_complexity: true
-changepassword_min_length: 16
-changepassword_require_upper: true
-changepassword_require_lower: true
-changepassword_require_digit: true
-changepassword_require_special: true
-changepassword_hash_algorithm: sha512
-changepassword_default_hash_rounds: 656000
-changepassword_min_hash_rounds: 500000
-changepassword_hash_salt_mode: hmac_machine_id
-changepassword_hash_salt_prefix: iriven_chgpasswd:v2
-changepassword_hmac_algorithm: sha256
-changepassword_hmac_salt_secret: ''
-changepassword_default_hmac_salt_secret: jf?@#67568YPZs4Y6@5jG.7=pKw9jQ.j-d1ihlFpdGKsbuHru:?U?KeP573a
-changepassword_require_custom_hmac_secret: true
-changepassword_salt_length: 16
-changepassword_set_aging: false
-changepassword_min_days: null
-changepassword_max_days: null
-changepassword_warn_days: null
-changepassword_inactive_days: null
-changepassword_lock_after_change: false
-changepassword_audit_append_only: false
-changepassword_audit_only: false
-changepassword_machine_id_paths:
+
+# Security posture.
+iriven_chgpasswd_require_hash: false
+iriven_chgpasswd_allow_plaintext_password: true
+iriven_chgpasswd_use_no_log: true
+iriven_chgpasswd_fail_if_user_missing: true
+iriven_chgpasswd_manage_root: true
+iriven_chgpasswd_allow_root_lock: false
+iriven_chgpasswd_allow_empty_password: false
+
+# Password policy applied when password contains plaintext.
+iriven_chgpasswd_enforce_complexity: true
+iriven_chgpasswd_min_length: 16
+iriven_chgpasswd_require_upper: true
+iriven_chgpasswd_require_lower: true
+iriven_chgpasswd_require_digit: true
+iriven_chgpasswd_require_special: true
+iriven_chgpasswd_forbidden_plain_values:
+  - password
+  - Password123!
+  - ChangeMe123!
+  - Admin123!
+
+# Hashing parameters used when password contains plaintext.
+# SHA512 crypt is the default generated Linux-compatible password hash.
+# Pre-hashed password values beginning with $5$ or $6$ are passed through.
+iriven_chgpasswd_hash_algorithm: sha512
+iriven_chgpasswd_default_hash_rounds: 656000
+iriven_chgpasswd_min_hash_rounds: 500000
+iriven_chgpasswd_password_hash_regex: '^\$(5|6)\$(rounds=[0-9]+\$)?[^$]{1,16}\$.+'
+iriven_chgpasswd_password_hash_prefix_regex: '^\$(5|6)\$'
+iriven_chgpasswd_hash_salt_mode: hmac_machine_id
+iriven_chgpasswd_hash_salt_prefix: iriven_chgpasswd:v2
+iriven_chgpasswd_hmac_algorithm: sha256
+iriven_chgpasswd_hmac_salt_secret: ""
+iriven_chgpasswd_default_hmac_salt_secret: "jf?@#67568YPZs4Y6@5jG.7=pKw9jQ.j-d1ihlFpdGKsbuHru:?U?KeP573a"
+iriven_chgpasswd_min_hmac_secret_length: 32
+iriven_chgpasswd_require_custom_hmac_secret: true
+iriven_chgpasswd_salt_length: 16
+
+# Password ageing. Omit values with null.
+# These variables intentionally keep their historical names for compatibility.
+iriven_chgpasswd_set_aging: false
+iriven_chgpasswd_min_days: null
+iriven_chgpasswd_max_days: null
+iriven_chgpasswd_warn_days: null
+iriven_chgpasswd_inactive_days: null
+
+# Optional account lock after password change, except root unless explicitly allowed.
+iriven_chgpasswd_lock_after_change: false
+
+# Auditing without secrets. Written on managed host.
+iriven_chgpasswd_audit_enabled: true
+iriven_chgpasswd_audit_file: /var/log/ansible/changepassword.json
+iriven_chgpasswd_audit_schema_version: "1.0"
+iriven_chgpasswd_audit_owner: root
+iriven_chgpasswd_audit_group: root
+iriven_chgpasswd_audit_dir_mode: '0750'
+iriven_chgpasswd_audit_file_mode: '0600'
+iriven_chgpasswd_audit_logrotate_enabled: true
+iriven_chgpasswd_audit_logrotate_path: /etc/logrotate.d/iriven_chgpasswd
+iriven_chgpasswd_audit_logrotate_frequency: daily
+iriven_chgpasswd_audit_logrotate_rotate: 30
+iriven_chgpasswd_audit_logrotate_compress: true
+iriven_chgpasswd_audit_integrity_enabled: true
+iriven_chgpasswd_audit_append_only: false
+
+# Execution safety.
+iriven_chgpasswd_audit_only: false
+iriven_chgpasswd_lock_enabled: true
+iriven_chgpasswd_lock_path: /var/lock/iriven_chgpasswd.lock
+iriven_chgpasswd_check_shadow_backend: true
+iriven_chgpasswd_validate_username_regex: '^[a-z_][a-z0-9_-]{0,31}$|^root$'
+iriven_chgpasswd_cleanup_sensitive_facts: true
+
+# Salt identity used for HMAC hash generation.
+# The generated salt is always derived from username + machine-id.
+iriven_chgpasswd_machine_id_paths:
   - /etc/machine-id
   - /var/lib/dbus/machine-id
-changepassword_forbidden_users:
+
+# Refuse risky local/system accounts even when TGT_USER=all.
+iriven_chgpasswd_forbidden_users:
   - bin
   - daemon
   - adm
@@ -59,8 +132,10 @@ changepassword_forbidden_users:
   - systemd-coredump
   - rpc
   - rpcuser
-changepassword_require_login_shell: true
-changepassword_allowed_login_shells:
+
+# Refuse non-interactive accounts unless explicitly disabled.
+iriven_chgpasswd_require_login_shell: true
+iriven_chgpasswd_allowed_login_shells:
   - /bin/bash
   - /usr/bin/bash
   - /bin/sh
@@ -69,37 +144,13 @@ changepassword_allowed_login_shells:
   - /usr/bin/zsh
   - /bin/ksh
   - /usr/bin/ksh
-changepassword_allow_default_hmac_fallback: false
-changepassword_manage_root: true
-changepassword_allow_root_lock: false
-changepassword_lock_enabled: true
-changepassword_lock_path: /var/lock/iriven_chgpasswd.lock
-changepassword_audit_enabled: true
-changepassword_audit_owner: root
-changepassword_audit_group: root
-changepassword_audit_file: /var/log/ansible/changepassword.json
-changepassword_audit_schema_version: 1.0
-changepassword_audit_dir_mode: '0750'
-changepassword_audit_file_mode: '0600'
-changepassword_audit_logrotate_enabled: true
-changepassword_audit_integrity_enabled: true
-changepassword_min_hmac_secret_length: 32
-changepassword_use_no_log: true
-changepassword_password_hash_regex: ^\$(5|6)\$(rounds=[0-9]+\$)?[^$]{1,16}\$.+
-changepassword_password_hash_prefix_regex: ^\$(5|6)\$
-changepassword_check_shadow_backend: true
-changepassword_target_account_regex: ^[a-z_][a-z0-9_-]{0,31}$|^root$
-changepassword_cleanup_sensitive_facts: true
-changepassword_sha512_rounds: 656000
-changepassword_min_sha512_rounds: 500000
-changepassword_require_etc_passwd_user: true
-changepassword_fail_if_same_hash: false
-changepassword_audit_logrotate_path: /etc/logrotate.d/iriven_chgpasswd
-changepassword_audit_logrotate_frequency: daily
-changepassword_audit_logrotate_rotate: 30
-changepassword_audit_logrotate_compress: true
-changepassword_forbidden_plain_values:
-  - password
-  - Password123!
-  - ChangeMe123!
-  - Admin123!
+
+# Local-only backend guard: users must exist in /etc/passwd, not only via LDAP/IPA/AD/SSSD.
+iriven_chgpasswd_require_etc_passwd_user: true
+
+# Optional anti-reuse check. Keep false by default to preserve idempotent re-runs.
+iriven_chgpasswd_fail_if_same_hash: false
+iriven_chgpasswd_enable_audit_log: true
+iriven_chgpasswd_enable_runtime_lock: true
+iriven_chgpasswd_min_sha512_rounds: 500000
+iriven_chgpasswd_allow_default_hmac_fallback: false
