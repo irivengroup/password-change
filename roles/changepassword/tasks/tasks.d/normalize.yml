@@ -1,10 +1,13 @@
 ---
 - name: Changepassword | Build normalized runtime data
   block:
+
+
     - name: Changepassword | Reset normalized account list
       ansible.builtin.set_fact:
         changepassword_normalized_accounts: []
       no_log: "{{ changepassword_use_no_log | bool }}"
+
 
     - name: Changepassword | Build normalized account management list
       ansible.builtin.set_fact:

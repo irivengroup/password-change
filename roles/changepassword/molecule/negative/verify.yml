@@ -5,6 +5,8 @@
   gather_facts: false
 
   tasks:
+
+
     - name: Verify | Scenario contract placeholder
       ansible.builtin.assert:
         that:

@@ -1,6 +1,8 @@
 ---
 - name: Changepassword | Write local JSONL audit trail without secrets
   block:
+
+
     - name: Changepassword | Ensure audit directory exists
       ansible.builtin.file:
         path: "{{ changepassword_audit_file | dirname }}"
@@ -10,6 +12,7 @@
         mode: "{{ changepassword_audit_dir_mode }}"
       changed_when: false
 
+
     - name: Changepassword | Ensure audit file exists with restricted permissions
       ansible.builtin.file:
         path: "{{ changepassword_audit_file }}"
@@ -18,6 +21,7 @@
         group: "{{ changepassword_audit_group }}"
         mode: "{{ changepassword_audit_file_mode }}"
       changed_when: false
+
 
     - name: Changepassword | Write SIEM-ready password rotation audit event without secrets
       ansible.builtin.lineinfile:
@@ -63,6 +67,7 @@
         index_var: changepassword_account_index
       changed_when: false
 
+
     - name: Changepassword | Enforce audit file ownership and permissions
       ansible.builtin.file:
         path: "{{ changepassword_audit_file }}"
@@ -71,6 +76,7 @@
         group: "{{ changepassword_audit_group }}"
         mode: "{{ changepassword_audit_file_mode }}"
       changed_when: false
+
 
     - name: Changepassword | Install audit logrotate policy
       ansible.builtin.copy:
@@ -91,6 +97,7 @@
           }
       when: changepassword_audit_logrotate_enabled | bool
 
+
     - name: Changepassword | Calculate audit file SHA256 checksum
       ansible.builtin.command:
         argv:
@@ -101,17 +108,19 @@
       failed_when: false
       when: changepassword_audit_integrity_enabled | bool
 
+
     - name: Changepassword | Write audit checksum sidecar
       ansible.builtin.copy:
         dest: "{{ changepassword_audit_file }}.sha256"
         owner: "{{ changepassword_audit_owner }}"
         group: "{{ changepassword_audit_group }}"
         mode: "{{ changepassword_audit_file_mode }}"
-        content: "{{ changepassword_audit_sha256.stdout | default('') }}\n"
+        content: "{{ changepassword_audit_sha256.stdout | default('') }} "
       changed_when: false
       when:
         - changepassword_audit_integrity_enabled | bool
         - changepassword_audit_sha256.rc | default(1) == 0
+
 
     - name: Changepassword | Enable append-only protection on audit file when requested
       ansible.builtin.command:

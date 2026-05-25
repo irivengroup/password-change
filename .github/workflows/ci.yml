@@ -17,49 +17,81 @@ jobs:
     env:
       ANSIBLE_ROLES_PATH: ${{ github.workspace }}/roles
     steps:
+
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           persist-credentials: false
+
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
           cache: pip
+
+
       - name: Install Python dependencies
         run: 'python -m pip install --upgrade pip
 
           pip install -r requirements.txt
 
           '
+
+
       - name: Install Ansible collections
         run: ansible-galaxy collection install -r requirements.yml
+
+
       - name: Validate YAML style
         run: yamllint .
+
+
       - name: Validate YAML parsing
-        run: "python - <<'PY'\nfrom pathlib import Path\nimport sys\nimport yaml\n\nfailed = False\nfor path in list(Path(\".\").rglob(\"*.yml\"\
-          )) + list(Path(\".\").rglob(\"*.yaml\")):\n    try:\n        yaml.safe_load(path.read_text(encoding=\"utf-8\"))\n    except Exception\
-          \ as exc:\n        print(f\"{path}: {exc}\", file=sys.stderr)\n        failed = True\nsys.exit(1 if failed else 0)\nPY\n"
+        run: "python - <<'PY' from pathlib import Path import sys import yaml  failed = False for path in list(Path(\".\").rglob(\"*.yml\"\
+          )) + list(Path(\".\").rglob(\"*.yaml\")):     try:         yaml.safe_load(path.read_text(encoding=\"utf-8\"))     except Exception\
+          \ as exc:         print(f\"{path}: {exc}\", file=sys.stderr)         failed = True sys.exit(1 if failed else 0) PY "
+
+
       - name: Validate project schema
         run: python scripts/validate_project.py
+
+
       - name: Run project hardening validation
         run: python scripts/validate_hardening.py
+
+
       - name: Compile Python plugins
         run: python -m compileall roles/changepassword/plugins
+
+
       - name: Validate inventory
         run: ansible-inventory -i inventories/production/hosts.yml --list
+
+
       - name: Syntax-check playbook
-        run: "ansible-playbook \\\n  -i inventories/production/hosts.yml \\\n  playbooks/changepassword.yml \\\n  --syntax-check\n"
+        run: "ansible-playbook \\   -i inventories/production/hosts.yml \\   playbooks/changepassword.yml \\   --syntax-check "
+
+
       - name: Run ansible-lint
         run: ansible-lint --profile production
+
+
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
       - name: Run Molecule default scenario
         run: cd roles/changepassword && molecule --debug test -s default
+
+
       - name: Run Molecule multi scenario
         run: cd roles/changepassword && molecule --debug test -s multi
+
+
       - name: Run Molecule negative scenario
         run: cd roles/changepassword && molecule --debug test -s negative
   molecule:
@@ -70,37 +102,57 @@ jobs:
     env:
       ANSIBLE_ROLES_PATH: ${{ github.workspace }}/roles
     steps:
+
+
       - name: Run project hardening validation
         run: python scripts/validate_hardening.py
+
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           persist-credentials: false
+
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
           cache: pip
+
+
       - name: Install Python dependencies
         run: 'python -m pip install --upgrade pip
 
           pip install -r requirements.txt
 
           '
+
+
       - name: Install Ansible collections
         run: ansible-galaxy collection install -r requirements.yml
+
+
       - name: Show Docker runtime
         run: 'docker version
 
           docker info
 
           '
+
+
       - name: Run Molecule negative scenario
         working-directory: roles/changepassword
         run: molecule test -s negative
+
+
       - name: Run Molecule default scenario
         run: cd roles/changepassword && molecule --debug test -s default
+
+
       - name: Run Molecule multi scenario
         run: cd roles/changepassword && molecule --debug test -s multi
+
+
       - name: Run Molecule negative scenario
         run: cd roles/changepassword && molecule --debug test -s negative
