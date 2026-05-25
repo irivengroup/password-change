@@ -10,7 +10,7 @@ from typing import Any
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-ACCOUNT_ALLOWED_KEYS = {"changepassword_target_account", "password", "state", "expire"}
+ACCOUNT_ALLOWED_KEYS = {"username", "password", "state", "expire"}
 ACCOUNT_STATES = {"locked", "unlocked"}
 USERNAME_RE = re.compile(r"^[a-z_][a-z0-9_-]{0,31}$|^root$")
 HASH_RE = re.compile(r"^\$(5|6)\$(rounds=[0-9]+\$)?[^$]{1,16}\$.+")
