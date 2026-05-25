@@ -4,7 +4,7 @@ dependency:
 driver:
   name: default
 platforms:
-- name: localhost
+  - name: localhost
 provisioner:
   name: ansible
   inventory:
@@ -18,8 +18,8 @@ verifier:
   name: ansible
 scenario:
   test_sequence:
-  - syntax
-  - prepare
-  - converge
-  - idempotence
-  - verify
+    - syntax
+    - prepare
+    - converge
+    - idempotence
+    - verify

@@ -10,39 +10,30 @@
       - (changepassword_sha512_rounds | int) >= (changepassword_min_sha512_rounds | int)
     fail_msg: 'Production strict mode is mandatory: no_log, audit, runtime lock, custom HMAC secret, and SHA512 minimum rounds must be enforced.'
   changed_when: false
-
 - name: Changepassword | Validate platform and role inputs
   block:
-
     - name: Changepassword | Validate supported operating system family
       ansible.builtin.assert:
         that:
           - ansible_system == 'Linux'
           - ansible_os_family in ['RedHat', 'Debian', 'Suse']
-        fail_msg: 'Unsupported target: {{ ansible_system }} / {{ ansible_os_family }}. Supported OS families are RedHat, Debian and Suse for local
-          Linux accounts.'
-
+        fail_msg: 'Unsupported target: {{ ansible_system }} / {{ ansible_os_family }}. Supported OS families are RedHat, Debian and Suse for local Linux accounts.'
     - name: Changepassword | Validate account list is provided
       ansible.builtin.assert:
         that:
           - changepassword_local_accounts | type_debug == 'list'
           - changepassword_local_accounts | length > 0
-        fail_msg: 'changepassword_local_accounts must be a non-empty list of dictionaries, for example: changepassword_local_accounts: [{username:
-          root, password: ''vault-secret-or-$5$/$6$hash''}].'
-
+        fail_msg: 'changepassword_local_accounts must be a non-empty list of dictionaries, for example: changepassword_local_accounts: [{username: root, password: ''vault-secret-or-$5$/$6$hash''}].'
     - name: Changepassword | Normalize runtime target selector
       ansible.builtin.set_fact:
         changepassword_requested_user: '{{ changepassword_target_account | default(''root'') | string | trim }}'
       no_log: '{{ changepassword_use_no_log | bool }}'
-
     - name: Changepassword | Validate runtime target selector
       ansible.builtin.assert:
         that:
           - changepassword_requested_user | length > 0
           - (changepassword_requested_user in changepassword_all_targets) or (changepassword_requested_user is match(changepassword_account_regex))
-        fail_msg: changepassword_target_account must be a valid local account name declared in changepassword_local_accounts, or one of {{ changepassword_all_targets
-          }} to target all declared accounts.
-
+        fail_msg: changepassword_target_account must be a valid local account name declared in changepassword_local_accounts, or one of {{ changepassword_all_targets }} to target all declared accounts.
     - name: Changepassword | Validate each account item is a dictionary
       ansible.builtin.assert:
         that:
@@ -51,24 +42,20 @@
           - item.username | string | length > 0
           - item.password is defined
           - item.password | string | length > 0
-        fail_msg: 'Each changepassword_local_accounts entry must be a dictionary containing changepassword_target_account and password. Expected
-          list item format: {username: root, password: ''vault-secret-or-$5$/$6$hash''}.'
+        fail_msg: 'Each changepassword_local_accounts entry must be a dictionary containing changepassword_target_account and password. Expected list item format: {username: root, password: ''vault-secret-or-$5$/$6$hash''}.'
       loop: '{{ changepassword_local_accounts }}'
       loop_control:
         label: '{{ item.username | default(''undefined'') }}'
       no_log: '{{ changepassword_use_no_log | bool }}'
-
     - name: Changepassword | Refuse unsupported account keys
       ansible.builtin.assert:
         that:
           - (item.keys() | list | difference(['username', 'password', 'state', 'expire'])) | length == 0
-        fail_msg: Unsupported keys found for account '{{ item.username | default('undefined') }}'. This role only accepts changepassword_target_account,
-          password, state and expire. User provisioning attributes are intentionally forbidden.
+        fail_msg: Unsupported keys found for account '{{ item.username | default('undefined') }}'. This role only accepts changepassword_target_account, password, state and expire. User provisioning attributes are intentionally forbidden.
       loop: '{{ changepassword_local_accounts }}'
       loop_control:
         label: '{{ item.username | default(''undefined'') }}'
       no_log: '{{ changepassword_use_no_log | bool }}'
-
     - name: Changepassword | Validate usernames match security policy
       ansible.builtin.assert:
         that:
@@ -78,20 +65,17 @@
       loop_control:
         label: '{{ item.username | default(''undefined'') }}'
       no_log: '{{ changepassword_use_no_log | bool }}'
-
     - name: Changepassword | Validate password hash format or explicit secret policy
       ansible.builtin.assert:
         that:
           - item.password is string
           - item.password | length > 0
           - (item.password is match(changepassword_password_hash_regex)) or (item.password | length >= 16)
-        fail_msg: Password for '{{ item.username | default('undefined') }}' must be a SHA-256/SHA-512 crypt hash or a sufficiently long vaulted
-          secret.
+        fail_msg: Password for '{{ item.username | default('undefined') }}' must be a SHA-256/SHA-512 crypt hash or a sufficiently long vaulted secret.
       loop: '{{ changepassword_local_accounts }}'
       loop_control:
         label: '{{ item.username | default(''undefined'') }}'
       no_log: '{{ changepassword_use_no_log | bool }}'
-
     - name: Changepassword | Refuse explicitly forbidden password values
       ansible.builtin.assert:
         that:
@@ -101,7 +85,6 @@
       loop_control:
         label: '{{ item.username | default(''undefined'') }}'
       no_log: '{{ changepassword_use_no_log | bool }}'
-
     - name: Changepassword | Validate account state values
       ansible.builtin.assert:
         that:
@@ -111,7 +94,6 @@
       loop_control:
         label: '{{ item.username | default(''undefined'') }}'
       no_log: '{{ changepassword_use_no_log | bool }}'
-
     - name: Changepassword | Validate account expire values
       ansible.builtin.assert:
         that:
@@ -121,95 +103,72 @@
       loop_control:
         label: '{{ item.username | default(''undefined'') }}'
       no_log: '{{ changepassword_use_no_log | bool }}'
-
     - name: Changepassword | Build declared account changepassword_target_account list
       ansible.builtin.set_fact:
         changepassword_runtime_accounts: '{{ changepassword_local_accounts | map(attribute=''username'') | list }}'
       no_log: '{{ changepassword_use_no_log | bool }}'
-
     - name: Changepassword | Refuse duplicate account declarations
       ansible.builtin.assert:
         that:
           - changepassword_runtime_accounts | length == changepassword_runtime_accounts | unique | list | length
         fail_msg: Duplicate changepassword_target_accounts found in changepassword_local_accounts. Keep exactly one dictionary per changepassword_target_account.
       no_log: '{{ changepassword_use_no_log | bool }}'
-
     - name: Changepassword | Ensure requested account is declared in Vault variables
       ansible.builtin.assert:
         that:
           - (changepassword_requested_user in changepassword_all_targets) or (changepassword_requested_user in changepassword_runtime_accounts)
-        fail_msg: changepassword_target_account={{ changepassword_requested_user }} is not declared in changepassword_local_accounts. Refusing
-          to change an account that is not explicitly declared in Vault/inventory variables.
-
+        fail_msg: changepassword_target_account={{ changepassword_requested_user }} is not declared in changepassword_local_accounts. Refusing to change an account that is not explicitly declared in Vault/inventory variables.
     - name: Changepassword | Build effective target account list
       ansible.builtin.set_fact:
-        changepassword_target_accounts: "{{   changepassword_local_accounts   if changepassword_requested_user in changepassword_all_targets \
-           else (changepassword_local_accounts | selectattr('username', 'equalto', changepassword_requested_user) | list) }}"
+        changepassword_target_accounts: '{{ changepassword_local_accounts if changepassword_requested_user in changepassword_all_targets else (changepassword_local_accounts | selectattr(''username'', ''equalto'', changepassword_requested_user) | list) }}'
       no_log: '{{ changepassword_use_no_log | bool }}'
-
     - name: Changepassword | Validate effective target account list
       ansible.builtin.assert:
         that:
           - changepassword_target_accounts | length > 0
         fail_msg: No effective account selected for changepassword_target_account={{ changepassword_requested_user }}.
-
 - name: Changepassword | Resolve machine-id identity for hash generation
   block:
-
     - name: Changepassword | Check machine-id candidate files
       ansible.builtin.stat:
         path: '{{ item }}'
       register: changepassword_machine_id_stat
       loop: '{{ changepassword_machine_id_paths }}'
-
     - name: Changepassword | Select first available machine-id file
       ansible.builtin.set_fact:
-        changepassword_machine_id_file: "{{   changepassword_machine_id_stat.results   | selectattr('stat.exists')   | selectattr('stat.isreg') \
-           | map(attribute='item')   | list   | first   | default('') }}"
+        changepassword_machine_id_file: '{{ changepassword_machine_id_stat.results | selectattr(''stat.exists'') | selectattr(''stat.isreg'') | map(attribute=''item'') | list | first | default('''') }}'
       no_log: '{{ changepassword_use_no_log | bool }}'
-
     - name: Changepassword | Read machine-id for deterministic salt identity
       ansible.builtin.slurp:
         src: '{{ changepassword_machine_id_file }}'
       register: changepassword_machine_id_raw
       when: changepassword_machine_id_file | length > 0
       no_log: '{{ changepassword_use_no_log | bool }}'
-
     - name: Changepassword | Normalize machine-id
       ansible.builtin.set_fact:
         changepassword_machine_id: '{{ changepassword_machine_id_raw.content | b64decode | trim | lower }}'
       when: changepassword_machine_id_file | length > 0
       no_log: '{{ changepassword_use_no_log | bool }}'
-
     - name: Changepassword | Validate machine-id availability and format
       ansible.builtin.assert:
         that:
           - changepassword_machine_id | default('') is match('^[0-9a-f]{32}$')
-        fail_msg: machine-id is required for HMAC salt generation but was not found or is invalid on {{ inventory_hostname }}. No inventory_hostname
-          fallback is supported for password hash salt derivation.
-
+        fail_msg: machine-id is required for HMAC salt generation but was not found or is invalid on {{ inventory_hostname }}. No inventory_hostname fallback is supported for password hash salt derivation.
     - name: Changepassword | Build effective salt identity from machine-id
       ansible.builtin.set_fact:
         changepassword_effective_salt_identity: '{{ changepassword_machine_id }}'
       no_log: '{{ changepassword_use_no_log | bool }}'
-
     - name: Changepassword | Validate effective salt identity
       ansible.builtin.assert:
         that:
           - changepassword_effective_salt_identity | length == 32
         fail_msg: Effective salt identity must be the 32-character machine-id.
-
 - name: Changepassword | Validate account definitions
   block:
-
     - name: Changepassword | Validate provided HMAC secret strength
       ansible.builtin.set_fact:
-        changepassword_custom_hmac_secret_is_valid: "{{   (changepassword_hmac_salt_secret | default('') | length >= changepassword_min_hmac_secret_length\
-          | int) and ((changepassword_hmac_salt_secret | default('') | regex_search('[A-Z]')) is not none) and ((changepassword_hmac_salt_secret\
-          | default('') | regex_search('[a-z]')) is not none) and ((changepassword_hmac_salt_secret | default('') | regex_search('[0-9]'))\
-          is not none)   and ((changepassword_hmac_salt_secret | default('') | regex_search('[^A-Za-z0-9]')) is not none) }}"
+        changepassword_custom_hmac_secret_is_valid: '{{ (changepassword_hmac_salt_secret | default('''') | length >= changepassword_min_hmac_secret_length | int) and ((changepassword_hmac_salt_secret | default('''') | regex_search(''[A-Z]'')) is not none) and ((changepassword_hmac_salt_secret | default('''') | regex_search(''[a-z]'')) is not none) and ((changepassword_hmac_salt_secret | default('''') | regex_search(''[0-9]'')) is not none) and ((changepassword_hmac_salt_secret | default('''') | regex_search(''[^A-Za-z0-9]'')) is not none) }}'
       no_log: '{{ changepassword_use_no_log | bool }}'
-
     - name: Changepassword | Validate default HMAC fallback secret strength
       ansible.builtin.assert:
         that:
@@ -220,22 +179,17 @@
           - (changepassword_default_hmac_salt_secret | regex_search('[^A-Za-z0-9]')) is not none
         fail_msg: Default HMAC fallback secret must be at least 60 chars and include uppercase, lowercase, digit and special characters.
       no_log: '{{ changepassword_use_no_log | bool }}'
-
     - name: Changepassword | Fail when a valid custom HMAC secret is required
       ansible.builtin.assert:
         that:
           - changepassword_custom_hmac_secret_is_valid | bool
-        fail_msg: changepassword_require_custom_hmac_secret=true requires changepassword_hmac_salt_secret to be at least changepassword_min_hmac_secret_length
-          characters and include uppercase, lowercase, digit and special characters.
+        fail_msg: changepassword_require_custom_hmac_secret=true requires changepassword_hmac_salt_secret to be at least changepassword_min_hmac_secret_length characters and include uppercase, lowercase, digit and special characters.
       when: changepassword_require_custom_hmac_secret | bool
       no_log: '{{ changepassword_use_no_log | bool }}'
-
     - name: Changepassword | Select effective HMAC secret for salt derivation
       ansible.builtin.set_fact:
-        changepassword_effective_hmac_salt_secret: "{{   changepassword_hmac_salt_secret   if (changepassword_custom_hmac_secret_is_valid |\
-          bool)   else changepassword_default_hmac_salt_secret }}"
+        changepassword_effective_hmac_salt_secret: '{{ changepassword_hmac_salt_secret if (changepassword_custom_hmac_secret_is_valid | bool) else changepassword_default_hmac_salt_secret }}'
       no_log: '{{ changepassword_use_no_log | bool }}'
-
     - name: Changepassword | Validate account definitions and security policy
       ansible.builtin.assert:
         that:
@@ -271,16 +225,11 @@
           - changepassword_allow_empty_password | bool == false
           - not ((item.username == 'root') and ((item.state | default('unchanged')) == 'locked') and not (changepassword_allow_root_lock | bool))
           - not ((item.username == 'root') and (changepassword_lock_after_change | bool) and not (changepassword_allow_root_lock | bool))
-        fail_msg: "Invalid account definition or blocked hardening policy for account '{{ item.username | default('undefined') }}'. Supported\
-            account state values are unlocked and locked only. password is mandatory for every account and is auto-detected as SHA256/SHA512\
-            crypt hash when it starts with $5$ or $6$, otherwise treated as Vault-protected plaintext. password_hash, password_plain and manage_password\
-            are not supported. Do not define per-account aging or provisioning attributes such as shell, groups, uid, home, comment, create_home \
-           or system."
+        fail_msg: Invalid account definition or blocked hardening policy for account '{{ item.username | default('undefined') }}'. Supportedaccount state values are unlocked and locked only. password is mandatory for every account and is auto-detected as SHA256/SHA512crypt hash when it starts with $5$ or $6$, otherwise treated as Vault-protected plaintext. password_hash, password_plain and manage_passwordare not supported. Do not define per-account aging or provisioning attributes such as shell, groups, uid, home, comment, create_home or system.
       loop: '{{ changepassword_target_accounts }}'
       loop_control:
         label: '{{ item.username | default(''undefined'') }}'
       no_log: '{{ changepassword_use_no_log | bool }}'
-
     - name: Changepassword | Validate SHA256/SHA512 password hash format when provided
       ansible.builtin.assert:
         that:
@@ -292,7 +241,6 @@
       when:
         - item.password | default('') is match(changepassword_password_hash_prefix_regex)
       no_log: '{{ changepassword_use_no_log | bool }}'
-
     - name: Changepassword | Validate clear-text password complexity when explicitly enabled
       ansible.builtin.assert:
         that:
@@ -312,10 +260,8 @@
         - changepassword_enforce_complexity | bool
         - ((item.password | default('') | length > 0) and not (item.password is match(changepassword_password_hash_prefix_regex)))
       no_log: '{{ changepassword_use_no_log | bool }}'
-
 - name: Changepassword | Validate local account backend
   block:
-
     - name: Changepassword | Query local passwd database with builtin getent
       ansible.builtin.getent:
         database: passwd
@@ -325,14 +271,10 @@
       loop: '{{ changepassword_target_accounts }}'
       loop_control:
         label: '{{ item.username }}'
-
     - name: Changepassword | Build discovered local account list
       ansible.builtin.set_fact:
-        changepassword_existing_local_users: "{{   changepassword_getent_passwd_results.results   | selectattr('ansible_facts.getent_passwd',\
-          'defined') | map(attribute='ansible_facts.getent_passwd') | map('dict2items') | flatten | map(attribute='key') | list \
-          }}"
+        changepassword_existing_local_users: '{{ changepassword_getent_passwd_results.results | selectattr(''ansible_facts.getent_passwd'', ''defined'') | map(attribute=''ansible_facts.getent_passwd'') | map(''dict2items'') | flatten | map(attribute=''key'') | list }}'
       no_log: '{{ changepassword_use_no_log | bool }}'
-
     - name: Changepassword | Fail if local account is missing
       ansible.builtin.assert:
         that:
@@ -342,13 +284,11 @@
       loop_control:
         label: '{{ item.username }}'
       when: changepassword_fail_if_user_missing | bool
-
     - name: Changepassword | Check shadow backend availability
       ansible.builtin.stat:
         path: /etc/shadow
       register: changepassword_shadow
       when: changepassword_check_shadow_backend | bool
-
     - name: Changepassword | Fail when local shadow backend is unavailable
       ansible.builtin.assert:
         that:
@@ -356,40 +296,33 @@
           - changepassword_shadow.stat.isreg
         fail_msg: /etc/shadow is unavailable. This target may use an external identity backend; do not use this role for IPA/LDAP/AD passwords.
       when: changepassword_check_shadow_backend | bool
-
     - name: Changepassword | Validate local shadow file ownership and permissions
       ansible.builtin.assert:
         that:
           - changepassword_shadow.stat.pw_name == 'root'
           - changepassword_shadow.stat.gr_name in ['root', 'shadow']
           - changepassword_shadow.stat.mode in ['0600', '0640']
-        fail_msg: /etc/shadow has unexpected ownership or permissions on {{ inventory_hostname }}. Expected owner root, group root/shadow, mode
-          0600/0640.
+        fail_msg: /etc/shadow has unexpected ownership or permissions on {{ inventory_hostname }}. Expected owner root, group root/shadow, mode 0600/0640.
       when: changepassword_check_shadow_backend | bool
-
     - name: Changepassword | Read /etc/passwd for local-only backend validation
       ansible.builtin.slurp:
         src: /etc/passwd
       register: changepassword_etc_passwd_raw
       when: changepassword_require_etc_passwd_user | bool
       no_log: '{{ changepassword_use_no_log | bool }}'
-
     - name: Changepassword | Fail if selected account is not local to /etc/passwd
       ansible.builtin.assert:
         that:
           - ((changepassword_etc_passwd_raw.content | b64decode).split(' ') | select('match', '^' ~ (item.username | regex_escape) ~ ':') | list | length) > 0
-        fail_msg: Account '{{ item.username }}' is not present in /etc/passwd on {{ inventory_hostname }}. It may be provided by LDAP/IPA/AD/SSSD;
-          refusing local password mutation.
+        fail_msg: Account '{{ item.username }}' is not present in /etc/passwd on {{ inventory_hostname }}. It may be provided by LDAP/IPA/AD/SSSD; refusing local password mutation.
       loop: '{{ changepassword_target_accounts }}'
       loop_control:
         label: '{{ item.username }}'
       when: changepassword_require_etc_passwd_user | bool
       no_log: '{{ changepassword_use_no_log | bool }}'
-
     - name: Changepassword | Build selected login shell map from builtin getent facts
       ansible.builtin.set_fact:
-        changepassword_selected_login_shells: "{{   changepassword_selected_login_shells | default({})   | combine({       item.item.username:\
-          (         item.ansible_facts.getent_passwd[item.item.username][-1]         | default('')         | trim       )     }) }}"
+        changepassword_selected_login_shells: '{{ changepassword_selected_login_shells | default({}) | combine({ item.item.username: (item.ansible_facts.getent_passwd[item.item.username][-1] | default('''') | trim) }) }}'
       loop: '{{ changepassword_getent_passwd_results.results }}'
       loop_control:
         label: '{{ item.item.username }}'
@@ -398,7 +331,6 @@
         - item.ansible_facts.getent_passwd is defined
         - item.item.username in item.ansible_facts.getent_passwd
       no_log: '{{ changepassword_use_no_log | bool }}'
-
     - name: Changepassword | Check selected login shell paths
       ansible.builtin.stat:
         path: '{{ item.value }}'
@@ -409,7 +341,6 @@
       when:
         - changepassword_require_login_shell | bool
       no_log: '{{ changepassword_use_no_log | bool }}'
-
     - name: Changepassword | Validate selected login shell paths exist and are executable
       ansible.builtin.assert:
         that:
@@ -423,7 +354,6 @@
       when:
         - changepassword_require_login_shell | bool
       no_log: '{{ changepassword_use_no_log | bool }}'
-
     - name: Changepassword | Validate selected accounts have an allowed login shell
       ansible.builtin.assert:
         that:
@@ -436,24 +366,19 @@
       when:
         - changepassword_require_login_shell | bool
       no_log: '{{ changepassword_use_no_log | bool }}'
-
 - name: Changepassword | Validate password ageing prerequisites
   block:
-
     - name: Changepassword | Ensure chage command exists when expiry or aging is requested
       ansible.builtin.stat:
         path: /usr/bin/chage
       register: changepassword_chage_check
-      when: (changepassword_target_accounts | selectattr('expire', 'defined') | selectattr('expire') | list | length > 0) or (changepassword_set_aging  | bool)
-
+      when: (changepassword_target_accounts | selectattr('expire', 'defined') | selectattr('expire') | list | length > 0) or (changepassword_set_aging | bool)
     - name: Changepassword | Fail when chage is required but missing
       ansible.builtin.assert:
         that:
           - changepassword_chage_check.stat.exists
-        fail_msg: chage is required for expire/aging operations but was not found at /usr/bin/chage. On SUSE/SLES/openSUSE, install or restore
-          the shadow package.
+        fail_msg: chage is required for expire/aging operations but was not found at /usr/bin/chage. On SUSE/SLES/openSUSE, install or restore the shadow package.
       when: changepassword_chage_check is defined and not ansible_check_mode
-
 - name: Changepassword | Refuse missing or weak custom HMAC secret in production
   ansible.builtin.assert:
     that:
