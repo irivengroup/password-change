@@ -1,7 +1,6 @@
 ---
 - name: Changepassword | Shadow pre-change hardening checks
   block:
-
     - name: Changepassword | Read current shadow database when anti-reuse is enabled
       ansible.builtin.slurp:
         src: /etc/shadow
@@ -16,7 +15,7 @@
         that:
           - >-
             (
-              ((changepassword_shadow_raw.content | b64decode).split(' ')
+              ((changepassword_shadow_raw.content | b64decode).split('\n')
                 | select('match', '^' ~ (item.username | regex_escape) ~ ':')
                 | list
                 | first

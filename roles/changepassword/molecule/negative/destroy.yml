@@ -1,0 +1,17 @@
+---
+- name: Destroy Molecule delegated Docker target
+  hosts: localhost
+  gather_facts: false
+  vars:
+    molecule_container_name: chgpassword-negative-ubuntu
+  tasks:
+    - name: Molecule | Remove target container
+      community.docker.docker_container:
+        name: '{{ molecule_container_name }}'
+        state: absent
+      changed_when: false
+    - name: Molecule | Remove delegated instance configuration
+      ansible.builtin.file:
+        path: '{{ molecule_instance_config }}'
+        state: absent
+      changed_when: false

@@ -1,11 +1,11 @@
 ---
 profile: production
+
 exclude_paths:
   - .git/
   - .venv/
   - collections/
   - .cache/
-  - .tox/
-  - .molecule/
-skip_list:
+
+warn_list:
   - yaml[line-length]

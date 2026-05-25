@@ -1,7 +1,6 @@
 ---
 - name: Changepassword | Run secured password rotation workflow
   block:
-
     - name: Changepassword | Acquire host-level execution lock
       ansible.builtin.command:
         argv:
@@ -34,7 +33,6 @@
       when: changepassword_audit_enabled | bool
 
   rescue:
-
     - name: Changepassword | Report secured workflow failure
       ansible.builtin.fail:
         msg: >-
@@ -42,7 +40,6 @@
           Secrets are hidden when changepassword_use_no_log=true.
 
   always:
-
     - name: Changepassword | Release host-level execution lock
       ansible.builtin.file:
         path: "{{ changepassword_lock_path }}"

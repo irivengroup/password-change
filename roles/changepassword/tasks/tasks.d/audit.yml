@@ -1,7 +1,6 @@
 ---
 - name: Changepassword | Write local JSONL audit trail without secrets
   block:
-
     - name: Changepassword | Ensure audit directory exists
       ansible.builtin.file:
         path: "{{ changepassword_audit_file | dirname }}"
@@ -108,7 +107,7 @@
         owner: "{{ changepassword_audit_owner }}"
         group: "{{ changepassword_audit_group }}"
         mode: "{{ changepassword_audit_file_mode }}"
-        content: "{{ changepassword_audit_sha256.stdout | default('') }} "
+        content: "{{ changepassword_audit_sha256.stdout | default('') }}\n"
       changed_when: false
       when:
         - changepassword_audit_integrity_enabled | bool

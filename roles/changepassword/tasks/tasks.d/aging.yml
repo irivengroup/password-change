@@ -1,7 +1,6 @@
 ---
 - name: Changepassword | Apply expiration and password ageing policies
   block:
-
     - name: Changepassword | Read current shadow ageing state
       ansible.builtin.command:
         argv:

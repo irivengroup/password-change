@@ -1,7 +1,6 @@
 ---
 - name: Changepassword | Build normalized runtime data
   block:
-
     - name: Changepassword | Reset normalized account list
       ansible.builtin.set_fact:
         changepassword_normalized_accounts: []

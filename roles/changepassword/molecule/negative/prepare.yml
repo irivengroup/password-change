@@ -1,13 +1,23 @@
 ---
-- name: Prepare changepassword Molecule contract tests
-  hosts: localhost
-  connection: local
-  gather_facts: false
-
+- name: Prepare negative scenario target
+  hosts: all
+  connection: community.docker.docker
+  become: true
+  gather_facts: true
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
   tasks:
+    - name: Molecule negative | Ensure machine-id exists
+      ansible.builtin.copy:
+        dest: /etc/machine-id
+        content: '0123456789abcdef0123456789abcdef
 
-    - name: Prepare | Create temporary test directory
-      ansible.builtin.file:
-        path: /tmp/changepassword-molecule
-        state: directory
-        mode: "0755"
+          '
+        owner: root
+        group: root
+        mode: '0444'
+    - name: Molecule negative | Create existing control user
+      ansible.builtin.user:
+        name: moleculevalid
+        shell: /bin/bash
+        state: present

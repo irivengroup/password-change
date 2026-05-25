@@ -16,4 +16,9 @@ rules:
   line-length:
     max: 140
     level: warning
-  truthy: disable
+  truthy:
+    allowed-values:
+      - 'true'
+      - 'false'
+      - 'on'
+      - 'off'

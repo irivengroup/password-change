@@ -1,0 +1,32 @@
+---
+- name: Create Molecule delegated Docker target
+  hosts: localhost
+  gather_facts: false
+  vars:
+    molecule_container_name: chgpassword-ubuntu
+    molecule_container_image: docker.io/ubuntu:22.04
+  tasks:
+    - name: Molecule | Pull target image
+      community.docker.docker_image:
+        name: '{{ molecule_container_image }}'
+        source: pull
+    - name: Molecule | Create and start target container
+      community.docker.docker_container:
+        name: '{{ molecule_container_name }}'
+        image: '{{ molecule_container_image }}'
+        command: sleep infinity
+        state: started
+        detach: true
+        tty: true
+        cleanup: true
+    - name: Molecule | Bootstrap Python and account utilities in target container
+      community.docker.docker_container_exec:
+        container: '{{ molecule_container_name }}'
+        command: sh -c "apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3 passwd login && rm -rf /var/lib/apt/lists/*"
+      changed_when: false
+    - name: Molecule | Write delegated instance configuration
+      ansible.builtin.copy:
+        dest: '{{ molecule_instance_config }}'
+        mode: '0600'
+        content: "---\n- instance: chgpassword-ubuntu\n  address: chgpassword-ubuntu\n  user: root\n  connection: community.docker.docker\n  ansible_python_interpreter:\
+          \ /usr/bin/python3\n"
