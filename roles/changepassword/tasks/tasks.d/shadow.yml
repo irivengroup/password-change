@@ -2,6 +2,7 @@
 - name: Changepassword | Shadow pre-change hardening checks
   block:
 
+
     - name: Changepassword | Read current shadow database when anti-reuse is enabled
       ansible.builtin.slurp:
         src: /etc/shadow
@@ -10,6 +11,7 @@
         - changepassword_fail_if_same_hash | bool
         - changepassword_normalized_accounts | length > 0
       no_log: "{{ changepassword_use_no_log | bool }}"
+
 
     - name: Changepassword | Refuse password reuse when requested
       ansible.builtin.assert:

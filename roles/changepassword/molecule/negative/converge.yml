@@ -23,12 +23,15 @@
 
   tasks:
 
+
     - name: Negative | Run role and capture expected preflight rejection
       block:
+
 
         - name: Negative | Include changepassword role with unknown target
           ansible.builtin.include_role:
             name: changepassword
+
 
         - name: Negative | Mark unexpected success
           ansible.builtin.set_fact:
@@ -36,9 +39,11 @@
 
       rescue:
 
+
         - name: Negative | Mark expected failure as rejected
           ansible.builtin.set_fact:
             changepassword_negative_rejected: true
+
 
     - name: Negative | Assert unknown requested account is rejected
       ansible.builtin.assert:
