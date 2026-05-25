@@ -6,11 +6,11 @@
         argv:
           - /usr/bin/getent
           - shadow
-          - "{{ item.changepassword_target_account }}"
+          - "{{ item.username }}"
       register: changepassword_shadow_ageing_state
       loop: "{{ changepassword_normalized_accounts }}"
       loop_control:
-        label: "{{ item.changepassword_target_account }}"
+        label: "{{ item.username }}"
       changed_when: false
       no_log: "{{ changepassword_use_no_log | bool }}"
 
@@ -20,10 +20,10 @@
           - /usr/bin/chage
           - -d
           - "0"
-          - "{{ item.changepassword_target_account }}"
+          - "{{ item.username }}"
       loop: "{{ changepassword_normalized_accounts }}"
       loop_control:
-        label: "{{ item.changepassword_target_account }}"
+        label: "{{ item.username }}"
         index_var: changepassword_account_index
       when:
         - item.expire | bool
@@ -40,11 +40,11 @@
             + ((['-M', item.aging_max_days|string]) if item.aging_max_days is not none else [])
             + ((['-W', item.aging_warn_days|string]) if item.aging_warn_days is not none else [])
             + ((['-I', item.aging_inactive_days|string]) if item.aging_inactive_days is not none else [])
-            + [item.changepassword_target_account]
+            + [item.username]
           }}
       loop: "{{ changepassword_normalized_accounts }}"
       loop_control:
-        label: "{{ item.changepassword_target_account }}"
+        label: "{{ item.username }}"
         index_var: changepassword_account_index
       when:
         - changepassword_set_aging | bool

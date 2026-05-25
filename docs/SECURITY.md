@@ -6,7 +6,7 @@ The preferred account model is:
 
 ```yaml
 changepassword_local_accounts:
-  - changepassword_target_account: root
+  - username: root
     password: "VaultProtectedPasswordOrSha512Hash"
 ```
 
@@ -38,7 +38,6 @@ Hardening rules:
 ## SUSE Compatibility
 
 SLES 15+ and openSUSE Leap 15.5+ are supported when local UNIX account backends, `getent`, `/etc/shadow`, and `/usr/bin/chage` are available.
-
 
 ## Production Strict Baseline
 

@@ -20,7 +20,7 @@
                   'aging_warn_days': changepassword_warn_days,
                   'aging_inactive_days': changepassword_inactive_days,
                   'generated_salt': (
-                    (changepassword_hash_salt_prefix ~ ':' ~ item.changepassword_target_account ~ ':' ~ changepassword_effective_salt_identity)
+                    (changepassword_hash_salt_prefix ~ ':' ~ item.username ~ ':' ~ changepassword_effective_salt_identity)
                     | changepassword_hmac_salt(
                         changepassword_effective_hmac_salt_secret,
                         changepassword_hmac_algorithm,
@@ -35,7 +35,7 @@
                       | password_hash(
                           changepassword_hash_algorithm,
                           (
-                            (changepassword_hash_salt_prefix ~ ':' ~ item.changepassword_target_account ~ ':' ~ changepassword_effective_salt_identity)
+                            (changepassword_hash_salt_prefix ~ ':' ~ item.username ~ ':' ~ changepassword_effective_salt_identity)
                             | changepassword_hmac_salt(
                                 changepassword_effective_hmac_salt_secret,
                                 changepassword_hmac_algorithm,
@@ -51,5 +51,5 @@
           }}
       loop: "{{ changepassword_target_accounts }}"
       loop_control:
-        label: "{{ item.changepassword_target_account }}"
+        label: "{{ item.username }}"
       no_log: "{{ changepassword_use_no_log | bool }}"

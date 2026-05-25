@@ -115,7 +115,7 @@ inventories/
             └── vault.yml
 ```
 
-`main.yml` contains non-sensitive operational defaults.  
+`main.yml` contains non-sensitive operational defaults.
 `vault.yml` contains sensitive account and password data and must be encrypted with Ansible Vault.
 
 ---
@@ -183,7 +183,6 @@ Accepted hash prefixes:
 
 Store generated hashes only in Vault-protected inventory files and never commit real credentials in clear text.
 
-
 ## Vault Configuration
 
 Example `inventories/production/group_vars/all/vault.yml`:
@@ -198,14 +197,14 @@ Example `inventories/production/group_vars/all/vault.yml`:
 changepassword_hmac_salt_secret: ""
 
 changepassword_local_accounts:
-  - changepassword_target_account: root
+  - username: root
     password: "replace-with-vault-secret-root-password"
 
-  - changepassword_target_account: ansible
+  - username: ansible
     password: "replace-with-vault-secret-ansible-password"
     state: unlocked
 
-  - changepassword_target_account: svc_backup
+  - username: svc_backup
     password: "$6$rounds=656000$replaceSaltHere$replaceSha512CryptHashHere"
     state: locked
     expire: false
@@ -227,7 +226,7 @@ Each item must represent an account that already exists locally on the managed h
 
 ```yaml
 changepassword_local_accounts:
-  - changepassword_target_account: root
+  - username: root
     password: "StrongPassword#2026!"
     state: unlocked
     expire: false
@@ -546,7 +545,6 @@ This role is suitable for controlled environments requiring:
 
 ---
 
-
 ## Production Strict Controls
 
 The role is designed for production-strict execution by default.
@@ -584,7 +582,7 @@ Multi-distribution validation is available for:
 
 ## Authors
 
-Alfred TCHONDJO  
+Alfred TCHONDJO
 Project Initiator — IRIVEN Group
 
 ---

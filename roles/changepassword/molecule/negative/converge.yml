@@ -29,7 +29,7 @@
             changepassword_audit_file: /tmp/changepassword-negative-audit.jsonl
             changepassword_lock_path: /tmp/changepassword-negative.lock
             changepassword_local_accounts:
-              - changepassword_target_account: moleculevalid
+              - username: moleculevalid
                 state: unlocked
             changepassword_sha512_rounds: 656000
             changepassword_min_sha512_rounds: 500000
@@ -57,7 +57,7 @@
             changepassword_audit_file: /tmp/changepassword-negative-audit.jsonl
             changepassword_lock_path: /tmp/changepassword-negative.lock
             changepassword_local_accounts:
-              - changepassword_target_account: moleculevalid
+              - username: moleculevalid
                 password: ValidPassword#2026!
                 state: present
             changepassword_sha512_rounds: 656000
@@ -86,7 +86,7 @@
             changepassword_audit_file: /tmp/changepassword-negative-audit.jsonl
             changepassword_lock_path: /tmp/changepassword-negative.lock
             changepassword_local_accounts:
-              - changepassword_target_account: moleculevalid
+              - username: moleculevalid
                 password: ValidPassword#2026!
                 state: unlocked
             changepassword_sha512_rounds: 656000
@@ -115,7 +115,7 @@
             changepassword_audit_file: /tmp/changepassword-negative-audit.jsonl
             changepassword_lock_path: /tmp/changepassword-negative.lock
             changepassword_local_accounts:
-              - changepassword_target_account: missinguser
+              - username: missinguser
                 password: ValidPassword#2026!
                 state: unlocked
             changepassword_sha512_rounds: 656000

@@ -1,12 +1,12 @@
 ---
 changepassword_hmac_salt_secret: ''
 changepassword_local_accounts:
-  - changepassword_target_account: root
+  - username: root
     password: replace-with-vault-secret-root-password
-  - changepassword_target_account: ansible
+  - username: ansible
     password: replace-with-vault-secret-ansible-password
     state: unlocked
-  - changepassword_target_account: svc_backup
+  - username: svc_backup
     password: $6$rounds=656000$replaceSaltHere$replaceSha512CryptHashHere
     state: locked
     expire: false

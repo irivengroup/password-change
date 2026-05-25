@@ -21,7 +21,6 @@ except Exception:  # pragma: no cover
     class AnsibleFilterError(Exception):
         pass
 
-
 class FilterModule(object):
     """Custom filters used by the changepassword role."""
 

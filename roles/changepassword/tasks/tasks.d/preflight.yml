@@ -30,7 +30,7 @@
           - changepassword_local_accounts | length > 0
         fail_msg: >-
           changepassword_local_accounts must be a non-empty list of dictionaries, for example:
-          changepassword_local_accounts: [{changepassword_target_account: root, password: 'vault-secret-or-$5$/$6$hash'}].
+          changepassword_local_accounts: [{username: root, password: 'vault-secret-or-$5$/$6$hash'}].
 
     - name: Changepassword | Normalize runtime target selector
       ansible.builtin.set_fact:
@@ -51,35 +51,35 @@
       ansible.builtin.assert:
         that:
           - item | type_debug == 'dict'
-          - item.changepassword_target_account is defined
-          - item.changepassword_target_account | string | length > 0
+          - item.username is defined
+          - item.username | string | length > 0
           - item.password is defined
           - item.password | string | length > 0
         fail_msg: >-
           Each changepassword_local_accounts entry must be a dictionary containing changepassword_target_account and password.
-          Expected list item format: {changepassword_target_account: root, password: 'vault-secret-or-$5$/$6$hash'}.
+          Expected list item format: {username: root, password: 'vault-secret-or-$5$/$6$hash'}.
       loop: "{{ changepassword_local_accounts }}"
       loop_control:
-        label: "{{ item.changepassword_target_account | default('undefined') }}"
+        label: "{{ item.username | default('undefined') }}"
       no_log: "{{ changepassword_use_no_log | bool }}"
 
     - name: Changepassword | Refuse unsupported account keys
       ansible.builtin.assert:
         that:
           - >-
-            (item.keys() | list | difference(['changepassword_target_account', 'password', 'state', 'expire'])) | length == 0
+            (item.keys() | list | difference(['username', 'password', 'state', 'expire'])) | length == 0
         fail_msg: >-
-          Unsupported keys found for account '{{ item.changepassword_target_account | default('undefined') }}'.
+          Unsupported keys found for account '{{ item.username | default('undefined') }}'.
           This role only accepts changepassword_target_account, password, state and expire.
           User provisioning attributes are intentionally forbidden.
       loop: "{{ changepassword_local_accounts }}"
       loop_control:
-        label: "{{ item.changepassword_target_account | default('undefined') }}"
+        label: "{{ item.username | default('undefined') }}"
       no_log: "{{ changepassword_use_no_log | bool }}"
 
     - name: Changepassword | Build declared account changepassword_target_account list
       ansible.builtin.set_fact:
-        changepassword_declared_changepassword_target_accounts: "{{ changepassword_local_accounts | map(attribute='changepassword_target_account') | list }}"
+        changepassword_declared_changepassword_target_accounts: "{{ changepassword_local_accounts | map(attribute='username') | list }}"
       no_log: "{{ changepassword_use_no_log | bool }}"
 
     - name: Changepassword | Refuse duplicate account declarations
@@ -105,7 +105,7 @@
           {{
             changepassword_local_accounts
             if changepassword_requested_user in changepassword_all_targets
-            else (changepassword_local_accounts | selectattr('changepassword_target_account', 'equalto', changepassword_requested_user) | list)
+            else (changepassword_local_accounts | selectattr('username', 'equalto', changepassword_requested_user) | list)
           }}
       no_log: "{{ changepassword_use_no_log | bool }}"
 
@@ -218,8 +218,8 @@
     - name: Changepassword | Validate account definitions and security policy
       ansible.builtin.assert:
         that:
-          - item.changepassword_target_account is defined
-          - item.changepassword_target_account is match(changepassword_validate_changepassword_target_account_regex)
+          - item.username is defined
+          - item.username is match(changepassword_validate_changepassword_target_account_regex)
           - item.state is not defined or item.state in ['unlocked', 'locked']
           - item.expire | default(false) | type_debug == 'bool'
           - changepassword_hash_algorithm in ['sha256', 'sha512']
@@ -234,11 +234,11 @@
           - item.group is not defined
           - item.create_home is not defined
           - item.system is not defined
-          - changepassword_manage_root | bool or item.changepassword_target_account != 'root'
+          - changepassword_manage_root | bool or item.username != 'root'
           - item.password_hash is not defined
           - item.password_plain is not defined
           - item.manage_password is not defined
-          - item.changepassword_target_account not in changepassword_forbidden_users
+          - item.username not in changepassword_forbidden_users
           - item.password is defined
           - item.password | string | length > 0
           - >-
@@ -251,12 +251,12 @@
           - changepassword_salt_length | int >= 8
           - changepassword_salt_length | int <= 16
           - changepassword_allow_empty_password | bool == false
-          - not ((item.changepassword_target_account == 'root') and ((item.state | default('unchanged')) == 'locked') and not
+          - not ((item.username == 'root') and ((item.state | default('unchanged')) == 'locked') and not
             (changepassword_allow_root_lock | bool))
-          - not ((item.changepassword_target_account == 'root') and (changepassword_lock_after_change | bool) and not
+          - not ((item.username == 'root') and (changepassword_lock_after_change | bool) and not
             (changepassword_allow_root_lock | bool))
         fail_msg: >-
-          Invalid account definition or blocked hardening policy for account '{{ item.changepassword_target_account | default('undefined') }}'.
+          Invalid account definition or blocked hardening policy for account '{{ item.username | default('undefined') }}'.
           Supported account state values are unlocked and locked only. password is mandatory for every account and is
             auto-detected as SHA256/SHA512 crypt hash when it starts with $5$ or $6$, otherwise treated as
             Vault-protected plaintext. password_hash, password_plain and manage_password are not supported. Do not
@@ -264,17 +264,17 @@
             or system.
       loop: "{{ changepassword_target_accounts }}"
       loop_control:
-        label: "{{ item.changepassword_target_account | default('undefined') }}"
+        label: "{{ item.username | default('undefined') }}"
       no_log: "{{ changepassword_use_no_log | bool }}"
 
     - name: Changepassword | Validate SHA256/SHA512 password hash format when provided
       ansible.builtin.assert:
         that:
           - item.password is match(changepassword_password_hash_regex)
-        fail_msg: "Password hash for '{{ item.changepassword_target_account }}' must be a supported Linux crypt hash starting with $5$ or $6$."
+        fail_msg: "Password hash for '{{ item.username }}' must be a supported Linux crypt hash starting with $5$ or $6$."
       loop: "{{ changepassword_target_accounts }}"
       loop_control:
-        label: "{{ item.changepassword_target_account }}"
+        label: "{{ item.username }}"
       when:
         - item.password | default('') is match(changepassword_password_hash_prefix_regex)
       no_log: "{{ changepassword_use_no_log | bool }}"
@@ -288,11 +288,11 @@
           - (not changepassword_require_digit | bool) or (item.password is regex('[0-9]'))
           - (not changepassword_require_special | bool) or (item.password is regex('[^A-Za-z0-9]'))
           - item.password not in changepassword_forbidden_plain_values
-          - item.password != item.changepassword_target_account
-        fail_msg: "Clear-text password for '{{ item.changepassword_target_account }}' does not satisfy the local complexity policy."
+          - item.password != item.username
+        fail_msg: "Clear-text password for '{{ item.username }}' does not satisfy the local complexity policy."
       loop: "{{ changepassword_target_accounts }}"
       loop_control:
-        label: "{{ item.changepassword_target_account }}"
+        label: "{{ item.username }}"
       when:
         - changepassword_allow_plaintext_password | bool
         - changepassword_enforce_complexity | bool
@@ -304,12 +304,12 @@
     - name: Changepassword | Query local passwd database with builtin getent
       ansible.builtin.getent:
         database: passwd
-        key: "{{ item.changepassword_target_account }}"
+        key: "{{ item.username }}"
         fail_key: false
       register: changepassword_getent_passwd_results
       loop: "{{ changepassword_target_accounts }}"
       loop_control:
-        label: "{{ item.changepassword_target_account }}"
+        label: "{{ item.username }}"
 
     - name: Changepassword | Build discovered local account list
       ansible.builtin.set_fact:
@@ -328,11 +328,11 @@
     - name: Changepassword | Fail if local account is missing
       ansible.builtin.assert:
         that:
-          - item.changepassword_target_account in changepassword_existing_local_users
-        fail_msg: "Local account '{{ item.changepassword_target_account }}' does not exist on {{ inventory_hostname }}."
+          - item.username in changepassword_existing_local_users
+        fail_msg: "Local account '{{ item.username }}' does not exist on {{ inventory_hostname }}."
       loop: "{{ changepassword_target_accounts }}"
       loop_control:
-        label: "{{ item.changepassword_target_account }}"
+        label: "{{ item.username }}"
       when: changepassword_fail_if_user_missing | bool
 
     - name: Changepassword | Check shadow backend availability
@@ -373,14 +373,14 @@
         that:
           - >-
             ((changepassword_etc_passwd_raw.content | b64decode).split('\n')
-            | select('match', '^' ~ (item.changepassword_target_account | regex_escape) ~ ':')
+            | select('match', '^' ~ (item.username | regex_escape) ~ ':')
             | list | length) > 0
         fail_msg: >-
-          Account '{{ item.changepassword_target_account }}' is not present in /etc/passwd on {{ inventory_hostname }}.
+          Account '{{ item.username }}' is not present in /etc/passwd on {{ inventory_hostname }}.
           It may be provided by LDAP/IPA/AD/SSSD; refusing local password mutation.
       loop: "{{ changepassword_target_accounts }}"
       loop_control:
-        label: "{{ item.changepassword_target_account }}"
+        label: "{{ item.username }}"
       when: changepassword_require_etc_passwd_user | bool
       no_log: "{{ changepassword_use_no_log | bool }}"
 
@@ -390,8 +390,8 @@
           {{
             changepassword_selected_login_shells | default({})
             | combine({
-                item.item.changepassword_target_account: (
-                  item.ansible_facts.getent_passwd[item.item.changepassword_target_account][-1]
+                item.item.username: (
+                  item.ansible_facts.getent_passwd[item.item.username][-1]
                   | default('')
                   | trim
                 )
@@ -399,11 +399,11 @@
           }}
       loop: "{{ changepassword_getent_passwd_results.results }}"
       loop_control:
-        label: "{{ item.item.changepassword_target_account }}"
+        label: "{{ item.item.username }}"
       when:
         - changepassword_require_login_shell | bool
         - item.ansible_facts.getent_passwd is defined
-        - item.item.changepassword_target_account in item.ansible_facts.getent_passwd
+        - item.item.username in item.ansible_facts.getent_passwd
       no_log: "{{ changepassword_use_no_log | bool }}"
 
     - name: Changepassword | Check selected login shell paths
@@ -435,15 +435,15 @@
     - name: Changepassword | Validate selected accounts have an allowed login shell
       ansible.builtin.assert:
         that:
-          - item.changepassword_target_account in changepassword_selected_login_shells
-          - changepassword_selected_login_shells[item.changepassword_target_account] in changepassword_allowed_login_shells
+          - item.username in changepassword_selected_login_shells
+          - changepassword_selected_login_shells[item.username] in changepassword_allowed_login_shells
         fail_msg: >-
-          Account '{{ item.changepassword_target_account }}' has a non-login, unknown or non-approved shell
-          '{{ changepassword_selected_login_shells[item.changepassword_target_account] | default('unknown') }}'.
+          Account '{{ item.username }}' has a non-login, unknown or non-approved shell
+          '{{ changepassword_selected_login_shells[item.username] | default('unknown') }}'.
           Refusing password change for service/system accounts.
       loop: "{{ changepassword_target_accounts }}"
       loop_control:
-        label: "{{ item.changepassword_target_account }}"
+        label: "{{ item.username }}"
       when:
         - changepassword_require_login_shell | bool
       no_log: "{{ changepassword_use_no_log | bool }}"
