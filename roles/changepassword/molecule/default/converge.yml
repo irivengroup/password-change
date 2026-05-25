@@ -21,11 +21,11 @@
     changepassword_audit_file: /tmp/changepassword-molecule-audit.jsonl
     changepassword_lock_path: /tmp/changepassword-molecule.lock
     changepassword_local_accounts:
-      - changepassword_target_account: moleculeops
+      - username: moleculeops
         password: Molecule-Test-Password-2026!
         state: unlocked
         expire: false
-      - changepassword_target_account: moleculeaudit
+      - username: moleculeaudit
         password: Molecule-Audit-Password-2026!
         state: locked
         expire: false

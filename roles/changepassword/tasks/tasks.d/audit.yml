@@ -37,7 +37,7 @@
               'role': 'changepassword',
               'host': inventory_hostname,
               'ansible_fqdn': ansible_fqdn | default(''),
-              'target_user': item.changepassword_target_account,
+              'target_user': item.username,
               'target_selector': changepassword_requested_user,
               'execution_mode': 'audit_only' if (changepassword_audit_only | bool) else 'standard',
               'password_changed': (
@@ -59,7 +59,7 @@
           }}
       loop: "{{ changepassword_normalized_accounts }}"
       loop_control:
-        label: "{{ item.changepassword_target_account }}"
+        label: "{{ item.username }}"
         index_var: changepassword_account_index
       changed_when: false
 

@@ -49,7 +49,7 @@ def validate_accounts(path: Path, errors: list[str]) -> None:
         forbidden = set(account) & FORBIDDEN_ACCOUNT_KEYS
         if forbidden:
             errors.append(f"{label}: forbidden keys: {sorted(forbidden)}")
-        changepassword_target_account = account.get("changepassword_target_account")
+        changepassword_target_account = account.get("username")
         if not isinstance(changepassword_target_account, str) or not changepassword_target_account.strip():
             errors.append(f"{label}: changepassword_target_account is required")
         elif not USERNAME_RE.match(changepassword_target_account):

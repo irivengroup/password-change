@@ -23,7 +23,7 @@ for idx, account in enumerate(accounts):
     if unknown:
         print(f"changepassword_local_accounts[{idx}] has unsupported keys: {sorted(unknown)}", file=sys.stderr)
         sys.exit(1)
-    if not account.get("changepassword_target_account"):
+    if not account.get("username"):
         print(f"changepassword_local_accounts[{idx}].changepassword_target_account is required", file=sys.stderr)
         sys.exit(1)
     if "password" not in account:
