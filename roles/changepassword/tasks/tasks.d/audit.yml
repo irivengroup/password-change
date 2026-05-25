@@ -1,124 +1,32 @@
 ---
-- name: Changepassword | Write local JSONL audit trail without secrets
-  block:
-    - name: Changepassword | Ensure audit directory exists
-      ansible.builtin.file:
-        path: "{{ changepassword_audit_file | dirname }}"
-        state: directory
-        owner: "{{ changepassword_audit_owner }}"
-        group: "{{ changepassword_audit_group }}"
-        mode: "{{ changepassword_audit_dir_mode }}"
-      changed_when: false
-
-    - name: Changepassword | Ensure audit file exists with restricted permissions
-      ansible.builtin.file:
-        path: "{{ changepassword_audit_file }}"
-        state: touch
-        owner: "{{ changepassword_audit_owner }}"
-        group: "{{ changepassword_audit_group }}"
-        mode: "{{ changepassword_audit_file_mode }}"
-      changed_when: false
-
-    - name: Changepassword | Write SIEM-ready password rotation audit event without secrets
-      ansible.builtin.lineinfile:
-        path: "{{ changepassword_audit_file }}"
-        create: true
-        owner: "{{ changepassword_audit_owner }}"
-        group: "{{ changepassword_audit_group }}"
-        mode: "{{ changepassword_audit_file_mode }}"
-        insertafter: EOF
-        line: >-
-          {{
-            {
-              'schema_version': changepassword_audit_schema_version,
-              'timestamp_utc': ansible_date_time.iso8601,
-              'event_type': 'unix_local_password_change',
-              'project': 'iriven-changepassword',
-              'role': 'changepassword',
-              'host': inventory_hostname,
-              'ansible_fqdn': ansible_fqdn | default(''),
-              'target_user': item.username,
-              'target_selector': changepassword_requested_user,
-              'execution_mode': 'audit_only' if (changepassword_audit_only | bool) else 'standard',
-              'password_changed': (
-                changepassword_apply_results.results[changepassword_account_index].changed | default(false)
-                if (changepassword_apply_results is defined and changepassword_apply_results.results is defined and
-                  (changepassword_apply_results.results | length > changepassword_account_index))
-                else false
-              ),
-              'account_state': item.state | default('unchanged'),
-              'expire_requested': item.expire | default(false) | bool,
-              'aging_enabled': changepassword_set_aging | bool,
-              'aging_min_days': changepassword_min_days,
-              'aging_max_days': changepassword_max_days,
-              'aging_warn_days': changepassword_warn_days,
-              'aging_inactive_days': changepassword_inactive_days,
-              'operator': ansible_user_id | default('ansible'),
-              'controller_user': lookup('env', 'USER') | default('', true)
-            } | to_json
-          }}
-      loop: "{{ changepassword_normalized_accounts }}"
-      loop_control:
-        label: "{{ item.username }}"
-        index_var: changepassword_account_index
-      changed_when: false
-
-    - name: Changepassword | Enforce audit file ownership and permissions
-      ansible.builtin.file:
-        path: "{{ changepassword_audit_file }}"
-        state: file
-        owner: "{{ changepassword_audit_owner }}"
-        group: "{{ changepassword_audit_group }}"
-        mode: "{{ changepassword_audit_file_mode }}"
-      changed_when: false
-
-    - name: Changepassword | Install audit logrotate policy
-      ansible.builtin.copy:
-        dest: "{{ changepassword_audit_logrotate_path }}"
-        owner: root
-        group: root
-        mode: '0644'
-        content: |
-          {{ changepassword_audit_file }} {
-              {{ changepassword_audit_logrotate_frequency }}
-              rotate {{ changepassword_audit_logrotate_rotate }}
-              missingok
-              notifempty
-              create {{ changepassword_audit_file_mode }} {{ changepassword_audit_owner }} {{ changepassword_audit_group }}
-          {% if changepassword_audit_logrotate_compress | bool %}
-              compress
-          {% endif %}
-          }
-      when: changepassword_audit_logrotate_enabled | bool
-
-    - name: Changepassword | Calculate audit file SHA256 checksum
-      ansible.builtin.command:
-        argv:
-          - /usr/bin/sha256sum
-          - "{{ changepassword_audit_file }}"
-      register: changepassword_audit_sha256
-      changed_when: false
-      failed_when: false
-      when: changepassword_audit_integrity_enabled | bool
-
-    - name: Changepassword | Write audit checksum sidecar
-      ansible.builtin.copy:
-        dest: "{{ changepassword_audit_file }}.sha256"
-        owner: "{{ changepassword_audit_owner }}"
-        group: "{{ changepassword_audit_group }}"
-        mode: "{{ changepassword_audit_file_mode }}"
-        content: "{{ changepassword_audit_sha256.stdout | default('') }}\n"
-      changed_when: false
-      when:
-        - changepassword_audit_integrity_enabled | bool
-        - changepassword_audit_sha256.rc | default(1) == 0
-
-    - name: Changepassword | Enable append-only protection on audit file when requested
-      ansible.builtin.command:
-        argv:
-          - /usr/bin/chattr
-          - +a
-          - "{{ changepassword_audit_file }}"
-      changed_when: false
-      failed_when: false
-      when: changepassword_audit_append_only | bool
+- name: Changepassword | Ensure audit directory exists
+  ansible.builtin.file:
+    path: '{{ changepassword_audit_file | dirname }}'
+    state: directory
+    owner: '{{ changepassword_audit_owner }}'
+    group: '{{ changepassword_audit_group }}'
+    mode: '{{ changepassword_audit_dir_mode }}'
+  when: changepassword_audit_enabled | bool
+- name: Changepassword | Ensure audit file exists with restricted permissions
+  ansible.builtin.file:
+    path: '{{ changepassword_audit_file }}'
+    state: touch
+    owner: '{{ changepassword_audit_owner }}'
+    group: '{{ changepassword_audit_group }}'
+    mode: '{{ changepassword_audit_file_mode }}'
+  changed_when: false
+  when: changepassword_audit_enabled | bool
+- name: Changepassword | Write SIEM-ready password rotation audit event without secrets
+  ansible.builtin.lineinfile:
+    path: '{{ changepassword_audit_file }}'
+    create: true
+    owner: '{{ changepassword_audit_owner }}'
+    group: '{{ changepassword_audit_group }}'
+    mode: '{{ changepassword_audit_file_mode }}'
+    line: '{{ {''schema_version'': changepassword_audit_schema_version, ''event'': ''password_rotation'', ''host'': inventory_hostname, ''requested_target'': changepassword_target_account_normalized | default(changepassword_target_account | default(''root'', true)), ''target_username'': item.username, ''target_state'': item.state | default(''unlocked''), ''expire_requested'': item.expire | default(false), ''changed_by'': ansible_user_id | default(''unknown''), ''timestamp'': ansible_date_time.iso8601 | default(''unknown'')} | to_json }}'
+    insertafter: EOF
+  loop: '{{ changepassword_target_accounts }}'
+  loop_control:
+    label: '{{ item.username | default(''unknown'') }}'
+  no_log: '{{ changepassword_use_no_log | bool }}'
+  when: changepassword_audit_enabled | bool
