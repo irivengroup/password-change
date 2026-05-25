@@ -1,15 +1,5 @@
 ---
-- name: Changepassword | Normalize runtime target selector
-  ansible.builtin.set_fact:
-    changepassword_target_account_normalized: '{{ (changepassword_target_account | default(''root'', true) | string | trim | lower) if (changepassword_target_account | default(''root'', true) | string | trim | lower) in [''all'', ''*''] else (changepassword_target_account | default(''root'', true) | string | trim) }}'
-  changed_when: false
-- name: Changepassword | Validate runtime target selector
-  ansible.builtin.assert:
-    that:
-      - changepassword_target_account_normalized | length > 0
-      - changepassword_target_account_normalized in ['all', '*'] or changepassword_target_account_normalized is match(changepassword_target_account_regex)
-    fail_msg: changepassword_target_account must be omitted/default(root), a valid local username, all, ALL, or *.
-  changed_when: false
+
 - name: Changepassword | Enforce production strict runtime controls
   ansible.builtin.assert:
     that:
@@ -21,6 +11,7 @@
       - (changepassword_sha512_rounds | int) >= (changepassword_min_sha512_rounds | int)
     fail_msg: 'Production strict mode is mandatory: no_log, audit, runtime lock, custom HMAC secret, and SHA512 minimum rounds must be enforced.'
   changed_when: false
+
 - name: Changepassword | Validate platform and role inputs
   block:
     - name: Changepassword | Validate supported operating system family
@@ -103,6 +94,7 @@
         fail_msg: No target account selected from changepassword_local_accounts.
       changed_when: false
       no_log: '{{ changepassword_use_no_log | bool }}'
+
 - name: Changepassword | Resolve machine-id identity for hash generation
   block:
     - name: Changepassword | Check machine-id candidate files
@@ -139,6 +131,7 @@
         that:
           - changepassword_effective_salt_identity | length == 32
         fail_msg: Effective salt identity must be the 32-character machine-id.
+
 - name: Changepassword | Validate account definitions
   block:
     - name: Changepassword | Validate provided HMAC secret strength
@@ -236,6 +229,7 @@
         - changepassword_enforce_complexity | bool
         - ((item.password | default('') | length > 0) and not (item.password is match(changepassword_password_hash_prefix_regex)))
       no_log: '{{ changepassword_use_no_log | bool }}'
+
 - name: Changepassword | Validate local account backend
   block:
     - name: Changepassword | Query local passwd database with builtin getent
@@ -342,6 +336,7 @@
       when:
         - changepassword_require_login_shell | bool
       no_log: '{{ changepassword_use_no_log | bool }}'
+
 - name: Changepassword | Validate password ageing prerequisites
   block:
     - name: Changepassword | Ensure chage command exists when expiry or aging is requested
@@ -355,6 +350,7 @@
           - changepassword_chage_check.stat.exists
         fail_msg: chage is required for expire/aging operations but was not found at /usr/bin/chage. On SUSE/SLES/openSUSE, install or restore the shadow package.
       when: changepassword_chage_check is defined and not ansible_check_mode
+
 - name: Changepassword | Refuse missing or weak custom HMAC secret in production
   ansible.builtin.assert:
     that:
