@@ -1,34 +1,34 @@
 ---
-- name: changepassword | Shadow pre-change hardening checks
+- name: Changepassword | Shadow pre-change hardening checks
   block:
-    - name: changepassword | Read current shadow database when anti-reuse is enabled
+    - name: Changepassword | Read current shadow database when anti-reuse is enabled
       ansible.builtin.slurp:
         src: /etc/shadow
-      register: iriven_chgpasswd_shadow_raw
+      register: changepassword_shadow_raw
       when:
-        - iriven_chgpasswd_fail_if_same_hash | bool
-        - iriven_chgpasswd_normalized_accounts | length > 0
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+        - changepassword_fail_if_same_hash | bool
+        - changepassword_normalized_accounts | length > 0
+      no_log: "{{ changepassword_use_no_log | bool }}"
 
-    - name: changepassword | Refuse password reuse when requested
+    - name: Changepassword | Refuse password reuse when requested
       ansible.builtin.assert:
         that:
           - >-
             (
-              ((iriven_chgpasswd_shadow_raw.content | b64decode).split('\n')
-                | select('match', '^' ~ (item.username | regex_escape) ~ ':')
+              ((changepassword_shadow_raw.content | b64decode).split('\n')
+                | select('match', '^' ~ (item.changepassword_target_account | regex_escape) ~ ':')
                 | list
                 | first
                 | default('::'))
               .split(':')[1]
             ) != item.final_password_hash
         fail_msg: >-
-          Refusing password reuse for '{{ item.username }}': the generated/provided hash
-          is already present in /etc/shadow. Disable iriven_chgpasswd_fail_if_same_hash
+          Refusing password reuse for '{{ item.changepassword_target_account }}': the generated/provided hash
+          is already present in /etc/shadow. Disable changepassword_fail_if_same_hash
           only for idempotent re-runs.
-      loop: "{{ iriven_chgpasswd_normalized_accounts }}"
+      loop: "{{ changepassword_normalized_accounts }}"
       loop_control:
-        label: "{{ item.username }}"
+        label: "{{ item.changepassword_target_account }}"
       when:
-        - iriven_chgpasswd_fail_if_same_hash | bool
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+        - changepassword_fail_if_same_hash | bool
+      no_log: "{{ changepassword_use_no_log | bool }}"

@@ -1,9 +1,11 @@
 ---
 profile: production
-skip_list: []
-warn_list:
-  - experimental
+
 exclude_paths:
-  - .cache/
-  - .github/
+  - .git/
   - .venv/
+  - collections/
+  - .cache/
+
+warn_list:
+  - yaml[line-length]

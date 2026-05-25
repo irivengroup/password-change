@@ -1,31 +1,26 @@
 ---
 dependency:
   name: galaxy
-
 driver:
   name: default
-
 platforms:
   - name: chgpassword-ubuntu
     image: docker.io/ubuntu:22.04
-  - name: chgpassword-debian
-    image: docker.io/debian:12
-  - name: chgpassword-rocky
-    image: docker.io/rockylinux:9
-  - name: chgpassword-opensuse
-    image: docker.io/opensuse/leap:15.6
-
 provisioner:
   name: ansible
   env:
-    ANSIBLE_DEPRECATION_WARNINGS: "False"
+    ANSIBLE_DEPRECATION_WARNINGS: 'False'
   config_options:
     defaults:
       deprecation_warnings: false
       stdout_callback: default
       result_format: yaml
       roles_path: ../../..
-
+  inventory:
+    host_vars:
+      chgpassword-ubuntu:
+        ansible_connection: community.docker.docker
+        ansible_python_interpreter: /usr/bin/python3
 scenario:
   test_sequence:
     - syntax

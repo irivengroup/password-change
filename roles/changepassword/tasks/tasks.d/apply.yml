@@ -1,27 +1,27 @@
 ---
-- name: changepassword | Apply password and status to existing local accounts only
+- name: Changepassword | Apply password and status to existing local accounts only
   block:
-    - name: changepassword | Rotate password and optionally lock/unlock existing account
+    - name: Changepassword | Rotate password and optionally lock/unlock existing account
       ansible.builtin.user:
-        name: "{{ item.username }}"
+        name: "{{ item.changepassword_target_account }}"
         password: "{{ item.final_password_hash }}"
         update_password: always
         password_lock: "{{ true if item.state | default('unchanged') == 'locked' else false if item.state | default('unchanged')
           == 'unlocked' else omit }}"
-      loop: "{{ iriven_chgpasswd_normalized_accounts }}"
+      loop: "{{ changepassword_normalized_accounts }}"
       loop_control:
-        label: "{{ item.username }}"
-      register: iriven_chgpasswd_apply_results
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+        label: "{{ item.changepassword_target_account }}"
+      register: changepassword_apply_results
+      no_log: "{{ changepassword_use_no_log | bool }}"
 
-    - name: changepassword | Lock account after password change when requested globally
+    - name: Changepassword | Lock account after password change when requested globally
       ansible.builtin.user:
-        name: "{{ item.username }}"
+        name: "{{ item.changepassword_target_account }}"
         password_lock: true
-      loop: "{{ iriven_chgpasswd_normalized_accounts }}"
+      loop: "{{ changepassword_normalized_accounts }}"
       loop_control:
-        label: "{{ item.username }}"
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+        label: "{{ item.changepassword_target_account }}"
+      no_log: "{{ changepassword_use_no_log | bool }}"
       when:
-        - iriven_chgpasswd_lock_after_change | bool
-        - item.username != 'root' or iriven_chgpasswd_allow_root_lock | bool
+        - changepassword_lock_after_change | bool
+        - item.changepassword_target_account != 'root' or changepassword_allow_root_lock | bool

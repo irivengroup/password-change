@@ -1,33 +1,25 @@
 ---
+dependency:
+  name: galaxy
 driver:
   name: default
-
 platforms:
   - name: chgpassword-ubuntu
-    image: docker.io/geerlingguy/docker-ubuntu2204-ansible:latest
-
 provisioner:
   name: ansible
   env:
-    ANSIBLE_DEPRECATION_WARNINGS: "False"
-  playbooks:
-    create: create.yml
-    prepare: prepare.yml
-    converge: converge.yml
-    destroy: destroy.yml
+    ANSIBLE_DEPRECATION_WARNINGS: 'False'
+  config_options:
+    defaults:
+      deprecation_warnings: false
+      stdout_callback: default
+      result_format: yaml
+      roles_path: ../../..
   inventory:
     host_vars:
       chgpassword-ubuntu:
         ansible_connection: community.docker.docker
-        ansible_user: root
-  config_options:
-    defaults:
-      roles_path: ../../..
-      stdout_callback: default
-      result_format: yaml
-      bin_ansible_callbacks: true
-      deprecation_warnings: false
-
+        ansible_python_interpreter: /usr/bin/python3
 scenario:
   test_sequence:
     - syntax
@@ -37,6 +29,3 @@ scenario:
     - idempotence
     - verify
     - destroy
-
-verifier:
-  name: ansible

@@ -2,31 +2,28 @@
 galaxy_info:
   role_name: changepassword
   namespace: iriven
-  author: IRIVEN Group
-  description: Hardened local Linux password rotation role, including root.
-  license: MIT
-  min_ansible_version: "2.14"
+  author: Alfred TCHONDJO
+  description: Enterprise-grade local UNIX password rotation role.
+  company: IRIVEN Group
+  license: proprietary
+  min_ansible_version: '2.17'
   platforms:
     - name: EL
       versions:
-        - "8"
-        - "9"
-        - "10"
-    - name: Ubuntu
-      versions:
-        - focal
-        - jammy
-        - noble
+        - all
     - name: Debian
       versions:
-        - bullseye
-        - bookworm
-        - trixie
+        - all
+    - name: Ubuntu
+      versions:
+        - all
     - name: SLES
       versions:
-        - '15'
-    - name: opensuse
-      versions:
-        - '15.5'
-        - '15.6'
+        - all
+  galaxy_tags:
+    - linux
+    - security
+    - password
+    - hardening
+    - compliance
 dependencies: []

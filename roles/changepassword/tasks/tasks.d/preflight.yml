@@ -1,21 +1,21 @@
 ---
-- name: changepassword | Enforce production strict runtime controls
+- name: Changepassword | Enforce production strict runtime controls
   ansible.builtin.assert:
     that:
-      - iriven_chgpasswd_use_no_log | bool
-      - iriven_chgpasswd_enable_audit_log | bool
-      - iriven_chgpasswd_enable_runtime_lock | bool
-      - iriven_chgpasswd_require_custom_hmac_secret | bool
-      - not (iriven_chgpasswd_allow_default_hmac_fallback | default(false) | bool)
-      - (iriven_chgpasswd_sha512_rounds | int) >= (iriven_chgpasswd_min_sha512_rounds | int)
+      - changepassword_use_no_log | bool
+      - changepassword_audit_enabled | bool
+      - changepassword_lock_enabled | bool
+      - changepassword_require_custom_hmac_secret | bool
+      - not (changepassword_allow_default_hmac_fallback | default(false) | bool)
+      - (changepassword_sha512_rounds | int) >= (changepassword_min_sha512_rounds | int)
     fail_msg: >-
-      Production strict mode is mandatory: no_log, audit log, runtime lock,
+      Production strict mode is mandatory: no_log, audit, runtime lock,
       custom HMAC secret, and SHA512 minimum rounds must be enforced.
   changed_when: false
 
-- name: changepassword | Validate platform and role inputs
+- name: Changepassword | Validate platform and role inputs
   block:
-    - name: changepassword | Validate supported operating system family
+    - name: Changepassword | Validate supported operating system family
       ansible.builtin.assert:
         that:
           - ansible_system == 'Linux'
@@ -23,111 +23,111 @@
         fail_msg: "Unsupported target: {{ ansible_system }} / {{ ansible_os_family }}. Supported OS families are RedHat, Debian
           and Suse for local Linux accounts."
 
-    - name: changepassword | Validate account list is provided
+    - name: Changepassword | Validate account list is provided
       ansible.builtin.assert:
         that:
-          - unix_local_accounts | type_debug == 'list'
-          - unix_local_accounts | length > 0
+          - changepassword_local_accounts | type_debug == 'list'
+          - changepassword_local_accounts | length > 0
         fail_msg: >-
-          unix_local_accounts must be a non-empty list of dictionaries, for example:
-          unix_local_accounts: [{username: root, password: 'vault-secret-or-$5$/$6$hash'}].
+          changepassword_local_accounts must be a non-empty list of dictionaries, for example:
+          changepassword_local_accounts: [{changepassword_target_account: root, password: 'vault-secret-or-$5$/$6$hash'}].
 
-    - name: changepassword | Normalize runtime target selector
+    - name: Changepassword | Normalize runtime target selector
       ansible.builtin.set_fact:
-        iriven_chgpasswd_requested_user: "{{ TGT_USER | default('root') | string | trim }}"
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+        changepassword_requested_user: "{{ changepassword_target_account | default('root') | string | trim }}"
+      no_log: "{{ changepassword_use_no_log | bool }}"
 
-    - name: changepassword | Validate runtime target selector
+    - name: Changepassword | Validate runtime target selector
       ansible.builtin.assert:
         that:
-          - iriven_chgpasswd_requested_user | length > 0
-          - (iriven_chgpasswd_requested_user in iriven_chgpasswd_all_targets) or (iriven_chgpasswd_requested_user is
-            match(iriven_chgpasswd_validate_username_regex))
+          - changepassword_requested_user | length > 0
+          - (changepassword_requested_user in changepassword_all_targets) or (changepassword_requested_user is
+            match(changepassword_validate_changepassword_target_account_regex))
         fail_msg: >-
-          TGT_USER must be a valid local account name declared in unix_local_accounts,
-          or one of {{ iriven_chgpasswd_all_targets }} to target all declared accounts.
+          changepassword_target_account must be a valid local account name declared in changepassword_local_accounts,
+          or one of {{ changepassword_all_targets }} to target all declared accounts.
 
-    - name: changepassword | Validate each account item is a dictionary
+    - name: Changepassword | Validate each account item is a dictionary
       ansible.builtin.assert:
         that:
           - item | type_debug == 'dict'
-          - item.username is defined
-          - item.username | string | length > 0
+          - item.changepassword_target_account is defined
+          - item.changepassword_target_account | string | length > 0
           - item.password is defined
           - item.password | string | length > 0
         fail_msg: >-
-          Each unix_local_accounts entry must be a dictionary containing username and password.
-          Expected list item format: {username: root, password: 'vault-secret-or-$5$/$6$hash'}.
-      loop: "{{ unix_local_accounts }}"
+          Each changepassword_local_accounts entry must be a dictionary containing changepassword_target_account and password.
+          Expected list item format: {changepassword_target_account: root, password: 'vault-secret-or-$5$/$6$hash'}.
+      loop: "{{ changepassword_local_accounts }}"
       loop_control:
-        label: "{{ item.username | default('undefined') }}"
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+        label: "{{ item.changepassword_target_account | default('undefined') }}"
+      no_log: "{{ changepassword_use_no_log | bool }}"
 
-    - name: changepassword | Refuse unsupported account keys
+    - name: Changepassword | Refuse unsupported account keys
       ansible.builtin.assert:
         that:
           - >-
-            (item.keys() | list | difference(['username', 'password', 'state', 'expire'])) | length == 0
+            (item.keys() | list | difference(['changepassword_target_account', 'password', 'state', 'expire'])) | length == 0
         fail_msg: >-
-          Unsupported keys found for account '{{ item.username | default('undefined') }}'.
-          This role only accepts username, password, state and expire.
+          Unsupported keys found for account '{{ item.changepassword_target_account | default('undefined') }}'.
+          This role only accepts changepassword_target_account, password, state and expire.
           User provisioning attributes are intentionally forbidden.
-      loop: "{{ unix_local_accounts }}"
+      loop: "{{ changepassword_local_accounts }}"
       loop_control:
-        label: "{{ item.username | default('undefined') }}"
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+        label: "{{ item.changepassword_target_account | default('undefined') }}"
+      no_log: "{{ changepassword_use_no_log | bool }}"
 
-    - name: changepassword | Build declared account username list
+    - name: Changepassword | Build declared account changepassword_target_account list
       ansible.builtin.set_fact:
-        iriven_chgpasswd_declared_usernames: "{{ unix_local_accounts | map(attribute='username') | list }}"
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+        changepassword_declared_changepassword_target_accounts: "{{ changepassword_local_accounts | map(attribute='changepassword_target_account') | list }}"
+      no_log: "{{ changepassword_use_no_log | bool }}"
 
-    - name: changepassword | Refuse duplicate account declarations
+    - name: Changepassword | Refuse duplicate account declarations
       ansible.builtin.assert:
         that:
-          - iriven_chgpasswd_declared_usernames | length == iriven_chgpasswd_declared_usernames | unique | list | length
+          - changepassword_declared_changepassword_target_accounts | length == changepassword_declared_changepassword_target_accounts | unique | list | length
         fail_msg: >-
-          Duplicate usernames found in unix_local_accounts. Keep exactly one dictionary per username.
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+          Duplicate changepassword_target_accounts found in changepassword_local_accounts. Keep exactly one dictionary per changepassword_target_account.
+      no_log: "{{ changepassword_use_no_log | bool }}"
 
-    - name: changepassword | Ensure requested account is declared in Vault variables
+    - name: Changepassword | Ensure requested account is declared in Vault variables
       ansible.builtin.assert:
         that:
-          - (iriven_chgpasswd_requested_user in iriven_chgpasswd_all_targets) or (iriven_chgpasswd_requested_user in
-            iriven_chgpasswd_declared_usernames)
+          - (changepassword_requested_user in changepassword_all_targets) or (changepassword_requested_user in
+            changepassword_declared_changepassword_target_accounts)
         fail_msg: >-
-          TGT_USER={{ iriven_chgpasswd_requested_user }} is not declared in unix_local_accounts.
+          changepassword_target_account={{ changepassword_requested_user }} is not declared in changepassword_local_accounts.
           Refusing to change an account that is not explicitly declared in Vault/inventory variables.
 
-    - name: changepassword | Build effective target account list
+    - name: Changepassword | Build effective target account list
       ansible.builtin.set_fact:
-        iriven_chgpasswd_target_accounts: >-
+        changepassword_target_accounts: >-
           {{
-            unix_local_accounts
-            if iriven_chgpasswd_requested_user in iriven_chgpasswd_all_targets
-            else (unix_local_accounts | selectattr('username', 'equalto', iriven_chgpasswd_requested_user) | list)
+            changepassword_local_accounts
+            if changepassword_requested_user in changepassword_all_targets
+            else (changepassword_local_accounts | selectattr('changepassword_target_account', 'equalto', changepassword_requested_user) | list)
           }}
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+      no_log: "{{ changepassword_use_no_log | bool }}"
 
-    - name: changepassword | Validate effective target account list
+    - name: Changepassword | Validate effective target account list
       ansible.builtin.assert:
         that:
-          - iriven_chgpasswd_target_accounts | length > 0
-        fail_msg: "No effective account selected for TGT_USER={{ iriven_chgpasswd_requested_user }}."
+          - changepassword_target_accounts | length > 0
+        fail_msg: "No effective account selected for changepassword_target_account={{ changepassword_requested_user }}."
 
-- name: changepassword | Resolve machine-id identity for hash generation
+- name: Changepassword | Resolve machine-id identity for hash generation
   block:
-    - name: changepassword | Check machine-id candidate files
+    - name: Changepassword | Check machine-id candidate files
       ansible.builtin.stat:
         path: "{{ item }}"
-      register: iriven_chgpasswd_machine_id_stat
-      loop: "{{ iriven_chgpasswd_machine_id_paths }}"
+      register: changepassword_machine_id_stat
+      loop: "{{ changepassword_machine_id_paths }}"
 
-    - name: changepassword | Select first available machine-id file
+    - name: Changepassword | Select first available machine-id file
       ansible.builtin.set_fact:
-        iriven_chgpasswd_machine_id_file: >-
+        changepassword_machine_id_file: >-
           {{
-            iriven_chgpasswd_machine_id_stat.results
+            changepassword_machine_id_stat.results
             | selectattr('stat.exists')
             | selectattr('stat.isreg')
             | map(attribute='item')
@@ -135,95 +135,95 @@
             | first
             | default('')
           }}
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+      no_log: "{{ changepassword_use_no_log | bool }}"
 
-    - name: changepassword | Read machine-id for deterministic salt identity
+    - name: Changepassword | Read machine-id for deterministic salt identity
       ansible.builtin.slurp:
-        src: "{{ iriven_chgpasswd_machine_id_file }}"
-      register: iriven_chgpasswd_machine_id_raw
-      when: iriven_chgpasswd_machine_id_file | length > 0
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+        src: "{{ changepassword_machine_id_file }}"
+      register: changepassword_machine_id_raw
+      when: changepassword_machine_id_file | length > 0
+      no_log: "{{ changepassword_use_no_log | bool }}"
 
-    - name: changepassword | Normalize machine-id
+    - name: Changepassword | Normalize machine-id
       ansible.builtin.set_fact:
-        iriven_chgpasswd_machine_id: "{{ iriven_chgpasswd_machine_id_raw.content | b64decode | trim | lower }}"
-      when: iriven_chgpasswd_machine_id_file | length > 0
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+        changepassword_machine_id: "{{ changepassword_machine_id_raw.content | b64decode | trim | lower }}"
+      when: changepassword_machine_id_file | length > 0
+      no_log: "{{ changepassword_use_no_log | bool }}"
 
-    - name: changepassword | Validate machine-id availability and format
+    - name: Changepassword | Validate machine-id availability and format
       ansible.builtin.assert:
         that:
-          - iriven_chgpasswd_machine_id | default('') is match('^[0-9a-f]{32}$')
+          - changepassword_machine_id | default('') is match('^[0-9a-f]{32}$')
         fail_msg: >-
           machine-id is required for HMAC salt generation but was not found or is invalid on {{ inventory_hostname }}.
           No inventory_hostname fallback is supported for password hash salt derivation.
 
-    - name: changepassword | Build effective salt identity from machine-id
+    - name: Changepassword | Build effective salt identity from machine-id
       ansible.builtin.set_fact:
-        iriven_chgpasswd_effective_salt_identity: "{{ iriven_chgpasswd_machine_id }}"
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+        changepassword_effective_salt_identity: "{{ changepassword_machine_id }}"
+      no_log: "{{ changepassword_use_no_log | bool }}"
 
-    - name: changepassword | Validate effective salt identity
+    - name: Changepassword | Validate effective salt identity
       ansible.builtin.assert:
         that:
-          - iriven_chgpasswd_effective_salt_identity | length == 32
+          - changepassword_effective_salt_identity | length == 32
         fail_msg: "Effective salt identity must be the 32-character machine-id."
 
-- name: changepassword | Validate account definitions
+- name: Changepassword | Validate account definitions
   block:
-    - name: changepassword | Validate provided HMAC secret strength
+    - name: Changepassword | Validate provided HMAC secret strength
       ansible.builtin.set_fact:
-        iriven_chgpasswd_custom_hmac_secret_is_valid: >-
+        changepassword_custom_hmac_secret_is_valid: >-
           {{
-            (iriven_chgpasswd_hmac_salt_secret | default('') | length >= iriven_chgpasswd_min_hmac_secret_length | int)
-            and ((iriven_chgpasswd_hmac_salt_secret | default('') | regex_search('[A-Z]')) is not none)
-            and ((iriven_chgpasswd_hmac_salt_secret | default('') | regex_search('[a-z]')) is not none)
-            and ((iriven_chgpasswd_hmac_salt_secret | default('') | regex_search('[0-9]')) is not none)
-            and ((iriven_chgpasswd_hmac_salt_secret | default('') | regex_search('[^A-Za-z0-9]')) is not none)
+            (changepassword_hmac_salt_secret | default('') | length >= changepassword_min_hmac_secret_length | int)
+            and ((changepassword_hmac_salt_secret | default('') | regex_search('[A-Z]')) is not none)
+            and ((changepassword_hmac_salt_secret | default('') | regex_search('[a-z]')) is not none)
+            and ((changepassword_hmac_salt_secret | default('') | regex_search('[0-9]')) is not none)
+            and ((changepassword_hmac_salt_secret | default('') | regex_search('[^A-Za-z0-9]')) is not none)
           }}
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+      no_log: "{{ changepassword_use_no_log | bool }}"
 
-    - name: changepassword | Validate default HMAC fallback secret strength
+    - name: Changepassword | Validate default HMAC fallback secret strength
       ansible.builtin.assert:
         that:
-          - iriven_chgpasswd_default_hmac_salt_secret | length >= 60
-          - (iriven_chgpasswd_default_hmac_salt_secret | regex_search('[A-Z]')) is not none
-          - (iriven_chgpasswd_default_hmac_salt_secret | regex_search('[a-z]')) is not none
-          - (iriven_chgpasswd_default_hmac_salt_secret | regex_search('[0-9]')) is not none
-          - (iriven_chgpasswd_default_hmac_salt_secret | regex_search('[^A-Za-z0-9]')) is not none
+          - changepassword_default_hmac_salt_secret | length >= 60
+          - (changepassword_default_hmac_salt_secret | regex_search('[A-Z]')) is not none
+          - (changepassword_default_hmac_salt_secret | regex_search('[a-z]')) is not none
+          - (changepassword_default_hmac_salt_secret | regex_search('[0-9]')) is not none
+          - (changepassword_default_hmac_salt_secret | regex_search('[^A-Za-z0-9]')) is not none
         fail_msg: "Default HMAC fallback secret must be at least 60 chars and include uppercase, lowercase, digit and special characters."
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+      no_log: "{{ changepassword_use_no_log | bool }}"
 
-    - name: changepassword | Fail when a valid custom HMAC secret is required
+    - name: Changepassword | Fail when a valid custom HMAC secret is required
       ansible.builtin.assert:
         that:
-          - iriven_chgpasswd_custom_hmac_secret_is_valid | bool
+          - changepassword_custom_hmac_secret_is_valid | bool
         fail_msg: >-
-          iriven_chgpasswd_require_custom_hmac_secret=true requires iriven_chgpasswd_hmac_salt_secret
-          to be at least iriven_chgpasswd_min_hmac_secret_length characters and include uppercase,
+          changepassword_require_custom_hmac_secret=true requires changepassword_hmac_salt_secret
+          to be at least changepassword_min_hmac_secret_length characters and include uppercase,
           lowercase, digit and special characters.
-      when: iriven_chgpasswd_require_custom_hmac_secret | bool
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+      when: changepassword_require_custom_hmac_secret | bool
+      no_log: "{{ changepassword_use_no_log | bool }}"
 
-    - name: changepassword | Select effective HMAC secret for salt derivation
+    - name: Changepassword | Select effective HMAC secret for salt derivation
       ansible.builtin.set_fact:
-        iriven_chgpasswd_effective_hmac_salt_secret: >-
+        changepassword_effective_hmac_salt_secret: >-
           {{
-            iriven_chgpasswd_hmac_salt_secret
-            if (iriven_chgpasswd_custom_hmac_secret_is_valid | bool)
-            else iriven_chgpasswd_default_hmac_salt_secret
+            changepassword_hmac_salt_secret
+            if (changepassword_custom_hmac_secret_is_valid | bool)
+            else changepassword_default_hmac_salt_secret
           }}
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+      no_log: "{{ changepassword_use_no_log | bool }}"
 
-    - name: changepassword | Validate account definitions and security policy
+    - name: Changepassword | Validate account definitions and security policy
       ansible.builtin.assert:
         that:
-          - item.username is defined
-          - item.username is match(iriven_chgpasswd_validate_username_regex)
+          - item.changepassword_target_account is defined
+          - item.changepassword_target_account is match(changepassword_validate_changepassword_target_account_regex)
           - item.state is not defined or item.state in ['unlocked', 'locked']
           - item.expire | default(false) | type_debug == 'bool'
-          - iriven_chgpasswd_hash_algorithm in ['sha256', 'sha512']
-          - iriven_chgpasswd_default_hash_rounds | int >= iriven_chgpasswd_min_hash_rounds | int
+          - changepassword_hash_algorithm in ['sha256', 'sha512']
+          - changepassword_default_hash_rounds | int >= changepassword_min_hash_rounds | int
           - item.aging is not defined
           - item.shell is not defined
           - item.groups is not defined
@@ -234,88 +234,88 @@
           - item.group is not defined
           - item.create_home is not defined
           - item.system is not defined
-          - iriven_chgpasswd_manage_root | bool or item.username != 'root'
+          - changepassword_manage_root | bool or item.changepassword_target_account != 'root'
           - item.password_hash is not defined
           - item.password_plain is not defined
           - item.manage_password is not defined
-          - item.username not in iriven_chgpasswd_forbidden_users
+          - item.changepassword_target_account not in changepassword_forbidden_users
           - item.password is defined
           - item.password | string | length > 0
           - >-
-            (not iriven_chgpasswd_require_hash | bool)
+            (not changepassword_require_hash | bool)
             or
-            (item.password is match(iriven_chgpasswd_password_hash_prefix_regex))
-          - iriven_chgpasswd_hash_salt_mode == 'hmac_machine_id'
-          - iriven_chgpasswd_hmac_algorithm in ['sha256', 'sha512']
-          - iriven_chgpasswd_effective_hmac_salt_secret | length >= iriven_chgpasswd_min_hmac_secret_length | int
-          - iriven_chgpasswd_salt_length | int >= 8
-          - iriven_chgpasswd_salt_length | int <= 16
-          - iriven_chgpasswd_allow_empty_password | bool == false
-          - not ((item.username == 'root') and ((item.state | default('unchanged')) == 'locked') and not
-            (iriven_chgpasswd_allow_root_lock | bool))
-          - not ((item.username == 'root') and (iriven_chgpasswd_lock_after_change | bool) and not
-            (iriven_chgpasswd_allow_root_lock | bool))
+            (item.password is match(changepassword_password_hash_prefix_regex))
+          - changepassword_hash_salt_mode == 'hmac_machine_id'
+          - changepassword_hmac_algorithm in ['sha256', 'sha512']
+          - changepassword_effective_hmac_salt_secret | length >= changepassword_min_hmac_secret_length | int
+          - changepassword_salt_length | int >= 8
+          - changepassword_salt_length | int <= 16
+          - changepassword_allow_empty_password | bool == false
+          - not ((item.changepassword_target_account == 'root') and ((item.state | default('unchanged')) == 'locked') and not
+            (changepassword_allow_root_lock | bool))
+          - not ((item.changepassword_target_account == 'root') and (changepassword_lock_after_change | bool) and not
+            (changepassword_allow_root_lock | bool))
         fail_msg: >-
-          Invalid account definition or blocked hardening policy for account '{{ item.username | default('undefined') }}'.
+          Invalid account definition or blocked hardening policy for account '{{ item.changepassword_target_account | default('undefined') }}'.
           Supported account state values are unlocked and locked only. password is mandatory for every account and is
             auto-detected as SHA256/SHA512 crypt hash when it starts with $5$ or $6$, otherwise treated as
             Vault-protected plaintext. password_hash, password_plain and manage_password are not supported. Do not
             define per-account aging or provisioning attributes such as shell, groups, uid, home, comment, create_home
             or system.
-      loop: "{{ iriven_chgpasswd_target_accounts }}"
+      loop: "{{ changepassword_target_accounts }}"
       loop_control:
-        label: "{{ item.username | default('undefined') }}"
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+        label: "{{ item.changepassword_target_account | default('undefined') }}"
+      no_log: "{{ changepassword_use_no_log | bool }}"
 
-    - name: changepassword | Validate SHA256/SHA512 password hash format when provided
+    - name: Changepassword | Validate SHA256/SHA512 password hash format when provided
       ansible.builtin.assert:
         that:
-          - item.password is match(iriven_chgpasswd_password_hash_regex)
-        fail_msg: "Password hash for '{{ item.username }}' must be a supported Linux crypt hash starting with $5$ or $6$."
-      loop: "{{ iriven_chgpasswd_target_accounts }}"
+          - item.password is match(changepassword_password_hash_regex)
+        fail_msg: "Password hash for '{{ item.changepassword_target_account }}' must be a supported Linux crypt hash starting with $5$ or $6$."
+      loop: "{{ changepassword_target_accounts }}"
       loop_control:
-        label: "{{ item.username }}"
+        label: "{{ item.changepassword_target_account }}"
       when:
-        - item.password | default('') is match(iriven_chgpasswd_password_hash_prefix_regex)
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+        - item.password | default('') is match(changepassword_password_hash_prefix_regex)
+      no_log: "{{ changepassword_use_no_log | bool }}"
 
-    - name: changepassword | Validate clear-text password complexity when explicitly enabled
+    - name: Changepassword | Validate clear-text password complexity when explicitly enabled
       ansible.builtin.assert:
         that:
-          - item.password | length >= iriven_chgpasswd_min_length
-          - (not iriven_chgpasswd_require_upper | bool) or (item.password is regex('[A-Z]'))
-          - (not iriven_chgpasswd_require_lower | bool) or (item.password is regex('[a-z]'))
-          - (not iriven_chgpasswd_require_digit | bool) or (item.password is regex('[0-9]'))
-          - (not iriven_chgpasswd_require_special | bool) or (item.password is regex('[^A-Za-z0-9]'))
-          - item.password not in iriven_chgpasswd_forbidden_plain_values
-          - item.password != item.username
-        fail_msg: "Clear-text password for '{{ item.username }}' does not satisfy the local complexity policy."
-      loop: "{{ iriven_chgpasswd_target_accounts }}"
+          - item.password | length >= changepassword_min_length
+          - (not changepassword_require_upper | bool) or (item.password is regex('[A-Z]'))
+          - (not changepassword_require_lower | bool) or (item.password is regex('[a-z]'))
+          - (not changepassword_require_digit | bool) or (item.password is regex('[0-9]'))
+          - (not changepassword_require_special | bool) or (item.password is regex('[^A-Za-z0-9]'))
+          - item.password not in changepassword_forbidden_plain_values
+          - item.password != item.changepassword_target_account
+        fail_msg: "Clear-text password for '{{ item.changepassword_target_account }}' does not satisfy the local complexity policy."
+      loop: "{{ changepassword_target_accounts }}"
       loop_control:
-        label: "{{ item.username }}"
+        label: "{{ item.changepassword_target_account }}"
       when:
-        - iriven_chgpasswd_allow_plaintext_password | bool
-        - iriven_chgpasswd_enforce_complexity | bool
-        - ((item.password | default('') | length > 0) and not (item.password is match(iriven_chgpasswd_password_hash_prefix_regex)))
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+        - changepassword_allow_plaintext_password | bool
+        - changepassword_enforce_complexity | bool
+        - ((item.password | default('') | length > 0) and not (item.password is match(changepassword_password_hash_prefix_regex)))
+      no_log: "{{ changepassword_use_no_log | bool }}"
 
-- name: changepassword | Validate local account backend
+- name: Changepassword | Validate local account backend
   block:
-    - name: changepassword | Query local passwd database with builtin getent
+    - name: Changepassword | Query local passwd database with builtin getent
       ansible.builtin.getent:
         database: passwd
-        key: "{{ item.username }}"
+        key: "{{ item.changepassword_target_account }}"
         fail_key: false
-      register: iriven_chgpasswd_getent_passwd_results
-      loop: "{{ iriven_chgpasswd_target_accounts }}"
+      register: changepassword_getent_passwd_results
+      loop: "{{ changepassword_target_accounts }}"
       loop_control:
-        label: "{{ item.username }}"
+        label: "{{ item.changepassword_target_account }}"
 
-    - name: changepassword | Build discovered local account list
+    - name: Changepassword | Build discovered local account list
       ansible.builtin.set_fact:
-        iriven_chgpasswd_existing_local_users: >-
+        changepassword_existing_local_users: >-
           {{
-            iriven_chgpasswd_getent_passwd_results.results
+            changepassword_getent_passwd_results.results
             | selectattr('ansible_facts.getent_passwd', 'defined')
             | map(attribute='ansible_facts.getent_passwd')
             | map('dict2items')
@@ -323,101 +323,101 @@
             | map(attribute='key')
             | list
           }}
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+      no_log: "{{ changepassword_use_no_log | bool }}"
 
-    - name: changepassword | Fail if local account is missing
+    - name: Changepassword | Fail if local account is missing
       ansible.builtin.assert:
         that:
-          - item.username in iriven_chgpasswd_existing_local_users
-        fail_msg: "Local account '{{ item.username }}' does not exist on {{ inventory_hostname }}."
-      loop: "{{ iriven_chgpasswd_target_accounts }}"
+          - item.changepassword_target_account in changepassword_existing_local_users
+        fail_msg: "Local account '{{ item.changepassword_target_account }}' does not exist on {{ inventory_hostname }}."
+      loop: "{{ changepassword_target_accounts }}"
       loop_control:
-        label: "{{ item.username }}"
-      when: iriven_chgpasswd_fail_if_user_missing | bool
+        label: "{{ item.changepassword_target_account }}"
+      when: changepassword_fail_if_user_missing | bool
 
-    - name: changepassword | Check shadow backend availability
+    - name: Changepassword | Check shadow backend availability
       ansible.builtin.stat:
         path: /etc/shadow
-      register: iriven_chgpasswd_shadow
-      when: iriven_chgpasswd_check_shadow_backend | bool
+      register: changepassword_shadow
+      when: changepassword_check_shadow_backend | bool
 
-    - name: changepassword | Fail when local shadow backend is unavailable
+    - name: Changepassword | Fail when local shadow backend is unavailable
       ansible.builtin.assert:
         that:
-          - iriven_chgpasswd_shadow.stat.exists
-          - iriven_chgpasswd_shadow.stat.isreg
+          - changepassword_shadow.stat.exists
+          - changepassword_shadow.stat.isreg
         fail_msg: "/etc/shadow is unavailable. This target may use an external identity backend; do not use this role for
           IPA/LDAP/AD passwords."
-      when: iriven_chgpasswd_check_shadow_backend | bool
+      when: changepassword_check_shadow_backend | bool
 
-    - name: changepassword | Validate local shadow file ownership and permissions
+    - name: Changepassword | Validate local shadow file ownership and permissions
       ansible.builtin.assert:
         that:
-          - iriven_chgpasswd_shadow.stat.pw_name == 'root'
-          - iriven_chgpasswd_shadow.stat.gr_name in ['root', 'shadow']
-          - iriven_chgpasswd_shadow.stat.mode in ['0600', '0640']
+          - changepassword_shadow.stat.pw_name == 'root'
+          - changepassword_shadow.stat.gr_name in ['root', 'shadow']
+          - changepassword_shadow.stat.mode in ['0600', '0640']
         fail_msg: >-
           /etc/shadow has unexpected ownership or permissions on {{ inventory_hostname }}.
           Expected owner root, group root/shadow, mode 0600/0640.
-      when: iriven_chgpasswd_check_shadow_backend | bool
+      when: changepassword_check_shadow_backend | bool
 
-    - name: changepassword | Read /etc/passwd for local-only backend validation
+    - name: Changepassword | Read /etc/passwd for local-only backend validation
       ansible.builtin.slurp:
         src: /etc/passwd
-      register: iriven_chgpasswd_etc_passwd_raw
-      when: iriven_chgpasswd_require_etc_passwd_user | bool
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+      register: changepassword_etc_passwd_raw
+      when: changepassword_require_etc_passwd_user | bool
+      no_log: "{{ changepassword_use_no_log | bool }}"
 
-    - name: changepassword | Fail if selected account is not local to /etc/passwd
+    - name: Changepassword | Fail if selected account is not local to /etc/passwd
       ansible.builtin.assert:
         that:
           - >-
-            ((iriven_chgpasswd_etc_passwd_raw.content | b64decode).split('\n')
-            | select('match', '^' ~ (item.username | regex_escape) ~ ':')
+            ((changepassword_etc_passwd_raw.content | b64decode).split('\n')
+            | select('match', '^' ~ (item.changepassword_target_account | regex_escape) ~ ':')
             | list | length) > 0
         fail_msg: >-
-          Account '{{ item.username }}' is not present in /etc/passwd on {{ inventory_hostname }}.
+          Account '{{ item.changepassword_target_account }}' is not present in /etc/passwd on {{ inventory_hostname }}.
           It may be provided by LDAP/IPA/AD/SSSD; refusing local password mutation.
-      loop: "{{ iriven_chgpasswd_target_accounts }}"
+      loop: "{{ changepassword_target_accounts }}"
       loop_control:
-        label: "{{ item.username }}"
-      when: iriven_chgpasswd_require_etc_passwd_user | bool
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+        label: "{{ item.changepassword_target_account }}"
+      when: changepassword_require_etc_passwd_user | bool
+      no_log: "{{ changepassword_use_no_log | bool }}"
 
-    - name: changepassword | Build selected login shell map from builtin getent facts
+    - name: Changepassword | Build selected login shell map from builtin getent facts
       ansible.builtin.set_fact:
-        iriven_chgpasswd_selected_login_shells: >-
+        changepassword_selected_login_shells: >-
           {{
-            iriven_chgpasswd_selected_login_shells | default({})
+            changepassword_selected_login_shells | default({})
             | combine({
-                item.item.username: (
-                  item.ansible_facts.getent_passwd[item.item.username][-1]
+                item.item.changepassword_target_account: (
+                  item.ansible_facts.getent_passwd[item.item.changepassword_target_account][-1]
                   | default('')
                   | trim
                 )
               })
           }}
-      loop: "{{ iriven_chgpasswd_getent_passwd_results.results }}"
+      loop: "{{ changepassword_getent_passwd_results.results }}"
       loop_control:
-        label: "{{ item.item.username }}"
+        label: "{{ item.item.changepassword_target_account }}"
       when:
-        - iriven_chgpasswd_require_login_shell | bool
+        - changepassword_require_login_shell | bool
         - item.ansible_facts.getent_passwd is defined
-        - item.item.username in item.ansible_facts.getent_passwd
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+        - item.item.changepassword_target_account in item.ansible_facts.getent_passwd
+      no_log: "{{ changepassword_use_no_log | bool }}"
 
-    - name: changepassword | Check selected login shell paths
+    - name: Changepassword | Check selected login shell paths
       ansible.builtin.stat:
         path: "{{ item.value }}"
-      register: iriven_chgpasswd_selected_shell_stats
-      loop: "{{ iriven_chgpasswd_selected_login_shells | dict2items }}"
+      register: changepassword_selected_shell_stats
+      loop: "{{ changepassword_selected_login_shells | dict2items }}"
       loop_control:
         label: "{{ item.key }}"
       when:
-        - iriven_chgpasswd_require_login_shell | bool
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+        - changepassword_require_login_shell | bool
+      no_log: "{{ changepassword_use_no_log | bool }}"
 
-    - name: changepassword | Validate selected login shell paths exist and are executable
+    - name: Changepassword | Validate selected login shell paths exist and are executable
       ansible.builtin.assert:
         that:
           - item.stat.exists
@@ -425,58 +425,58 @@
           - item.stat.executable
         fail_msg: >-
           Account '{{ item.item.key }}' uses shell '{{ item.item.value }}', but the shell path is missing or not executable.
-      loop: "{{ iriven_chgpasswd_selected_shell_stats.results | default([]) }}"
+      loop: "{{ changepassword_selected_shell_stats.results | default([]) }}"
       loop_control:
         label: "{{ item.item.key }}"
       when:
-        - iriven_chgpasswd_require_login_shell | bool
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+        - changepassword_require_login_shell | bool
+      no_log: "{{ changepassword_use_no_log | bool }}"
 
-    - name: changepassword | Validate selected accounts have an allowed login shell
+    - name: Changepassword | Validate selected accounts have an allowed login shell
       ansible.builtin.assert:
         that:
-          - item.username in iriven_chgpasswd_selected_login_shells
-          - iriven_chgpasswd_selected_login_shells[item.username] in iriven_chgpasswd_allowed_login_shells
+          - item.changepassword_target_account in changepassword_selected_login_shells
+          - changepassword_selected_login_shells[item.changepassword_target_account] in changepassword_allowed_login_shells
         fail_msg: >-
-          Account '{{ item.username }}' has a non-login, unknown or non-approved shell
-          '{{ iriven_chgpasswd_selected_login_shells[item.username] | default('unknown') }}'.
+          Account '{{ item.changepassword_target_account }}' has a non-login, unknown or non-approved shell
+          '{{ changepassword_selected_login_shells[item.changepassword_target_account] | default('unknown') }}'.
           Refusing password change for service/system accounts.
-      loop: "{{ iriven_chgpasswd_target_accounts }}"
+      loop: "{{ changepassword_target_accounts }}"
       loop_control:
-        label: "{{ item.username }}"
+        label: "{{ item.changepassword_target_account }}"
       when:
-        - iriven_chgpasswd_require_login_shell | bool
-      no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+        - changepassword_require_login_shell | bool
+      no_log: "{{ changepassword_use_no_log | bool }}"
 
-- name: changepassword | Validate password ageing prerequisites
+- name: Changepassword | Validate password ageing prerequisites
   block:
-    - name: changepassword | Ensure chage command exists when expiry or aging is requested
+    - name: Changepassword | Ensure chage command exists when expiry or aging is requested
       ansible.builtin.stat:
         path: /usr/bin/chage
-      register: iriven_chgpasswd_chage_check
+      register: changepassword_chage_check
       when: >-
-        (iriven_chgpasswd_target_accounts | selectattr('expire', 'defined') | selectattr('expire') | list | length > 0)
-        or (iriven_chgpasswd_set_aging | bool)
+        (changepassword_target_accounts | selectattr('expire', 'defined') | selectattr('expire') | list | length > 0)
+        or (changepassword_set_aging | bool)
 
-    - name: changepassword | Fail when chage is required but missing
+    - name: Changepassword | Fail when chage is required but missing
       ansible.builtin.assert:
         that:
-          - iriven_chgpasswd_chage_check.stat.exists
+          - changepassword_chage_check.stat.exists
         fail_msg: "chage is required for expire/aging operations but was not found at /usr/bin/chage. On SUSE/SLES/openSUSE,
           install or restore the shadow package."
-      when: iriven_chgpasswd_chage_check is defined and not ansible_check_mode
+      when: changepassword_chage_check is defined and not ansible_check_mode
 
-- name: changepassword | Refuse missing or weak custom HMAC secret in production
+- name: Changepassword | Refuse missing or weak custom HMAC secret in production
   ansible.builtin.assert:
     that:
-      - iriven_chgpasswd_hmac_salt_secret is defined
-      - iriven_chgpasswd_hmac_salt_secret | length >= iriven_chgpasswd_min_hmac_secret_length | int
-      - iriven_chgpasswd_hmac_salt_secret is regex('[A-Z]')
-      - iriven_chgpasswd_hmac_salt_secret is regex('[a-z]')
-      - iriven_chgpasswd_hmac_salt_secret is regex('[0-9]')
-      - iriven_chgpasswd_hmac_salt_secret is regex('[^A-Za-z0-9]')
+      - changepassword_hmac_salt_secret is defined
+      - changepassword_hmac_salt_secret | length >= changepassword_min_hmac_secret_length | int
+      - changepassword_hmac_salt_secret is regex('[A-Z]')
+      - changepassword_hmac_salt_secret is regex('[a-z]')
+      - changepassword_hmac_salt_secret is regex('[0-9]')
+      - changepassword_hmac_salt_secret is regex('[^A-Za-z0-9]')
     fail_msg: >-
-      iriven_chgpasswd_hmac_salt_secret must be defined in Vault and must meet
+      changepassword_hmac_salt_secret must be defined in Vault and must meet
       the configured minimum length and complexity requirements.
-  no_log: "{{ iriven_chgpasswd_use_no_log | bool }}"
+  no_log: "{{ changepassword_use_no_log | bool }}"
   changed_when: false

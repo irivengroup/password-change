@@ -1,44 +1,32 @@
 ---
 - name: Create Molecule delegated Docker target
   hosts: localhost
-  connection: local
   gather_facts: false
   vars:
-    molecule_instance_name: chgpassword-negative-ubuntu
-    molecule_instance_image: docker.io/geerlingguy/docker-ubuntu2204-ansible:latest
-    molecule_instance_config_path: "{{ lookup('env', 'MOLECULE_INSTANCE_CONFIG') }}"
-
+    molecule_container_name: chgpassword-negative-ubuntu
+    molecule_container_image: docker.io/ubuntu:22.04
   tasks:
-    - name: molecule | Pull target image
+    - name: Molecule | Pull target image
       community.docker.docker_image:
-        name: "{{ molecule_instance_image }}"
+        name: '{{ molecule_container_image }}'
         source: pull
-
-    - name: molecule | Create and start target container
+    - name: Molecule | Create and start target container
       community.docker.docker_container:
-        name: "{{ molecule_instance_name }}"
-        hostname: "{{ molecule_instance_name }}"
-        image: "{{ molecule_instance_image }}"
+        name: '{{ molecule_container_name }}'
+        image: '{{ molecule_container_image }}'
+        command: sleep infinity
         state: started
-        command: /bin/sh -c "while true; do sleep 3600; done"
         detach: true
         tty: true
-        restart_policy: "no"
-        privileged: false
         cleanup: true
-
-    - name: molecule | Write delegated instance configuration
+    - name: Molecule | Bootstrap Python and account utilities in target container
+      community.docker.docker_container_exec:
+        container: '{{ molecule_container_name }}'
+        command: sh -c "apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3 passwd login && rm -rf /var/lib/apt/lists/*"
+      changed_when: false
+    - name: Molecule | Write delegated instance configuration
       ansible.builtin.copy:
-        dest: "{{ molecule_instance_config_path }}"
+        dest: '{{ molecule_instance_config }}'
         mode: '0600'
-        content: >-
-          {{
-            [
-              {
-                'instance': molecule_instance_name,
-                'address': molecule_instance_name,
-                'user': 'root',
-                'connection': 'community.docker.docker'
-              }
-            ] | to_json
-          }}
+        content: "---\n- instance: chgpassword-negative-ubuntu\n  address: chgpassword-negative-ubuntu\n  user: root\n  connection: community.docker.docker\n\
+          \  ansible_python_interpreter: /usr/bin/python3\n"

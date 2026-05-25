@@ -1,21 +1,17 @@
 ---
 - name: Destroy Molecule delegated Docker target
   hosts: localhost
-  connection: local
   gather_facts: false
   vars:
-    molecule_instance_name: chgpassword-ubuntu
-    molecule_instance_config_path: "{{ lookup('env', 'MOLECULE_INSTANCE_CONFIG') }}"
-
+    molecule_container_name: chgpassword-ubuntu
   tasks:
-    - name: molecule | Remove target container
+    - name: Molecule | Remove target container
       community.docker.docker_container:
-        name: "{{ molecule_instance_name }}"
+        name: '{{ molecule_container_name }}'
         state: absent
-        force_kill: true
-      failed_when: false
-
-    - name: molecule | Remove delegated instance configuration
+      changed_when: false
+    - name: Molecule | Remove delegated instance configuration
       ansible.builtin.file:
-        path: "{{ molecule_instance_config_path }}"
+        path: '{{ molecule_instance_config }}'
         state: absent
+      changed_when: false

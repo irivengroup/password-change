@@ -1,32 +1,35 @@
 ---
 - name: Converge changepassword role on existing users only
   hosts: all
+  connection: community.docker.docker
   become: true
   gather_facts: true
   vars:
-    TGT_USER: all
-    iriven_chgpasswd_use_no_log: false
-    iriven_chgpasswd_require_hash: false
-    iriven_chgpasswd_allow_plaintext_password: true
-    iriven_chgpasswd_hash_algorithm: sha512
-    iriven_chgpasswd_default_hash_rounds: 656000
-    iriven_chgpasswd_hash_salt_mode: hmac_machine_id
-    iriven_chgpasswd_hmac_salt_secret: molecule-test-secret-minimum-24-chars
-    iriven_chgpasswd_set_aging: true
-    iriven_chgpasswd_min_days: 3
-    iriven_chgpasswd_max_days: 90
-    iriven_chgpasswd_warn_days: 14
-    iriven_chgpasswd_inactive_days: null
-    iriven_chgpasswd_audit_enabled: false
-    unix_local_accounts:
-      - username: moleculeops
+    ansible_python_interpreter: /usr/bin/python3
+    changepassword_target_account: all
+    changepassword_hmac_salt_secret: ValidMoleculeSecret#2026WithEnoughLength
+    changepassword_audit_enabled: true
+    changepassword_audit_only: false
+    changepassword_lock_enabled: true
+    changepassword_require_custom_hmac_secret: true
+    changepassword_use_no_log: true
+    changepassword_set_aging: true
+    changepassword_min_days: 3
+    changepassword_max_days: 90
+    changepassword_warn_days: 14
+    changepassword_inactive_days: null
+    changepassword_audit_file: /tmp/changepassword-molecule-audit.jsonl
+    changepassword_lock_path: /tmp/changepassword-molecule.lock
+    changepassword_local_accounts:
+      - changepassword_target_account: moleculeops
         password: Molecule-Test-Password-2026!
-        expire: false
         state: unlocked
-      - username: moleculeaudit
-        password: Molecule-Audit-Password-2026!
         expire: false
+      - changepassword_target_account: moleculeaudit
+        password: Molecule-Audit-Password-2026!
         state: locked
-
+        expire: false
+    changepassword_sha512_rounds: 656000
+    changepassword_min_sha512_rounds: 500000
   roles:
     - role: changepassword

@@ -3,8 +3,8 @@ title = "IRIVEN ChangePassword gitleaks policy"
 [allowlist]
 description = "Project placeholders and intentionally generated non-production fallback secret"
 regexes = [
-  'iriven_chgpasswd_default_hmac_salt_secret:',
-  'iriven_chgpasswd_hmac_salt_secret:\s*""',
+  'changepassword_default_hmac_salt_secret:',
+  'changepassword_hmac_salt_secret:\s*""',
   'Molecule-[A-Za-z-]+-Password-2026!',
   'MyStrongSecret#2026!'
 ]

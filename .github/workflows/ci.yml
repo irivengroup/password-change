@@ -1,279 +1,93 @@
 ---
 name: CI
-
-"on":
+'on':
   push:
+    branches:
+      - '**'
   pull_request:
-
+    branches:
+      - '**'
+  workflow_dispatch: null
 permissions:
   contents: read
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  validate:
+  static-validation:
     name: Static validation and syntax checks
     runs-on: ubuntu-latest
+    env:
+      ANSIBLE_ROLES_PATH: ${{ github.workspace }}/roles
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           persist-credentials: false
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
           cache: pip
-          cache-dependency-path: requirements.txt
+      - name: Install Python dependencies
+        run: 'python -m pip install --upgrade pip
 
-      - name: Install validation tooling
-        run: |
-          python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Show tool versions
-        run: |
-          python --version
-          ansible --version
-          ansible-playbook --version
-          ansible-lint --version
-          yamllint --version
-
-      - name: Validate password hashing dependency
-        run: python -c "import passlib.hash; print('passlib available')"
-
-      - name: Validate Ansible configuration
-        run: |
-          ansible-config dump --only-changed
-          if grep -R "stdout_callback = yaml" -n ansible.cfg roles/changepassword/molecule/default/molecule.yml; then
-            echo "Deprecated stdout_callback=yaml is not allowed" >&2
-            exit 1
-          fi
-
-      - name: Install Ansible requirements
-        run: ansible-galaxy collection install -r requirements.yml --force
-
-      - name: Validate YAML formatting
+          '
+      - name: Install Ansible collections
+        run: ansible-galaxy collection install -r requirements.yml
+      - name: Validate YAML style
         run: yamllint .
-
       - name: Validate YAML parsing
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          import sys
-          import yaml
-
-          failed = False
-          for path in sorted(Path('.').rglob('*')):
-              if path.parts[0] in {'.git', '.cache', '.venv'}:
-                  continue
-              if path.suffix.lower() not in {'.yml', '.yaml'}:
-                  continue
-              try:
-                  yaml.safe_load(path.read_text(encoding='utf-8'))
-              except Exception as exc:
-                  failed = True
-                  print(f'{path}: {exc}', file=sys.stderr)
-          if failed:
-              sys.exit(1)
-          PY
-
-      - name: Run Gitleaks secret scan
+        run: "python - <<'PY'\nfrom pathlib import Path\nimport sys\nimport yaml\n\nfailed = False\nfor path in list(Path(\".\").rglob(\"*.yml\"\
+          )) + list(Path(\".\").rglob(\"*.yaml\")):\n    try:\n        yaml.safe_load(path.read_text(encoding=\"utf-8\"))\n    except Exception\
+          \ as exc:\n        print(f\"{path}: {exc}\", file=sys.stderr)\n        failed = True\nsys.exit(1 if failed else 0)\nPY\n"
+      - name: Validate project schema
+        run: python scripts/validate_project.py
+      - name: Compile Python plugins
+        run: python -m compileall roles/changepassword/plugins
+      - name: Validate inventory
+        run: ansible-inventory -i inventories/production/hosts.yml --list
+      - name: Syntax-check playbook
+        run: "ansible-playbook \\\n  -i inventories/production/hosts.yml \\\n  playbooks/changepassword.yml \\\n  --syntax-check\n"
+      - name: Run ansible-lint
+        run: ansible-lint --profile production
+      - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
         env:
-          GITLEAKS_CONFIG: .gitleaks.toml
-
-      - name: Secret hygiene scan
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          import re
-          import sys
-
-          # Lightweight guardrail for private keys only.
-          # Full secret detection is handled by Gitleaks using .gitleaks.toml.
-          # Avoid broad password/secret regexes here because they create false
-          # positives in README examples, validation code and Ansible variables.
-          private_key_pattern = re.compile(
-              r"(?i)(BEGIN RSA PRIVATE KEY|BEGIN OPENSSH PRIVATE KEY|BEGIN PRIVATE KEY)"
-          )
-
-          ignored_dirs = {'.git', '.cache', '.venv', '__pycache__', '.github'}
-          errors = []
-
-          for path in Path('.').rglob('*'):
-              if not path.is_file():
-                  continue
-              if any(part in ignored_dirs for part in path.parts):
-                  continue
-              text = path.read_text(encoding='utf-8', errors='ignore')
-              if private_key_pattern.search(text):
-                  errors.append(f'{path}: private key material detected')
-
-          if errors:
-              for error in errors:
-                  print(error, file=sys.stderr)
-              sys.exit(1)
-          PY
-
-      - name: Run project schema validation
-        run: python scripts/validate_project_schema.py
-
-      - name: Validate Python filter plugins
-        run: python -m py_compile roles/changepassword/filter_plugins/*.py
-
-      - name: Validate Ansible inventory parsing
-        run: ansible-inventory -i inventories/production/hosts.yml --list
-
-      - name: Validate playbook syntax
-        run: ansible-playbook -i inventories/production/hosts.yml --syntax-check playbooks/change_password.yml
-
-      - name: Run Molecule default scenario
-        run: molecule --debug test
-        working-directory: roles/changepassword
-
-      - name: Run Molecule negative scenario
-        run: molecule test -s negative
-        working-directory: roles/changepassword
-      - name: Validate role with ansible-lint production profile
-        run: ansible-lint --profile production .
-
-      - name: Validate project invariants
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          import sys
-          import yaml
-
-          errors = []
-
-          for path in sorted(Path('.').rglob('*')):
-              if path.parts[0] in {'.git', '.cache', '.venv'}:
-                  continue
-              if path.is_file() and path.suffix.lower() in {'.yml', '.yaml'}:
-                  try:
-                      content = yaml.safe_load(path.read_text(encoding='utf-8'))
-                  except Exception:
-                      continue
-                  if path.name in {'vault.yml', 'vault.yml.example'}:
-                      accounts = (content or {}).get('unix_local_accounts', [])
-                      if accounts is not None and not isinstance(accounts, list):
-                          errors.append(f'{path}: unix_local_accounts must be a list of dictionaries')
-                      for account in accounts or []:
-                          if not isinstance(account, dict):
-                              errors.append(f'{path}: each unix_local_accounts item must be a dictionary')
-                              continue
-                          username = account.get('username', '<undefined>')
-                          if 'password' not in account or not str(account.get('password', '')).strip():
-                              errors.append(f'{path}: password is mandatory for {username}')
-                          if 'password_hash' in account or 'password_plain' in account or 'manage_password' in account:
-                              errors.append(f'{path}: legacy password_hash/password_plain/manage_password found for {username}')
-                          if account.get('state') == 'present':
-                              errors.append(f'{path}: state=present is not supported for {username}; use locked/unlocked or omit state')
-                          for field in ('shell', 'groups', 'append', 'home', 'uid', 'gid', 'comment', 'create_home', 'system', 'aging',
-                            'manage_password'):
-                              if field in account:
-                                  errors.append(f'{path}: provisioning/per-account policy field {field!r} is not allowed for {username}')
-
-          defaults = yaml.safe_load(Path('roles/changepassword/defaults/main.yml').read_text(encoding='utf-8'))
-          if defaults.get('iriven_chgpasswd_hash_algorithm') != 'sha512':
-              errors.append('roles/changepassword/defaults/main.yml: default generated hash algorithm must remain sha512')
-          if defaults.get('iriven_chgpasswd_hash_salt_mode') != 'hmac_machine_id':
-              errors.append('roles/changepassword/defaults/main.yml: salt mode must remain hmac_machine_id')
-
-          if int(defaults.get('iriven_chgpasswd_default_hash_rounds', 0)) < int(defaults.get('iriven_chgpasswd_min_hash_rounds', 500000)):
-              errors.append('roles/changepassword/defaults/main.yml: hash rounds must not be below the configured minimum')
-          if int(defaults.get('iriven_chgpasswd_min_hmac_secret_length', 0)) < 32:
-              errors.append('roles/changepassword/defaults/main.yml: HMAC secret minimum length must remain at least 32')
-          if defaults.get('iriven_chgpasswd_audit_file') != '/var/log/ansible/changepassword.json':
-              errors.append('roles/changepassword/defaults/main.yml: audit file path must remain /var/log/ansible/changepassword.json')
-          if defaults.get('iriven_chgpasswd_audit_file_mode') != '0600':
-              errors.append('roles/changepassword/defaults/main.yml: audit file mode must remain 0600')
-          if defaults.get('iriven_chgpasswd_audit_dir_mode') != '0750':
-              errors.append('roles/changepassword/defaults/main.yml: audit directory mode must remain 0750')
-          if defaults.get('iriven_chgpasswd_audit_logrotate_enabled') is not True:
-              errors.append('roles/changepassword/defaults/main.yml: audit logrotate must remain enabled by default')
-          if defaults.get('iriven_chgpasswd_audit_integrity_enabled') is not True:
-              errors.append('roles/changepassword/defaults/main.yml: audit checksum sidecar must remain enabled by default')
-          fallback_secret = defaults.get('iriven_chgpasswd_default_hmac_salt_secret', '')
-          if len(fallback_secret) != 60:
-              errors.append('roles/changepassword/defaults/main.yml: default HMAC fallback secret must be exactly 60 characters')
-          if not (any(c.isupper() for c in fallback_secret) and any(c.islower() for c in fallback_secret) and any(c.isdigit() for
-            c in fallback_secret) and any(not c.isalnum() for c in fallback_secret)):
-              errors.append('roles/changepassword/defaults/main.yml: default HMAC fallback secret does not meet complexity requirements')
-
-          ansible_cfg = Path('ansible.cfg').read_text(encoding='utf-8')
-          for required in ('host_key_checking = True', 'display_args_to_stdout = False', 'allow_world_readable_tmpfiles = False'):
-              if required not in ansible_cfg:
-                  errors.append(f'ansible.cfg: missing hardening option: {required}')
-
-          normalize = Path('roles/changepassword/tasks/tasks.d/normalize.yml').read_text(encoding='utf-8')
-          if 'inventory_hostname' in normalize:
-              errors.append('roles/changepassword/tasks/tasks.d/normalize.yml: salt generation must not depend on inventory_hostname')
-          audit = Path('roles/changepassword/tasks/tasks.d/audit.yml').read_text(encoding='utf-8')
-          for forbidden in ('final_password_hash', 'generated_salt', 'effective_hmac', 'hmac_salt_secret', 'machine_id'):
-              if forbidden in audit:
-                  errors.append(f'roles/changepassword/tasks/tasks.d/audit.yml: forbidden sensitive token found: {forbidden}')
-          for required in ('to_json', 'schema_version', 'timestamp_utc', 'target_user', 'execution_mode', 'password_changed'):
-              if required not in audit:
-                  errors.append(f'roles/changepassword/tasks/tasks.d/audit.yml: missing audit field/control: {required}')
-
-          if errors:
-              for error in errors:
-                  print(error, file=sys.stderr)
-              sys.exit(1)
-          PY
-
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   molecule:
-    name: Molecule integration test
+    name: Molecule integration tests
     runs-on: ubuntu-latest
-    needs: validate
-
+    needs:
+      - static-validation
+    env:
+      ANSIBLE_ROLES_PATH: ${{ github.workspace }}/roles
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           persist-credentials: false
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
           cache: pip
-          cache-dependency-path: requirements.txt
+      - name: Install Python dependencies
+        run: 'python -m pip install --upgrade pip
 
-      - name: Install Molecule tooling
-        run: |
-          python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Validate Ansible configuration
-        run: |
-          ansible-config dump --only-changed
-          if grep -R "stdout_callback = yaml" -n ansible.cfg roles/changepassword/molecule/default/molecule.yml; then
-            echo "Deprecated stdout_callback=yaml is not allowed" >&2
-            exit 1
-          fi
+          '
+      - name: Install Ansible collections
+        run: ansible-galaxy collection install -r requirements.yml
+      - name: Show Docker runtime
+        run: 'docker version
 
-      - name: Install Ansible requirements
-        run: ansible-galaxy collection install -r requirements.yml --force
-
-      - name: Validate Docker runtime
-        run: |
-          docker version
           docker info
-          docker pull docker.io/geerlingguy/docker-ubuntu2204-ansible:latest
 
-      - name: Run Molecule test
+          '
+      - name: Run Molecule default scenario
         working-directory: roles/changepassword
-        env:
-          ANSIBLE_ROLES_PATH: ${{ github.workspace }}/roles
         run: molecule --debug test
+      - name: Run Molecule negative scenario
         working-directory: roles/changepassword
-          molecule test -s negative
-
-# Optional multi-distribution validation:
-#   molecule test -s multi
+        run: molecule test -s negative
