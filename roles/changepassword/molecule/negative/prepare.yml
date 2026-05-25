@@ -1,23 +1,24 @@
 ---
-- name: Prepare negative scenario target
-  hosts: all
-  connection: community.docker.docker
-  become: true
-  gather_facts: true
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
-  tasks:
-    - name: Molecule negative | Ensure machine-id exists
-      ansible.builtin.copy:
-        dest: /etc/machine-id
-        content: '0123456789abcdef0123456789abcdef
+- name: Prepare Molecule localhost test context
+  hosts: localhost
+  connection: local
+  gather_facts: false
 
-          '
-        owner: root
-        group: root
-        mode: '0444'
-    - name: Molecule negative | Create existing control user
-      ansible.builtin.user:
-        name: moleculevalid
-        shell: /bin/bash
-        state: present
+  tasks:
+    - name: Molecule | Create runtime directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - /tmp/changepassword-molecule
+        - /tmp/changepassword-molecule/audit
+
+    - name: Molecule | Create deterministic fake shadow backend
+      ansible.builtin.copy:
+        dest: "/tmp/changepassword-molecule/shadow"
+        mode: "0600"
+        content: |
+          root:$6$rounds=656000$saltstring$dummyhash:19700:0:99999:7:::
+          moleculeops:$6$rounds=656000$saltstring$dummyhash:19700:0:99999:7:::
+          moleculeapp:$6$rounds=656000$saltstring$dummyhash:19700:0:99999:7:::

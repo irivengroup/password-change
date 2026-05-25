@@ -1,11 +1,11 @@
 ---
 profile: production
-
 exclude_paths:
-  - .git/
-  - .venv/
-  - collections/
   - .cache/
-
+  - .venv/
+  - .tox/
+  - .molecule/
 warn_list:
   - yaml[line-length]
+mock_filters:
+  - changepassword_hmac_salt

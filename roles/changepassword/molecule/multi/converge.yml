@@ -1,35 +1,36 @@
 ---
-- name: Converge changepassword role on existing users only
-  hosts: all
-  connection: community.docker.docker
-  become: true
+- name: Converge all targets
+  hosts: localhost
+  connection: local
   gather_facts: true
+  become: false
+  check_mode: true
+
   vars:
-    ansible_python_interpreter: /usr/bin/python3
+    changepassword_use_no_log: false
+    changepassword_audit_enabled: false
+    changepassword_enable_audit_log: false
+    changepassword_lock_enabled: false
+    changepassword_enable_runtime_lock: false
+    changepassword_check_shadow_backend: false
+    changepassword_set_aging: false
+    changepassword_require_etc_passwd_user: false
+    changepassword_fail_if_same_hash: false
+    changepassword_hmac_salt_secret: Molecule-Hmac-Secret-2026!
     changepassword_target_account: all
-    changepassword_hmac_salt_secret: ValidMoleculeSecret#2026WithEnoughLength
-    changepassword_audit_enabled: true
-    changepassword_audit_only: false
-    changepassword_lock_enabled: true
-    changepassword_require_custom_hmac_secret: true
-    changepassword_use_no_log: true
-    changepassword_set_aging: true
-    changepassword_min_days: 3
-    changepassword_max_days: 90
-    changepassword_warn_days: 14
-    changepassword_inactive_days: null
-    changepassword_audit_file: /tmp/changepassword-molecule-audit.jsonl
-    changepassword_lock_path: /tmp/changepassword-molecule.lock
     changepassword_local_accounts:
-      - username: moleculeops
-        password: Molecule-Test-Password-2026!
+      - username: root
+        password: $6$rounds=656000$abcdefghijklmnop$01234567890123456789012345678901234567890123456789012345678901234567890123456789
         state: unlocked
         expire: false
-      - username: moleculeaudit
-        password: Molecule-Audit-Password-2026!
-        state: locked
+      - username: moleculeops
+        password: $6$rounds=656000$qbcdefghijklmnop$11234567890123456789012345678901234567890123456789012345678901234567890123456789
+        state: unlocked
         expire: false
-    changepassword_sha512_rounds: 656000
-    changepassword_min_sha512_rounds: 500000
+      - username: moleculeapp
+        password: $6$rounds=656000$rbcdefghijklmnop$21234567890123456789012345678901234567890123456789012345678901234567890123456789
+        state: unlocked
+        expire: false
+
   roles:
     - role: changepassword
