@@ -590,3 +590,32 @@ Project Initiator — IRIVEN Group
 ## Copyright
 
 © IRIVEN Group — All Rights Reserved
+
+## Account selector contract
+
+The role keeps a strict separation between the operator selector and the account objects.
+
+```yaml
+changepassword_target_account: root  # root | <username> | all | ALL | "*"
+
+changepassword_local_accounts:
+  - username: root
+    password: "$6$rounds=656000$..."
+    state: unlocked
+    expire: false
+```
+
+Rules:
+
+- `changepassword_target_account` is the runtime selector.
+- If omitted, the role targets `root`.
+- If set to a username, the value must exist in `changepassword_local_accounts[].username`.
+- If set to `all`, `ALL`, or `"*"`, all declared accounts are selected.
+- Account dictionaries must use `username`; the legacy key `changepassword_target_account` is forbidden inside `changepassword_local_accounts`.
+- Audit events must never contain plaintext passwords, password hashes, Vault secrets, or HMAC secrets.
+
+Recommended dry-run:
+
+```bash
+ansible-playbook -i inventories/production/hosts.yml playbooks/changepassword.yml --check -e changepassword_target_account=root
+```

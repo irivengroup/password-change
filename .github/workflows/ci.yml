@@ -56,6 +56,12 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run Molecule default scenario
+        run: cd roles/changepassword && molecule --debug test -s default
+      - name: Run Molecule multi scenario
+        run: cd roles/changepassword && molecule --debug test -s multi
+      - name: Run Molecule negative scenario
+        run: cd roles/changepassword && molecule --debug test -s negative
   molecule:
     name: Molecule integration tests
     runs-on: ubuntu-latest
@@ -89,9 +95,12 @@ jobs:
           docker info
 
           '
-      - name: Run Molecule default scenario
-        working-directory: roles/changepassword
-        run: molecule --debug test
       - name: Run Molecule negative scenario
         working-directory: roles/changepassword
         run: molecule test -s negative
+      - name: Run Molecule default scenario
+        run: cd roles/changepassword && molecule --debug test -s default
+      - name: Run Molecule multi scenario
+        run: cd roles/changepassword && molecule --debug test -s multi
+      - name: Run Molecule negative scenario
+        run: cd roles/changepassword && molecule --debug test -s negative

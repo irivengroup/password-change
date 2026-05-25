@@ -4,28 +4,22 @@ dependency:
 driver:
   name: default
 platforms:
-  - name: chgpassword-ubuntu
-    image: docker.io/ubuntu:22.04
+  - name: localhost
 provisioner:
   name: ansible
-  env:
-    ANSIBLE_DEPRECATION_WARNINGS: 'False'
-  config_options:
-    defaults:
-      deprecation_warnings: false
-      stdout_callback: default
-      result_format: yaml
-      roles_path: ../../..
   inventory:
     host_vars:
-      chgpassword-ubuntu:
-        ansible_connection: community.docker.docker
-        ansible_python_interpreter: /usr/bin/python3
+      localhost:
+        ansible_connection: local
+        ansible_python_interpreter: '{{ ansible_playbook_python }}'
+  env:
+    ANSIBLE_ROLES_PATH: ${MOLECULE_PROJECT_DIRECTORY}/..:${ANSIBLE_ROLES_PATH:-}
+verifier:
+  name: ansible
 scenario:
   test_sequence:
     - syntax
-    - create
     - prepare
     - converge
+    - idempotence
     - verify
-    - destroy

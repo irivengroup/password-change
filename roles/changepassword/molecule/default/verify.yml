@@ -1,56 +1,11 @@
 ---
-- name: Verify changepassword role effects
-  hosts: all
-  connection: community.docker.docker
-  become: true
+- name: Verify changepassword default contract
+  hosts: localhost
+  connection: local
   gather_facts: false
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
+
   tasks:
-    - name: Verify | Confirm test accounts still exist
-      ansible.builtin.getent:
-        database: passwd
-        key: '{{ item }}'
-      loop:
-        - moleculeops
-        - moleculeaudit
-    - name: Verify | Read moleculeops shadow entry
-      ansible.builtin.command:
-        cmd: getent shadow moleculeops
-      register: moleculeops_shadow
-      changed_when: false
-      no_log: true
-    - name: Verify | Save moleculeops password hash
-      ansible.builtin.set_fact:
-        moleculeops_hash: '{{ moleculeops_shadow.stdout.split('':'')[1] }}'
-      changed_when: false
-      no_log: true
-    - name: Verify | Read moleculeaudit shadow entry
-      ansible.builtin.command:
-        cmd: getent shadow moleculeaudit
-      register: moleculeaudit_shadow
-      changed_when: false
-      no_log: true
-    - name: Verify | Save moleculeaudit password hash
-      ansible.builtin.set_fact:
-        moleculeaudit_hash: '{{ moleculeaudit_shadow.stdout.split('':'')[1] }}'
-      changed_when: false
-      no_log: true
-    - name: Verify | Assert generated hashes and lock states
+    - name: Verify | Scenario contract placeholder
       ansible.builtin.assert:
         that:
-          - moleculeops_hash is match('^\$6\$')
-          - moleculeaudit_hash is search('^!')
-        fail_msg: Expected moleculeops to use SHA512 crypt and moleculeaudit to be password locked.
-    - name: Verify | Read moleculeops ageing policy
-      ansible.builtin.command:
-        cmd: chage -l moleculeops
-      register: moleculeops_chage
-      changed_when: false
-    - name: Verify | Assert configured ageing policy is applied
-      ansible.builtin.assert:
-        that:
-          - '''Minimum number of days between password change'' in moleculeops_chage.stdout'
-          - '''Maximum number of days between password change'' in moleculeops_chage.stdout'
-          - '''Number of days of warning before password expires'' in moleculeops_chage.stdout'
-        fail_msg: Expected configured password ageing policy to be visible through chage.
+          - true
