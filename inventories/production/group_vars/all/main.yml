@@ -3,7 +3,6 @@ changepassword_target_account: root
 changepassword_hash_algorithm: sha512
 changepassword_require_hash: false
 changepassword_allow_plaintext_password: true
-changepassword_default_hash_rounds: 656000
 changepassword_min_hash_rounds: 500000
 changepassword_fail_if_user_missing: true
 changepassword_allow_empty_password: false
