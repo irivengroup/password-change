@@ -6,6 +6,12 @@
   gather_facts: true
   vars:
     ansible_python_interpreter: /usr/bin/python3
+    changepassword_sha512_rounds: 656000
+    changepassword_min_sha512_rounds: 500000
+    changepassword_enable_audit_log: true
+    changepassword_enable_runtime_lock: true
+    changepassword_require_custom_hmac_secret: true
+    changepassword_use_no_log: true
   tasks:
     - name: Negative | Missing password must fail
       block:
@@ -27,6 +33,8 @@
             changepassword_local_accounts:
               - changepassword_target_account: moleculevalid
                 state: unlocked
+            changepassword_sha512_rounds: 656000
+            changepassword_min_sha512_rounds: 500000
         - name: Negative | Fail because missing password was accepted
           ansible.builtin.fail:
             msg: Role accepted an account without password.
@@ -56,6 +64,8 @@
               - changepassword_target_account: moleculevalid
                 password: ValidPassword#2026!
                 state: present
+            changepassword_sha512_rounds: 656000
+            changepassword_min_sha512_rounds: 500000
         - name: Negative | Fail because invalid state was accepted
           ansible.builtin.fail:
             msg: Role accepted an invalid state.
@@ -85,6 +95,8 @@
               - changepassword_target_account: moleculevalid
                 password: ValidPassword#2026!
                 state: unlocked
+            changepassword_sha512_rounds: 656000
+            changepassword_min_sha512_rounds: 500000
         - name: Negative | Fail because weak hmac secret was accepted
           ansible.builtin.fail:
             msg: Role accepted a weak HMAC secret.
@@ -114,6 +126,8 @@
               - changepassword_target_account: missinguser
                 password: ValidPassword#2026!
                 state: unlocked
+            changepassword_sha512_rounds: 656000
+            changepassword_min_sha512_rounds: 500000
         - name: Negative | Fail because missing local user was accepted
           ansible.builtin.fail:
             msg: Role accepted a missing local user.

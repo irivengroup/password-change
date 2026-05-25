@@ -31,5 +31,7 @@
         password: Molecule-Audit-Password-2026!
         state: locked
         expire: false
+    changepassword_sha512_rounds: 656000
+    changepassword_min_sha512_rounds: 500000
   roles:
     - role: changepassword
