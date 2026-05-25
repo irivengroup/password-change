@@ -6,7 +6,7 @@ changepassword_lock_path: /var/lock/iriven_chgpasswd.lock
 changepassword_audit_enabled: true
 changepassword_audit_owner: root
 changepassword_audit_group: root
-changepassword_audit_file: /var/log/ansible/changepassword.jsonl
+changepassword_audit_file: /var/log/ansible/changepassword.json
 changepassword_audit_schema_version: 1.0
 changepassword_audit_dir_mode: '0750'
 changepassword_audit_file_mode: '0600'
@@ -23,8 +23,6 @@ changepassword_sha512_rounds: 656000
 changepassword_min_sha512_rounds: 500000
 changepassword_require_etc_passwd_user: true
 changepassword_fail_if_same_hash: false
-changepassword_enable_audit_log: true
-changepassword_enable_runtime_lock: true
 changepassword_audit_logrotate_path: /etc/logrotate.d/iriven_chgpasswd
 changepassword_audit_logrotate_frequency: daily
 changepassword_audit_logrotate_rotate: 30

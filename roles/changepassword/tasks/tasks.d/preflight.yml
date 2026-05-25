@@ -3,13 +3,13 @@
   ansible.builtin.assert:
     that:
       - changepassword_use_no_log | bool
-      - changepassword_enable_audit_log | bool
-      - changepassword_enable_runtime_lock | bool
+      - changepassword_audit_enabled | bool
+      - changepassword_lock_enabled | bool
       - changepassword_require_custom_hmac_secret | bool
       - not (changepassword_allow_default_hmac_fallback | default(false) | bool)
       - (changepassword_sha512_rounds | int) >= (changepassword_min_sha512_rounds | int)
     fail_msg: >-
-      Production strict mode is mandatory: no_log, audit log, runtime lock,
+      Production strict mode is mandatory: no_log, audit, runtime lock,
       custom HMAC secret, and SHA512 minimum rounds must be enforced.
   changed_when: false
 
