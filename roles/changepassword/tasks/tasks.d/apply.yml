@@ -2,7 +2,6 @@
 - name: Changepassword | Apply password and status to existing local accounts only
   block:
 
-
     - name: Changepassword | Rotate password and optionally lock/unlock existing account
       ansible.builtin.user:
         name: "{{ item.username }}"
@@ -15,7 +14,6 @@
         label: "{{ item.username }}"
       register: changepassword_apply_results
       no_log: "{{ changepassword_use_no_log | bool }}"
-
 
     - name: Changepassword | Lock account after password change when requested globally
       ansible.builtin.user:

@@ -6,7 +6,6 @@
 
   tasks:
 
-
     - name: Prepare | Create temporary test directory
       ansible.builtin.file:
         path: /tmp/changepassword-molecule

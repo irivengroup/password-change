@@ -2,7 +2,6 @@
 - name: Changepassword | Run secured password rotation workflow
   block:
 
-
     - name: Changepassword | Acquire host-level execution lock
       ansible.builtin.command:
         argv:
@@ -13,35 +12,28 @@
       failed_when: changepassword_lock_result.rc != 0
       when: changepassword_lock_enabled | bool
 
-
     - name: Changepassword | Preflight validation
       ansible.builtin.include_tasks: tasks.d/preflight.yml
-
 
     - name: Changepassword | Normalize input data
       ansible.builtin.include_tasks: tasks.d/normalize.yml
 
-
     - name: Changepassword | Run shadow pre-change hardening checks
       ansible.builtin.include_tasks: tasks.d/shadow.yml
-
 
     - name: Changepassword | Apply password changes
       ansible.builtin.include_tasks: tasks.d/apply.yml
       when: not (changepassword_audit_only | bool)
 
-
     - name: Changepassword | Apply password expiration and ageing
       ansible.builtin.include_tasks: tasks.d/aging.yml
       when: not (changepassword_audit_only | bool)
-
 
     - name: Changepassword | Write audit events
       ansible.builtin.include_tasks: tasks.d/audit.yml
       when: changepassword_audit_enabled | bool
 
   rescue:
-
 
     - name: Changepassword | Report secured workflow failure
       ansible.builtin.fail:
@@ -51,14 +43,12 @@
 
   always:
 
-
     - name: Changepassword | Release host-level execution lock
       ansible.builtin.file:
         path: "{{ changepassword_lock_path }}"
         state: absent
       changed_when: false
       when: changepassword_lock_enabled | default(true) | bool
-
 
     - name: Changepassword | Cleanup sensitive runtime facts
       ansible.builtin.set_fact:

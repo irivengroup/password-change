@@ -5,7 +5,6 @@ driver:
   name: default
 platforms:
 
-
   - name: localhost
 provisioner:
   name: ansible
