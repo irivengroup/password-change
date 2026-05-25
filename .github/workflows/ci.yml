@@ -42,6 +42,8 @@ jobs:
           \ as exc:\n        print(f\"{path}: {exc}\", file=sys.stderr)\n        failed = True\nsys.exit(1 if failed else 0)\nPY\n"
       - name: Validate project schema
         run: python scripts/validate_project.py
+      - name: Run project hardening validation
+        run: python scripts/validate_hardening.py
       - name: Compile Python plugins
         run: python -m compileall roles/changepassword/plugins
       - name: Validate inventory
@@ -62,6 +64,8 @@ jobs:
     env:
       ANSIBLE_ROLES_PATH: ${{ github.workspace }}/roles
     steps:
+      - name: Run project hardening validation
+        run: python scripts/validate_hardening.py
       - name: Checkout repository
         uses: actions/checkout@v4
         with:

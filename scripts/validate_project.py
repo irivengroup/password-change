@@ -14,11 +14,18 @@ if accounts and not isinstance(accounts, list):
     print("changepassword_local_accounts must be a list", file=sys.stderr)
     sys.exit(1)
 
+FORBIDDEN_ACCOUNT_KEYS = {'changepassword_target_account'}
+
 allowed = {"username", "password", "state", "expire"}
 for idx, account in enumerate(accounts):
     if not isinstance(account, dict):
         print(f"changepassword_local_accounts[{idx}] must be a mapping", file=sys.stderr)
         sys.exit(1)
+    forbidden = set(account) & FORBIDDEN_ACCOUNT_KEYS
+    if forbidden:
+        print(f"{ACCOUNT_LIST_KEY}[{idx}] has forbidden legacy keys: {sorted(forbidden)}", file=sys.stderr)
+        sys.exit(1)
+
     unknown = set(account) - allowed
     if unknown:
         print(f"changepassword_local_accounts[{idx}] has unsupported keys: {sorted(unknown)}", file=sys.stderr)
