@@ -136,7 +136,7 @@
       loop: '{{ changepassword_machine_id_paths }}'
     - name: Changepassword | Select first available machine-id file
       ansible.builtin.set_fact:
-        changepassword_machine_id_file: '{{ (changepassword_machine_id_stat.results | default([]) | selectattr(''stat.exists'') | selectattr(''stat.isreg'') | map(attribute=''item'') | list | first | default('''') }}'
+        changepassword_machine_id_file: '{{ changepassword_machine_id_stat.results | default([]) | selectattr(''stat.exists'') | selectattr(''stat.isreg'') | map(attribute=''item'') | list | first | default('''') }}'
       no_log: '{{ changepassword_use_no_log | bool }}'
     - name: Changepassword | Read machine-id for deterministic salt identity
       ansible.builtin.slurp:
@@ -273,7 +273,7 @@
         label: '{{ item.username }}'
     - name: Changepassword | Build discovered local account list
       ansible.builtin.set_fact:
-        changepassword_existing_local_users: '{{ (changepassword_getent_passwd_results.results | default([]) | selectattr(''ansible_facts.getent_passwd'', ''defined'') | map(attribute=''ansible_facts.getent_passwd'') | map(''dict2items'') | flatten | map(attribute=''key'') | list }}'
+        changepassword_existing_local_users: '{{ changepassword_getent_passwd_results.results | default([]) | selectattr(''ansible_facts.getent_passwd'', ''defined'') | map(attribute=''ansible_facts.getent_passwd'') | map(''dict2items'') | flatten | map(attribute=''key'') | list }}'
       no_log: '{{ changepassword_use_no_log | bool }}'
     - name: Changepassword | Fail if local account is missing
       ansible.builtin.assert:
@@ -322,14 +322,14 @@
       no_log: '{{ changepassword_use_no_log | bool }}'
     - name: Changepassword | Build selected login shell map from builtin getent facts
       ansible.builtin.set_fact:
-        changepassword_selected_login_shells: '{{ changepassword_selected_login_shells | default({}) | combine({ item.username: (item.ansible_facts.getent_passwd[item.username][-1] | default('''') | trim) }) }}'
-      loop: '{{ (changepassword_getent_passwd_results.results | default([])) }}'
+        changepassword_selected_login_shells: '{{ changepassword_selected_login_shells | default({}) | combine({item.item.username: (item.ansible_facts.getent_passwd[item.item.username][-1] | default('''') | trim)}) }}'
+      loop: '{{ changepassword_getent_passwd_results.results | default([])) }}'
       loop_control:
-        label: '{{ item.username }}'
+        label: '{{ item.item.username }}'
       when:
         - changepassword_require_login_shell | bool
         - item.ansible_facts.getent_passwd is defined
-        - item.username in item.ansible_facts.getent_passwd
+        - item.item.username in item.ansible_facts.getent_passwd
       no_log: '{{ changepassword_use_no_log | bool }}'
     - name: Changepassword | Check selected login shell paths
       ansible.builtin.stat:
