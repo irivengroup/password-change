@@ -58,7 +58,11 @@ jobs:
       - name: Validate inventory
         run: ansible-inventory -i inventories/production/hosts.yml --list
       - name: Syntax-check playbook
-        run: ansible-playbook \  -i inventories/production/hosts.yml \  playbooks/changepassword.yml \  --syntax-check
+        run: |-
+          ansible-playbook \
+            -i inventories/production/hosts.yml \
+            playbooks/changepassword.yml \
+            --syntax-check
       - name: Run ansible-lint
         run: ansible-lint --profile production
       - name: Run Gitleaks
