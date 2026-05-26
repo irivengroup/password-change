@@ -28,6 +28,7 @@
 #   - do not store audit secrets or HMAC secrets in clear text
 
 changepassword_hmac_salt_secret: ''
+
 changepassword_local_accounts:
   - username: root
     password: replace-with-vault-secret-root-password

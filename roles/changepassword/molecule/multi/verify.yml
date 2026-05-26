@@ -42,7 +42,6 @@
           - moleculeops_hash is match('^\$6\$')
           - moleculeaudit_hash is search('^!')
         fail_msg: Expected moleculeops to use SHA512 crypt and moleculeaudit to be password locked.
-        quiet: true
     - name: Verify | Read moleculeops ageing policy
       ansible.builtin.command:
         cmd: chage -l moleculeops
@@ -55,4 +54,3 @@
           - '''Maximum number of days between password change'' in moleculeops_chage.stdout'
           - '''Number of days of warning before password expires'' in moleculeops_chage.stdout'
         fail_msg: Expected configured password ageing policy to be visible through chage.
-        quiet: true
