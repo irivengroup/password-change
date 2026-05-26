@@ -11,6 +11,7 @@
     fail_msg: >-
       Production strict mode is mandatory: no_log, audit, runtime lock,
       custom HMAC secret, and SHA512 minimum rounds must be enforced.
+    quiet: true      
   changed_when: false
 
 - name: Changepassword | Validate platform and role inputs
@@ -22,6 +23,7 @@
           - ansible_os_family in ['RedHat', 'Debian', 'Suse']
         fail_msg: "Unsupported target: {{ ansible_system }} / {{ ansible_os_family }}. Supported OS families are RedHat, Debian
           and Suse for local Linux accounts."
+        quiet: true
 
     - name: Changepassword | Validate account list is provided
       ansible.builtin.assert:
@@ -31,6 +33,7 @@
         fail_msg: >-
           changepassword_local_accounts must be a non-empty list of dictionaries, for example:
           changepassword_local_accounts: [{username: root, password: 'vault-secret-or-$5$/$6$hash'}].
+        quiet: true
 
     - name: Changepassword | Normalize runtime target selector
       ansible.builtin.set_fact:
@@ -46,6 +49,7 @@
         fail_msg: >-
           changepassword_target_account must be a valid local account name declared in changepassword_local_accounts,
           or one of {{ changepassword_all_targets }} to target all declared accounts.
+        quiet: true
 
     - name: Changepassword | Validate each account item is a dictionary
       ansible.builtin.assert:
@@ -58,6 +62,7 @@
         fail_msg: >-
           Each changepassword_local_accounts entry must be a dictionary containing changepassword_target_account and password.
           Expected list item format: {username: root, password: 'vault-secret-or-$5$/$6$hash'}.
+        quiet: true          
       loop: "{{ changepassword_local_accounts }}"
       loop_control:
         label: "{{ item.username | default('undefined') }}"
@@ -72,6 +77,7 @@
           Unsupported keys found for account '{{ item.username | default('undefined') }}'.
           This role only accepts changepassword_target_account, password, state and expire.
           User provisioning attributes are intentionally forbidden.
+        quiet: true          
       loop: "{{ changepassword_local_accounts }}"
       loop_control:
         label: "{{ item.username | default('undefined') }}"
@@ -89,6 +95,7 @@
         fail_msg: >-
           Duplicate changepassword_target_accounts found in changepassword_local_accounts. Keep exactly one
           dictionary per changepassword_target_account.
+        quiet: true          
       no_log: "{{ changepassword_use_no_log | bool }}"
 
     - name: Changepassword | Ensure requested account is declared in Vault variables
@@ -99,6 +106,7 @@
         fail_msg: >-
           changepassword_target_account={{ changepassword_requested_user }} is not declared in changepassword_local_accounts.
           Refusing to change an account that is not explicitly declared in Vault/inventory variables.
+        quiet: true          
 
     - name: Changepassword | Build effective target account list
       ansible.builtin.set_fact:
@@ -115,6 +123,7 @@
         that:
           - changepassword_target_accounts | length > 0
         fail_msg: "No effective account selected for changepassword_target_account={{ changepassword_requested_user }}."
+        quiet: true        
 
 - name: Changepassword | Resolve machine-id identity for hash generation
   block:
@@ -158,7 +167,8 @@
         fail_msg: >-
           machine-id is required for HMAC salt generation but was not found or is invalid on {{ inventory_hostname }}.
           No inventory_hostname fallback is supported for password hash salt derivation.
-
+        quiet: true
+        
     - name: Changepassword | Build effective salt identity from machine-id
       ansible.builtin.set_fact:
         changepassword_effective_salt_identity: "{{ changepassword_machine_id }}"
@@ -169,6 +179,7 @@
         that:
           - changepassword_effective_salt_identity | length == 32
         fail_msg: "Effective salt identity must be the 32-character machine-id."
+        quiet: true
 
 - name: Changepassword | Validate account definitions
   block:
@@ -193,6 +204,7 @@
           - (changepassword_default_hmac_salt_secret | regex_search('[0-9]')) is not none
           - (changepassword_default_hmac_salt_secret | regex_search('[^A-Za-z0-9]')) is not none
         fail_msg: "Default HMAC fallback secret must be at least 60 chars and include uppercase, lowercase, digit and special characters."
+        quiet: true        
       no_log: "{{ changepassword_use_no_log | bool }}"
 
     - name: Changepassword | Fail when a valid custom HMAC secret is required
@@ -203,6 +215,7 @@
           changepassword_require_custom_hmac_secret=true requires changepassword_hmac_salt_secret
           to be at least changepassword_min_hmac_secret_length characters and include uppercase,
           lowercase, digit and special characters.
+        quiet: true          
       when: changepassword_require_custom_hmac_secret | bool
       no_log: "{{ changepassword_use_no_log | bool }}"
 
@@ -263,6 +276,7 @@
             Vault-protected plaintext. password_hash, password_plain and manage_password are not supported. Do not
             define per-account aging or provisioning attributes such as shell, groups, uid, home, comment, create_home
             or system.
+        quiet: true            
       loop: "{{ changepassword_target_accounts }}"
       loop_control:
         label: "{{ item.username | default('undefined') }}"
@@ -273,6 +287,7 @@
         that:
           - item.password is match(changepassword_password_hash_regex)
         fail_msg: "Password hash for '{{ item.username }}' must be a supported Linux crypt hash starting with $5$ or $6$."
+        quiet: true        
       loop: "{{ changepassword_target_accounts }}"
       loop_control:
         label: "{{ item.username }}"
@@ -291,6 +306,7 @@
           - item.password not in changepassword_forbidden_plain_values
           - item.password != item.username
         fail_msg: "Clear-text password for '{{ item.username }}' does not satisfy the local complexity policy."
+        quiet: true        
       loop: "{{ changepassword_target_accounts }}"
       loop_control:
         label: "{{ item.username }}"
@@ -331,6 +347,7 @@
         that:
           - item.username in changepassword_existing_local_users
         fail_msg: "Local account '{{ item.username }}' does not exist on {{ inventory_hostname }}."
+        quiet: true        
       loop: "{{ changepassword_target_accounts }}"
       loop_control:
         label: "{{ item.username }}"
@@ -349,6 +366,7 @@
           - changepassword_shadow.stat.isreg
         fail_msg: "/etc/shadow is unavailable. This target may use an external identity backend; do not use this role for
           IPA/LDAP/AD passwords."
+        quiet: true          
       when: changepassword_check_shadow_backend | bool
 
     - name: Changepassword | Validate local shadow file ownership and permissions
@@ -360,6 +378,7 @@
         fail_msg: >-
           /etc/shadow has unexpected ownership or permissions on {{ inventory_hostname }}.
           Expected owner root, group root/shadow, mode 0600/0640.
+        quiet: true          
       when: changepassword_check_shadow_backend | bool
 
     - name: Changepassword | Read /etc/passwd for local-only backend validation
@@ -379,6 +398,7 @@
         fail_msg: >-
           Account '{{ item.username }}' is not present in /etc/passwd on {{ inventory_hostname }}.
           It may be provided by LDAP/IPA/AD/SSSD; refusing local password mutation.
+        quiet: true          
       loop: "{{ changepassword_target_accounts }}"
       loop_control:
         label: "{{ item.username }}"
@@ -426,6 +446,7 @@
           - item.stat.executable
         fail_msg: >-
           Account '{{ item.item.key }}' uses shell '{{ item.item.value }}', but the shell path is missing or not executable.
+        quiet: true          
       loop: "{{ changepassword_selected_shell_stats.results | default([]) }}"
       loop_control:
         label: "{{ item.item.key }}"
@@ -442,6 +463,7 @@
           Account '{{ item.username }}' has a non-login, unknown or non-approved shell
           '{{ changepassword_selected_login_shells[item.username] | default('unknown') }}'.
           Refusing password change for service/system accounts.
+        quiet: true          
       loop: "{{ changepassword_target_accounts }}"
       loop_control:
         label: "{{ item.username }}"
@@ -465,6 +487,7 @@
           - changepassword_chage_check.stat.exists
         fail_msg: "chage is required for expire/aging operations but was not found at /usr/bin/chage. On SUSE/SLES/openSUSE,
           install or restore the shadow package."
+        quiet: true          
       when: changepassword_chage_check is defined and not ansible_check_mode
 
 - name: Changepassword | Refuse missing or weak custom HMAC secret in production
@@ -479,5 +502,6 @@
     fail_msg: >-
       changepassword_hmac_salt_secret must be defined in Vault and must meet
       the configured minimum length and complexity requirements.
+        quiet: true      
   no_log: "{{ changepassword_use_no_log | bool }}"
   changed_when: false
