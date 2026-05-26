@@ -7,6 +7,7 @@ changepassword_warn_days: 14
 changepassword_inactive_days: null
 changepassword_fail_if_user_missing: true
 changepassword_allow_empty_password: false
+changepassword_min_length: 8
 
 # Account selection & validation
 changepassword_require_etc_passwd_user: true
