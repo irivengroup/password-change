@@ -502,6 +502,6 @@
     fail_msg: >-
       changepassword_hmac_salt_secret must be defined in Vault and must meet
       the configured minimum length and complexity requirements.
-        quiet: true
+    quiet: true
   no_log: "{{ changepassword_use_no_log | bool }}"
   changed_when: false
