@@ -87,7 +87,8 @@
         that:
           - changepassword_runtime_accounts | length == changepassword_runtime_accounts | unique | list | length
         fail_msg: >-
-          Duplicate changepassword_target_accounts found in changepassword_local_accounts. Keep exactly one dictionary per changepassword_target_account.
+          Duplicate changepassword_target_accounts found in changepassword_local_accounts. Keep exactly one
+          dictionary per changepassword_target_account.
       no_log: "{{ changepassword_use_no_log | bool }}"
 
     - name: Changepassword | Ensure requested account is declared in Vault variables

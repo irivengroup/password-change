@@ -22,11 +22,12 @@
     - name: Molecule | Bootstrap Python and account utilities in target container
       community.docker.docker_container_exec:
         container: '{{ molecule_container_name }}'
-        command: sh -c "apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3 passwd login && rm -rf /var/lib/apt/lists/*"
+        command: sh -c "apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3 passwd
+          login && rm -rf /var/lib/apt/lists/*"
       changed_when: false
     - name: Molecule | Write delegated instance configuration
       ansible.builtin.copy:
         dest: '{{ molecule_instance_config }}'
         mode: '0600'
-        content: "---\n- instance: chgpassword-negative-ubuntu\n  address: chgpassword-negative-ubuntu\n  user: root\n  connection: community.docker.docker\n\
-          \  ansible_python_interpreter: /usr/bin/python3\n"
+        content: "---\n- instance: chgpassword-negative-ubuntu\n  address: chgpassword-negative-ubuntu\n\
+          \  user: root\n  connection: community.docker.docker\n  ansible_python_interpreter: /usr/bin/python3\n"

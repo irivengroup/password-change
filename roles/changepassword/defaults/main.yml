@@ -1,6 +1,23 @@
 ---
-# Selection & validation
+# Password hardening & policies
+changepassword_set_aging: false
+changepassword_min_days: null
+changepassword_max_days: null
+changepassword_warn_days: null
+changepassword_inactive_days: null
+changepassword_lock_after_change: false
+changepassword_fail_if_user_missing: true
+changepassword_allow_empty_password: false
+changepassword_enforce_complexity: true
+changepassword_min_length: 16
+changepassword_require_upper: true
+changepassword_require_lower: true
+changepassword_require_digit: true
+changepassword_require_special: true
+
+# Account selection & validation
 changepassword_target_account: root
+changepassword_local_accounts: null
 changepassword_account_regex: ^[a-z_][a-z0-9_-]{0,31}$|^root$
 changepassword_require_etc_passwd_user: true
 changepassword_fail_if_same_hash: false
@@ -22,7 +39,7 @@ changepassword_audit_schema_version: 1.0
 changepassword_audit_dir_mode: '0750'
 changepassword_audit_file_mode: '0600'
 changepassword_audit_logrotate_enabled: true
-changepassword_audit_logrotate_path: /etc/logrotate.d/iriven_chgpasswd
+changepassword_audit_logrotate_path: /etc/logrotate.d/changepassword
 changepassword_audit_logrotate_frequency: daily
 changepassword_audit_logrotate_rotate: 30
 changepassword_audit_logrotate_compress: true
@@ -34,27 +51,18 @@ changepassword_password_hash_regex: ^\$(5|6)\$(rounds=[0-9]+\$)?[^$]{1,16}\$.+
 changepassword_password_hash_prefix_regex: ^\$(5|6)\$
 changepassword_check_shadow_backend: true
 changepassword_forbidden_plain_values:
-  - password
-  - Password123!
-  - ChangeMe123!
-  - Admin123!
+- password
+- Password123!
+- ChangeMe123!
+- Admin123!
 
 # Other settings
-changepassword_local_accounts: null
 changepassword_all_targets:
-  - all
-  - '*'
-  - ALL
+- all
+- '*'
+- ALL
 changepassword_require_hash: false
 changepassword_allow_plaintext_password: true
-changepassword_fail_if_user_missing: true
-changepassword_allow_empty_password: false
-changepassword_enforce_complexity: true
-changepassword_min_length: 16
-changepassword_require_upper: true
-changepassword_require_lower: true
-changepassword_require_digit: true
-changepassword_require_special: true
 changepassword_hash_algorithm: sha512
 changepassword_default_hash_rounds: 656000
 changepassword_min_hash_rounds: 500000
@@ -65,50 +73,44 @@ changepassword_hmac_salt_secret: ''
 changepassword_default_hmac_salt_secret: jf?@#67568YPZs4Y6@5jG.7=pKw9jQ.j-d1ihlFpdGKsbuHru:?U?KeP573a
 changepassword_require_custom_hmac_secret: true
 changepassword_salt_length: 16
-changepassword_set_aging: false
-changepassword_min_days: null
-changepassword_max_days: null
-changepassword_warn_days: null
-changepassword_inactive_days: null
-changepassword_lock_after_change: false
 changepassword_audit_append_only: false
 changepassword_audit_only: false
 changepassword_machine_id_paths:
-  - /etc/machine-id
-  - /var/lib/dbus/machine-id
+- /etc/machine-id
+- /var/lib/dbus/machine-id
 changepassword_forbidden_users:
-  - bin
-  - daemon
-  - adm
-  - lp
-  - sync
-  - shutdown
-  - halt
-  - mail
-  - operator
-  - games
-  - ftp
-  - nobody
-  - nfsnobody
-  - dbus
-  - polkitd
-  - sssd
-  - systemd-network
-  - systemd-resolve
-  - systemd-timesync
-  - systemd-coredump
-  - rpc
-  - rpcuser
+- bin
+- daemon
+- adm
+- lp
+- sync
+- shutdown
+- halt
+- mail
+- operator
+- games
+- ftp
+- nobody
+- nfsnobody
+- dbus
+- polkitd
+- sssd
+- systemd-network
+- systemd-resolve
+- systemd-timesync
+- systemd-coredump
+- rpc
+- rpcuser
 changepassword_require_login_shell: true
 changepassword_allowed_login_shells:
-  - /bin/bash
-  - /usr/bin/bash
-  - /bin/sh
-  - /usr/bin/sh
-  - /bin/zsh
-  - /usr/bin/zsh
-  - /bin/ksh
-  - /usr/bin/ksh
+- /bin/bash
+- /usr/bin/bash
+- /bin/sh
+- /usr/bin/sh
+- /bin/zsh
+- /usr/bin/zsh
+- /bin/ksh
+- /usr/bin/ksh
 changepassword_allow_default_hmac_fallback: false
 changepassword_sha512_rounds: 656000
 changepassword_min_sha512_rounds: 500000
