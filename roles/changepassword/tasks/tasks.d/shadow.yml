@@ -8,27 +8,18 @@
       when:
         - changepassword_fail_if_same_hash | bool
         - changepassword_normalized_accounts | length > 0
-      no_log: "{{ changepassword_use_no_log | bool }}"
-
+      no_log: '{{ changepassword_use_no_log | bool }}'
     - name: Changepassword | Refuse password reuse when requested
       ansible.builtin.assert:
         that:
-          - >-
-            (
-              ((changepassword_shadow_raw.content | b64decode).split('\n')
-                | select('match', '^' ~ (item.username | regex_escape) ~ ':')
-                | list
-                | first
-                | default('::'))
-              .split(':')[1]
-            ) != item.final_password_hash
-        fail_msg: >-
-          Refusing password reuse for '{{ item.username }}': the generated/provided hash
-          is already present in /etc/shadow. Disable changepassword_fail_if_same_hash
-          only for idempotent re-runs.
-      loop: "{{ changepassword_normalized_accounts }}"
+          - "(\n  ((changepassword_shadow_raw.content | b64decode).split('\\n')\n    | select('match', '^' ~ (item.username\
+            \ | regex_escape) ~ ':')\n    | list\n    | first\n    | default('::'))\n  .split(':')[1]\n) != item.final_password_hash"
+        fail_msg: 'Refusing password reuse for ''{{ item.username }}'': the generated/provided hash is already present in
+          /etc/shadow. Disable changepassword_fail_if_same_hash only for idempotent re-runs.'
+        quiet: true
+      loop: '{{ changepassword_normalized_accounts }}'
       loop_control:
-        label: "{{ item.username }}"
+        label: '{{ item.username }}'
       when:
         - changepassword_fail_if_same_hash | bool
-      no_log: "{{ changepassword_use_no_log | bool }}"
+      no_log: '{{ changepassword_use_no_log | bool }}'
