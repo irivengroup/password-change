@@ -26,7 +26,7 @@
           Refusing password reuse for '{{ item.username }}': the generated/provided hash
           is already present in /etc/shadow. Disable changepassword_fail_if_same_hash
           only for idempotent re-runs.
-        quiet: true          
+        quiet: true
       loop: "{{ changepassword_normalized_accounts }}"
       loop_control:
         label: "{{ item.username }}"
