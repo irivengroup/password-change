@@ -168,7 +168,7 @@
           machine-id is required for HMAC salt generation but was not found or is invalid on {{ inventory_hostname }}.
           No inventory_hostname fallback is supported for password hash salt derivation.
         quiet: true
-        
+
     - name: Changepassword | Build effective salt identity from machine-id
       ansible.builtin.set_fact:
         changepassword_effective_salt_identity: "{{ changepassword_machine_id }}"
@@ -276,7 +276,7 @@
             Vault-protected plaintext. password_hash, password_plain and manage_password are not supported. Do not
             define per-account aging or provisioning attributes such as shell, groups, uid, home, comment, create_home
             or system.
-        quiet: true 
+        quiet: true
       loop: "{{ changepassword_target_accounts }}"
       loop_control:
         label: "{{ item.username | default('undefined') }}"
