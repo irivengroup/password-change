@@ -1,12 +1,29 @@
 ---
-changepassword_hmac_salt_secret: ''
+# Password Change - Sensitive Variables
+# All passwords in this file should be protected with ansible-vault.
+#
+# Example:
+# ansible-vault encrypt_string 'MyStrongPassword!' --name 'password'
+
+# Target local accounts managed by the role.
+# Supported runtime selectors:
+#   default/no extra-vars -> root
+#   -e changepassword_target_account=<username>
+#   -e changepassword_target_account=all
+#   -e changepassword_target_account='*'
+#
+# Structure:
+# changepassword_local_accounts:
+#   - username: root
+#     password: "{{ vault_root_password }}"
+#     state: present
+#     expire: false
+
 changepassword_local_accounts:
   - username: root
-    password: replace-with-vault-secret-root-password
-  - username: ansible
-    password: replace-with-vault-secret-ansible-password
-    state: unlocked
-  - username: svc_backup
-    password: $6$rounds=656000$replaceSaltHere$replaceSha512CryptHashHere
-    state: locked
-    expire: false
+    password: "{{ vault_root_password }}"
+
+# Vault encrypted password variables.
+# Replace values with ansible-vault encrypted strings.
+
+vault_root_password: CHANGE_ME
