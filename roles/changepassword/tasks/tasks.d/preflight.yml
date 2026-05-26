@@ -123,7 +123,7 @@
         that:
           - changepassword_target_accounts | length > 0
         fail_msg: "No effective account selected for changepassword_target_account={{ changepassword_requested_user }}."
-        quiet: true  
+        quiet: true
 
 - name: Changepassword | Resolve machine-id identity for hash generation
   block:
@@ -204,7 +204,7 @@
           - (changepassword_default_hmac_salt_secret | regex_search('[0-9]')) is not none
           - (changepassword_default_hmac_salt_secret | regex_search('[^A-Za-z0-9]')) is not none
         fail_msg: "Default HMAC fallback secret must be at least 60 chars and include uppercase, lowercase, digit and special characters."
-        quiet: true  
+        quiet: true
       no_log: "{{ changepassword_use_no_log | bool }}"
 
     - name: Changepassword | Fail when a valid custom HMAC secret is required
@@ -287,7 +287,7 @@
         that:
           - item.password is match(changepassword_password_hash_regex)
         fail_msg: "Password hash for '{{ item.username }}' must be a supported Linux crypt hash starting with $5$ or $6$."
-        quiet: true  
+        quiet: true
       loop: "{{ changepassword_target_accounts }}"
       loop_control:
         label: "{{ item.username }}"
@@ -306,7 +306,7 @@
           - item.password not in changepassword_forbidden_plain_values
           - item.password != item.username
         fail_msg: "Clear-text password for '{{ item.username }}' does not satisfy the local complexity policy."
-        quiet: true  
+        quiet: true
       loop: "{{ changepassword_target_accounts }}"
       loop_control:
         label: "{{ item.username }}"
@@ -347,7 +347,7 @@
         that:
           - item.username in changepassword_existing_local_users
         fail_msg: "Local account '{{ item.username }}' does not exist on {{ inventory_hostname }}."
-        quiet: true  
+        quiet: true
       loop: "{{ changepassword_target_accounts }}"
       loop_control:
         label: "{{ item.username }}"
