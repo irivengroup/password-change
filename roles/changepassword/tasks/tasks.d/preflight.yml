@@ -37,7 +37,7 @@
           Invalid Configuration: each account definition should implemeny at least a 'username' and password entry in settings file.
           changepassword_local_accounts must be a non-empty list of dictionaries, for example:
           changepassword_local_accounts: [{username: root, password: 'vault-secret-or-$5$/$6$hash'}].
-        quiet: true     
+        quiet: true
       delegate_to: localhost
       run_once: true
       become: false
