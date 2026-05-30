@@ -122,7 +122,7 @@ inventories/
 
 ## Global Configuration
 
-Example `roles/changepassword/vars/main.yml`:
+Example `playbooks/settings/main.yml`:
 
 ```yaml
 ---
@@ -185,7 +185,7 @@ Store generated hashes only in Vault-protected inventory files and never commit 
 
 ## Vault Configuration
 
-Example `roles/changepassword/vars/accounts.yml`:
+Example `playbooks/settings/accounts.yml`:
 
 ```yaml
 ---
@@ -213,7 +213,7 @@ changepassword_local_accounts:
 Encrypt the file before committing or using it in production:
 
 ```bash
-ansible-vault encrypt roles/changepassword/vars/accounts.yml
+ansible-vault encrypt playbooks/settings/accounts.yml
 ```
 
 ---
@@ -367,7 +367,7 @@ This role does not create users.
 
 ### 2. Prepare Vault Data
 
-Populate `roles/changepassword/vars/accounts.yml` with:
+Populate `playbooks/settings/accounts.yml` with:
 
 - `changepassword_hmac_salt_secret`
 - `changepassword_local_accounts`
@@ -376,7 +376,7 @@ Populate `roles/changepassword/vars/accounts.yml` with:
 Then encrypt the file:
 
 ```bash
-ansible-vault encrypt roles/changepassword/vars/accounts.yml
+ansible-vault encrypt playbooks/settings/accounts.yml
 ```
 
 ### 3. Validate Inventory Targeting

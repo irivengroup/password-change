@@ -60,7 +60,7 @@ jobs:
         run: |
           ansible-playbook \
             -i inventories/hosts.yml \
-            playbooks/changepassword.yml \
+            playbooks/changepassword.playbook.yml \
             --syntax-check
       - name: Run ansible-lint
         run: ansible-lint --profile production

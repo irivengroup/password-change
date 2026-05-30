@@ -10,7 +10,7 @@ regexes = [
 ]
 paths = [
   'roles/changepassword/defaults/main.yml',
-  'roles/changepassword/vars/accounts.yml',
-  'roles/changepassword/vars/accounts.yml.example',
+  'playbooks/settings/accounts.yml',
+  'playbooks/settings/accounts.yml.example',
   'roles/changepassword/molecule/default/converge.yml'
 ]

@@ -3,9 +3,9 @@ from pathlib import Path
 import sys
 import yaml
 
-vault_file = Path("roles/changepassword/vars/accounts.yml")
+vault_file = Path("playbooks/settings/accounts.yml")
 if not vault_file.exists():
-    print("Missing roles/changepassword/vars/accounts.yml", file=sys.stderr)
+    print("Missing playbooks/settings/accounts.yml", file=sys.stderr)
     sys.exit(1)
 
 data = yaml.safe_load(vault_file.read_text(encoding="utf-8")) or {}
