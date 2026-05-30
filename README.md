@@ -122,7 +122,7 @@ inventories/
 
 ## Global Configuration
 
-Example `inventories/production/group_vars/all/main.yml`:
+Example `roles/changepassword/vars/main.yml`:
 
 ```yaml
 ---
@@ -185,7 +185,7 @@ Store generated hashes only in Vault-protected inventory files and never commit 
 
 ## Vault Configuration
 
-Example `inventories/production/group_vars/all/vault.yml`:
+Example `roles/changepassword/vars/accounts.yml`:
 
 ```yaml
 ---
@@ -213,7 +213,7 @@ changepassword_local_accounts:
 Encrypt the file before committing or using it in production:
 
 ```bash
-ansible-vault encrypt inventories/production/group_vars/all/vault.yml
+ansible-vault encrypt roles/changepassword/vars/accounts.yml
 ```
 
 ---
@@ -274,7 +274,7 @@ All production executions should use Ansible Vault because `vault.yml` contains 
 The examples below use the production inventory:
 
 ```text
-inventories/production/hosts.yml
+inventories/hosts.yml
 ```
 
 and the playbook:
@@ -289,7 +289,7 @@ When `changepassword_target_account` is not passed as an extra variable, the rol
 
 ```bash
 ansible-playbook \
-  -i inventories/production/hosts.yml \
+  -i inventories/hosts.yml \
   playbooks/change_password.yml \
   --ask-vault-pass
 ```
@@ -298,7 +298,7 @@ With a Vault password file:
 
 ```bash
 ansible-playbook \
-  -i inventories/production/hosts.yml \
+  -i inventories/hosts.yml \
   playbooks/change_password.yml \
   --vault-password-file ~/.vault_pass.txt
 ```
@@ -309,7 +309,7 @@ Use this mode to rotate only the `root` password, provided `root` is declared in
 
 ```bash
 ansible-playbook \
-  -i inventories/production/hosts.yml \
+  -i inventories/hosts.yml \
   playbooks/change_password.yml \
   --ask-vault-pass \
   -e changepassword_target_account=root
@@ -321,7 +321,7 @@ Use this mode to rotate only one declared local account. Replace `<user>` with a
 
 ```bash
 ansible-playbook \
-  -i inventories/production/hosts.yml \
+  -i inventories/hosts.yml \
   playbooks/change_password.yml \
   --ask-vault-pass \
   -e changepassword_target_account=ansible
@@ -333,7 +333,7 @@ Use this mode to rotate all declared accounts.
 
 ```bash
 ansible-playbook \
-  -i inventories/production/hosts.yml \
+  -i inventories/hosts.yml \
   playbooks/change_password.yml \
   --ask-vault-pass \
   -e changepassword_target_account=all
@@ -345,7 +345,7 @@ The wildcard target is also supported for rotating all declared accounts. Quote 
 
 ```bash
 ansible-playbook \
-  -i inventories/production/hosts.yml \
+  -i inventories/hosts.yml \
   playbooks/change_password.yml \
   --ask-vault-pass \
   -e 'changepassword_target_account=*'
@@ -367,7 +367,7 @@ This role does not create users.
 
 ### 2. Prepare Vault Data
 
-Populate `inventories/production/group_vars/all/vault.yml` with:
+Populate `roles/changepassword/vars/accounts.yml` with:
 
 - `changepassword_hmac_salt_secret`
 - `changepassword_local_accounts`
@@ -376,7 +376,7 @@ Populate `inventories/production/group_vars/all/vault.yml` with:
 Then encrypt the file:
 
 ```bash
-ansible-vault encrypt inventories/production/group_vars/all/vault.yml
+ansible-vault encrypt roles/changepassword/vars/accounts.yml
 ```
 
 ### 3. Validate Inventory Targeting
@@ -385,7 +385,7 @@ Review the inventory and confirm the execution scope:
 
 ```bash
 ansible-inventory \
-  -i inventories/production/hosts.yml \
+  -i inventories/hosts.yml \
   --list
 ```
 
@@ -395,7 +395,7 @@ Run syntax validation before production execution:
 
 ```bash
 ansible-playbook \
-  -i inventories/production/hosts.yml \
+  -i inventories/hosts.yml \
   playbooks/change_password.yml \
   --syntax-check
 ```

@@ -3,9 +3,9 @@ from pathlib import Path
 import sys
 import yaml
 
-vault_file = Path("inventories/production/group_vars/all/vault.yml")
+vault_file = Path("roles/changepassword/vars/accounts.yml")
 if not vault_file.exists():
-    print("Missing inventories/production/group_vars/all/vault.yml", file=sys.stderr)
+    print("Missing roles/changepassword/vars/accounts.yml", file=sys.stderr)
     sys.exit(1)
 
 data = yaml.safe_load(vault_file.read_text(encoding="utf-8")) or {}

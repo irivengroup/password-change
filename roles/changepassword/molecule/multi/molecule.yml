@@ -10,6 +10,7 @@ provisioner:
   name: ansible
   env:
     ANSIBLE_DEPRECATION_WARNINGS: 'False'
+    ANSIBLE_ROLES_PATH: ${MOLECULE_PROJECT_DIRECTORY}/..
   config_options:
     defaults:
       deprecation_warnings: false

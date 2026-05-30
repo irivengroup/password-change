@@ -55,11 +55,11 @@ jobs:
       - name: Compile Python plugins
         run: python -m compileall roles/changepassword/plugins
       - name: Validate inventory
-        run: ansible-inventory -i inventories/production/hosts.yml --list
+        run: ansible-inventory -i inventories/hosts.yml --list
       - name: Syntax-check playbook
         run: |
           ansible-playbook \
-            -i inventories/production/hosts.yml \
+            -i inventories/hosts.yml \
             playbooks/changepassword.yml \
             --syntax-check
       - name: Run ansible-lint

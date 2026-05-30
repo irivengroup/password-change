@@ -10,7 +10,7 @@ regexes = [
 ]
 paths = [
   'roles/changepassword/defaults/main.yml',
-  'inventories/production/group_vars/all/vault.yml',
-  'inventories/production/group_vars/all/vault.yml.example',
+  'roles/changepassword/vars/accounts.yml',
+  'roles/changepassword/vars/accounts.yml.example',
   'roles/changepassword/molecule/default/converge.yml'
 ]
