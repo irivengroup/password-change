@@ -5,8 +5,8 @@
 # ansible-vault before being committed or shared.
 #
 # Recommended commands:
-#   ansible-vault encrypt roles/changepassword/vars/accounts.yml
-#   ansible-vault edit roles/changepassword/vars/accounts.yml
+#   ansible-vault encrypt playbooks/settings/accounts.yml
+#   ansible-vault edit playbooks/settings/accounts.yml
 #   ansible-vault encrypt_string 'MyStrongPassword!' --name 'vault_root_password'
 #
 # Account declaration contract:
@@ -15,9 +15,9 @@
 #       password: "{{ vault_root_password }}"
 #
 # Runtime selector examples:
-#   ansible-playbook ... -e changepassword_target_account=root
+#   ansible-playbook ... -e tgt_user=root
 #   ansible-playbook ... -e changepassword_target_account=<username>
-#   ansible-playbook ... -e changepassword_target_account=all
+#   ansible-playbook ... -e tgt_user=all
 #   ansible-playbook ... -e changepassword_target_account='*'
 #
 # Security recommendations:

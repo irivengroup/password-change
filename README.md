@@ -122,7 +122,7 @@ inventories/
 
 ## Global Configuration
 
-Example `playbooks/settings/main.yml`:
+Example `playbooks/settings/config.yml`:
 
 ```yaml
 ---
@@ -312,7 +312,7 @@ ansible-playbook \
   -i inventories/hosts.yml \
   playbooks/change_password.yml \
   --ask-vault-pass \
-  -e changepassword_target_account=root
+  -e tgt_user=root
 ```
 
 ### With `changepassword_target_account=<user>`
@@ -324,7 +324,7 @@ ansible-playbook \
   -i inventories/hosts.yml \
   playbooks/change_password.yml \
   --ask-vault-pass \
-  -e changepassword_target_account=ansible
+  -e tgt_user=ansible
 ```
 
 ### With `changepassword_target_account=all`
@@ -336,7 +336,7 @@ ansible-playbook \
   -i inventories/hosts.yml \
   playbooks/change_password.yml \
   --ask-vault-pass \
-  -e changepassword_target_account=all
+  -e tgt_user=all
 ```
 
 ### With `changepassword_target_account='*'`
@@ -590,3 +590,32 @@ Project Initiator — IRIVEN Group
 ## Copyright
 
 © IRIVEN Group — All Rights Reserved
+
+## Sélection runtime via extra-vars
+
+Le playbook expose une variable opérateur simple :
+
+```bash
+-e tgt_user=<compte>
+```
+
+Exemples :
+
+```bash
+# Compte root par défaut
+ansible-playbook -i inventories/hosts.yml playbooks/changepassword.playbook.yml
+
+# Compte spécifique
+ansible-playbook -i inventories/hosts.yml playbooks/changepassword.playbook.yml -e tgt_user=appuser
+
+# Tous les comptes déclarés
+ansible-playbook -i inventories/hosts.yml playbooks/changepassword.playbook.yml -e tgt_user=all
+```
+
+En interne, le playbook mappe `tgt_user` vers `changepassword_target_account`.
+Les fichiers de configuration utilisés par défaut sont :
+
+```text
+playbooks/settings/config.yml
+playbooks/settings/accounts.yml
+```
